@@ -1,5 +1,5 @@
-\version "2.19.80"
-%% version Y/M/D = 2018/11/12 for lilypond 2.19.80 or higher
+\version "2.20.0"
+%% version Y/M/D = 2020/07/04 for lilypond 2.20.0 or higher
 %% LSR = http://lsr.di.unimi.it/LSR/Item?id=769
 %% last changes :
 %%   - tuplets have now a duration . fix line 92-93 and 179

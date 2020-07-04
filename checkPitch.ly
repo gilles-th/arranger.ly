@@ -1,6 +1,6 @@
-\version "2.19.80"
+\version "2.20.0"
 %% LSR = http://lsr.di.unimi.it/LSR/Item?id=773
-%% version Y/M/D = 2018/02/16
+%% version Y/M/D = 2020/07/04
 
 #(define ((set-compare-pitch? . syms) p1 p2)
 "syms can be a set of 'above 'below 'equal"

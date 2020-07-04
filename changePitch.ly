@@ -1,6 +1,6 @@
-\version "2.19.80"
-%% changePitch.ly version Y/M/D = 2020/02/17
-%% for lilypond 2.19 or higher
+\version "2.20.0"
+%% changePitch.ly version Y/M/D = 2020/07/04
+%% for lilypond 2.20 or higher
 %% LSR :
 %%   http://lsr.di.unimi.it/LSR/Item?id=654
 %% Last release here :
@@ -8,6 +8,7 @@
 %% This directory contains also a doc called :
 %%   changePitch-doc.pdf
 %% Last changes (the more recent to the top) :
+%%    - function check-for-ties has been redone.
 %%    - allows \displayLilyMusic to work, using reduce-seq in a music with a \tempo command
 %%    - correction in \samePitch : music can contain q chords => call expand-q
 %%    - new changPitch-doc.pdf (made with Context => http://wiki.contextgarden.net/ )
@@ -200,44 +201,49 @@
              x)
   note-or-chord))
 
+#(define ((set-tags-prop-if-not tag-stop) evt tag-to-add . tags-to-del)
+"Add and delete tags in evt 'tags property, unless tag-stop is in it.
+Set tag-stop to #f to process without conditions"
+(let ((filtered-tags (fold delq (ly:music-property evt 'tags) tags-to-del)))
+  (if (not (and tag-stop (memq tag-stop filtered-tags)))
+    (ly:music-set-property! evt 'tags
+      (if (memq tag-to-add filtered-tags) filtered-tags (cons tag-to-add filtered-tags))))))
+#(define set-tags-prop (set-tags-prop-if-not #f))
+
+#(define (set-to-same-pitch-callback evt)
+   (define (same-pitch-callback x p)           ; set pitch to the prev value
+     (ly:prob-set-property! x 'pitch p)
+     p)
+(ly:music-set-property! evt 'to-relative-callback same-pitch-callback))
+
 #(define (check-for-ties pattern)
 "A tied note will get automatically the same pitch than the previous note (= the 
-note with the tie symbole)"
-(define (rel-callback x p)                    ; set pitch to the prev value
-   (ly:prob-set-property! x 'pitch p)
-   p)
-(let ((tieNote? #f)
-      (startSamePich? #f)  ;; see \samePitch later
-      (stopSamePich? #f))
-  (map-some-music
-    (lambda (x)
-      (and
-        (note-or-chord? x)
-        (let ((tags (ly:music-property x 'tags)))
-          (if (not (memq cPSamePitch tags))
-            (begin
-              (set! tieNote? (or (pair? (extract-named-music x '(TieEvent)))
-                                 (memq fakeTie tags)))
-              (set! stopSamePich? (and startSamePich? (not tieNote?)))
-              (set! startSamePich? (and tieNote? (not startSamePich?)))
-              (cond
-                (startSamePich?
-                  (ly:music-set-property! x 'tags (cons cPSamePitch
-                     (delq fakeTie (delq cPSamePitchEnd tags)))))
-                (stopSamePich?
-                  (ly:music-set-property! x 'to-relative-callback rel-callback)
-                  (if (not (memq cPSamePitchEnd tags))
-                    (ly:music-set-property! x 'tags (cons cPSamePitchEnd tags))))
-                (tieNote?
-                  (ly:music-set-property! x 'to-relative-callback rel-callback)
-                  (ly:music-set-property! x 'tags (cons cPSamePitch
-                     (delq fakeTie (delq cPSamePitchEnd tags))))
-                  (set! startSamePich? #t)))))
-          x)))
-    pattern)))
+note with the tie symbol)"
+(let loop1 ((notes (extract-named-music pattern '(NoteEvent EventChord))))
+  (if (null? notes)
+    pattern
+    (let loop2 ((note (car notes))
+                (next (cdr notes)))
+      (if (null? next)
+        pattern
+        (if (or (pair? (extract-named-music note '(TieEvent)))
+                (memq fakeTie (ly:music-property note 'tags)))
+          (let loop3 ((next-note (car next))
+                      (next (cdr next)))
+            (set-to-same-pitch-callback next-note)   ; a note will have same pitch as prev
+            (if (and (pair? next)
+                     (pair? (extract-named-music next-note '(TieEvent))))
+              (begin   ; next-note has also a tie => add cPsamePitch tag to next-note
+                (set-tags-prop next-note cPSamePitch fakeTie cPSamePitchEnd) ; add cPSamePitch, del fakeTie cPSamePitchEnd
+                (loop3 (car next)(cdr next)))
+              (begin   ; next-note has no tie, or no more notes after next-note.
+                (set-tags-prop note cPSamePitch fakeTie cPSamePitchEnd) ; add to note
+                ((set-tags-prop-if-not cPSamePitch) next-note cPSamePitchEnd) ; add cPSamePitchEnd to next-note if not cPSamePitch
+                (loop1 next))))
+          (loop2 (car next)(cdr next))))))))
 
-#(if (and (defined? 'cPCheckForTies)
-          (not cPCheckForTies))
+#(if (and (defined? 'cPCheckForTies) ; compatibility for files made with previous version. To add :
+          (not cPCheckForTies))      ; (define cPCheckForTies #f) before \include "changePitch.ly"
     (define (check-for-ties pattern) pattern))
 
 #(define (change-pitch pattern newnotes)
@@ -368,37 +374,16 @@ samePitch = #(define-music-function (music) (ly:music?)
 "Inside the `pattern parameter of the \\changePitch function, all notes grouped 
 by this function will have the same pitch, according to the current note of
 `newnotes parameter of \\changePitch."
-(let((not-first? #f)
-     (last-note #f)
-     (music (expand-q music)))
-  (map-some-music
-    (lambda (x)
-      (cond
-        ((note-or-chord? x)
-           (if not-first?     ; set all pitches to the pitch of the first note
-             (ly:music-set-property! x 'to-relative-callback
-                (lambda (x p)                    ; set pitch to the prev value
-                    (ly:prob-set-property! x 'pitch p)
-                    p))
-             (set! not-first? x)) ; do nothing for first note
-           (ly:music-set-property! x 'tags (cons
-                   cPSamePitch  ; add tag cPSamePitch to x
-                   (ly:music-property x 'tags)))
-           (set! last-note x)   ; save the note x
-           x)
-        (else #f)))
-    music)
-  (if last-note              ; the last saved EventChord
-     (ly:music-set-property! last-note 'tags (cons
-           cPSamePitchEnd    ; add cPSamePitchEnd tag, delete cPSamePitch tag
-           (delq cPSamePitch (ly:music-property last-note 'tags)))))
+(let((notes (extract-named-music music '(NoteEvent EventChord))))
+  (for-each set-to-same-pitch-callback (cdr notes))       ; fix all pitches to first pitch
+  (let ((rev-notes (reverse notes)))                      ; reverse the list
+    (set-tags-prop (car rev-notes) cPSamePitchEnd)        ; last note => tag cPSamePitchEnd
+    (for-each set-tags-prop (cdr rev-notes)               ; others notes =>
+                            (circular-list cPSamePitch))) ; tag cPSamePitch
   music))
 
-%% this function should be no more needed, as copy-arti should avoid pbs
-%% in relative mode and \samePitch
 absolute = #(define-music-function (music) (ly:music?)
-"Make `music unrelativable. To use inside a \\samePitch function in relative
-mode."
+"Make `music unrelativable. To use inside a \\samePitch function in relative mode."
 (make-music 'UnrelativableMusic 'element music))
 
 insert = #(define-music-function (music) (ly:music?)

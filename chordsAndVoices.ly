@@ -1,8 +1,8 @@
-\version "2.19.80"
-%% version Y/M/D = 2015/03/23
+\version "2.20.0"
+%% version Y/M/D = 2020/07/04
 %% LSR = http://lsr.di.unimi.it/LSR/Item?u=1&id=761
 %% LSR = http://lsr.di.unimi.it/LSR/Item?u=1&id=545
-%% for Lilypond 2.19 or higher.
+%% for Lilypond 2.20 or higher.
 %% NOTES
 %  - The old name of chordsAndVoices.ly was chord.ly
 %  - chordsAndVoices.ly now calls checkPitch.ly because

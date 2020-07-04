@@ -1,6 +1,6 @@
-\version "2.19.80"
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2020/05/02 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%% For Lilypond 2.19 or higher %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\version "2.20.0"
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2020/07/04 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%% For Lilypond 2.20 or higher %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The main goal of arranger.ly is to provide a set of functions to make arrangements
 % (for ex : a symphonic piece for a concert band (wood-winds and percussions only))
 % The basic possibility is to allow the user to be able to insert a fragment of
@@ -11,7 +11,7 @@
 % The user has just, beforehand, to define a \global variable, in which he has to
 % store all timing signature changes, separated by skips of appropriate length.
 % ex :    global = { s1*4 \time 5/8 s8*5*7 \time 3/4 s4*3*6 etc ...}
-% (Others timing events like \partial, cadenzaOn/Off... are supported).
+% Others timing events like \partial, cadenzaOn/Off... are supported.
 % The user then, calls the init function (see later) with a set of instruments as parameter.
 % The immediat result is that each instruments are automatically filled by appropriate
 % multi-measure rests (same length than \global). Even a starting rest is added if a
@@ -526,7 +526,7 @@ If sourceX is omitted, the prev source is assumed"
 (let ((music? (music-obj? destination)))
           (define (source->dest-copy from-pos to-pos)
              ((em-with-func func) source from-pos to-pos source-start-pos))
-  (let loop ((res (rm destination from-pos (source->dest-copy from-pos to-pos)));(em source from-pos to-pos source-start-pos)))
+  (let loop ((res (rm destination from-pos (source->dest-copy from-pos to-pos)))
              (args (filter not-procedure? ;; del all /
                           (if source-start-pos (cddr args) ;; skip key and key-values
                                                args))))
@@ -541,7 +541,6 @@ If sourceX is omitted, the prev source is assumed"
            (rm (if music? res destination)
                arg1
                (source->dest-copy arg1 (second args))))
-              ; (em source arg1 (second args) source-start-pos)))
          (list-tail args 2))))))
 
 #(define copy-to (copy-to-with-func #f))
@@ -600,7 +599,7 @@ Shortcut for : (apply-to obj func from1 to1)(apply-to obj func from2 to2) etc ..
 #(define (to-set-func func)
    (lambda(music) (music-map (lambda(m) (func m)
                                         m)
-                             music)))
+                             (ly:music-deep-copy music))))
 
 #(define (xchg-music obj1 obj2 from-pos to-pos . other-from-to-pos)
 "Exchange the music of the range [from-pos to-pos[ between obj1 and obj2"
@@ -884,12 +883,14 @@ Use `obj-start-pos if 'obj doesn't begin at the beginning of the whole music.
       (loop (first args)(second args)(list-tail args 2))
       res))))
 
-%% derivated from \partcombine
+%% derivated from \partCombine
 #(define (part-combine part1 part2)
 ;(make-part-combine-music (list part1 part2) #f)) ;; <- lilypond 2.18
-; new in lilypond 2.19 : see music-functions-init.ly ; les versions
-; scheme et lilypond sont compatibles
-(partcombine '(0 . 8) part1 part2))
+; new in lilypond 2.20 : see ly/music-functions-init.ly ;
+(make-directed-part-combine-music #f '(0 . 8) part1 part2
+    #{ \with { \voiceOne \override DynamicLineSpanner.direction = #UP } #}
+    #{ \with { \voiceTwo \override DynamicLineSpanner.direction = #DOWN } #}
+    #{ #}))
 
 #(define combine1 (add-voice 1 part-combine))
 
@@ -958,11 +959,20 @@ note of music2..., then repeat the process with each following notes of each mus
    (ly:error "notes+ needs a least one music argument, or a list of musics")
    ((apply set-notes+ (cdr all-args)) (car all-args)))))
 
-#(define (add-notes obj where-pos . args)
-(let ((obj-start-pos (last args))
-      (musics (map ly:music-deep-copy (filter ly:music? args))))
-  (apply-to obj (apply set-notes+ musics) where-pos 'end (and (pos? obj-start-pos)
-                                                              obj-start-pos))))
+#(define (add-notes obj where-pos music . args) ; args = music1 music2 ...
+"(add-notes obj where-pos music [music1 music2 ..[obj-start-pos]])
+Apply set-notes+ to obj at pos where-pos, with music music1 music2... 
+as sequences of notes to be added to each chords of obj. 
+obj-start-pos can be set in last arguments of args"
+(if (and (pair? music)(pair? obj))
+  (map
+    (lambda(instru mus)(apply add-notes instru where-pos mus args))
+    obj
+    music)
+  (let ((obj-start-pos (and (pair? args) (last args)))
+        (musics (map ly:music-deep-copy (filter ly:music? (cons music args)))))
+    (apply-to obj (apply set-notes+ musics) ;; func
+                  where-pos 'end (and (pos? obj-start-pos) obj-start-pos)))))
 
 % voices->chords behaves as \partcombine with \partcombineChords option
 % To use with apply-to
@@ -1772,13 +1782,23 @@ addStaffSet = {
       s))))
 
 % a function to associate a letter to measure numbers
-#(define* (def-letters measure-list #:optional (show-infos #t)
-                                               (index->string index->string-letters))
+% #(define* (def-letters measure-list #:optional (show-infos #t)
+%                                                (index->string index->string-letters)
+%                                                (start-index 0))
+#(define (def-letters measure-list . args)
 "Associate in the parser each measure number of the given list to a symbol.
 By default, each symbol name is a capital letter A-Z less letter I (26 - 1  =
-25 possibilities). If measure-list count exeeds 25, a second, a third... capital letter is added to 
-the left"
-  ;(for-each (lambda(x) (format #t "~a " (index->string x))) (iota 652))  ;; uncomment to test
+25 possibilities). If measure-list count exeeds 25, a second, a third... capital 
+letter is added to the left"
+   (define (pred->arg pred? default)
+     (let ((filtered-args (filter pred? args)))
+       (or (and (pair? filtered-args)
+                (car filtered-args))
+           default)))
+(let ((index->string (pred->arg procedure? index->string-letters))
+      (start-index (pred->arg index? 0))
+      (show-infos (pred->arg boolean? #f)))
+  ; (for-each (lambda(x) (format #t "~a " (index->string x))) (iota 652)) ; uncomment to test
   (for-each
     (lambda (x y) ;; associate symbol 'A 'B 'C... to an elt of the list
       (let* ((s (index->string x))
@@ -1786,13 +1806,13 @@ the left"
         (if (defined? sym)
           (let((new-s (string-append "_" s)))
             (if show-infos (ly:message
-        "def-letters infos :\n  symbol ~a already defined. New symbol will be : ~a" s new-s))
+"def-letters infos :\n  symbol ~a already defined. New symbol will be : ~a" s new-s))
             (set! sym (string->symbol new-s))))
         (ly:parser-define! sym y)))
-    (iota (length measure-list))
+    (iota (length measure-list) start-index)
     measure-list)
   ;; return the original list))
-  measure-list)
+  measure-list))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% clean export of instruments %%%%%%%%%%%%%%%%%%%%%%%%%
 %% display-lily-music add a line break only when a bar-check is found.

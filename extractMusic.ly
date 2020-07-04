@@ -1,5 +1,5 @@
-\version "2.19.80"
-%% version Y/M/D = 2020/05/03 : for lilypond 2.19
+\version "2.20.0"
+%% version Y/M/D = 2020/07/04: for lilypond 2.20
 %% LSR = http://lsr.di.unimi.it/LSR/Item?id=542
 % Last modif. (the last at the end) :
 % - change append! by cons in (make-signature-list)
@@ -15,7 +15,7 @@
 %   notes, rests, and skips) => we have to change line 174
 % - \cadenzaOn/Off compatibility
 % - allows \displayLilyMusic to work, using reduce-seq in a music with a \tempo command
-% - \replaceVoltaMusic was buggy for music out of valta structure : Rewrite.
+% - \replaceVoltaMusic was buggy for music out of volta structure : Rewriting.
 
 #(define (expand-q-chords music); for q chords : see chord-repetition-init.ly
  (expand-repeat-chords! (list 'rhythmic-event) music))
