@@ -658,7 +658,7 @@ ce qui donnera, appliquée à un paramètre \type{music} :
 \blank[0.3em] 
 \startmylily ((set-func args) music) \stopmylily
 \blank[0.3em]
-Pendant l'appel de \type{apply-to}, tous les arguments \type{args} de la sous-fonction \type{set-func} restent identiques et fixés pour tous les instruments contenus dans \type{obj}. Or, il est dans certain cas souhaitable que ces arguments soient au contraire, personnalisables à chaque instrument.\\ Cela sera possible, à la condition d'adopter une nouvelle syntaxe pour l'argument \type{func} de \type{apply-to}, qui sera alors défini comme une paire, avec en 1\high{er} element, le nom de la sous-fonction, et en 2\high{nd}, une liste, composée des arguments correspondant à chaque instrument.
+Pendant l'appel de \type{apply-to}, tous les arguments \type{args} de la sous-fonction \type{set-func} restent identiques et fixés pour tous les instruments contenus dans \type{obj}. Or, il est dans certain cas souhaitable que ces arguments soient au contraire, personnalisables à chaque instrument.\\ Cela sera possible, à la condition d'adopter une nouvelle syntaxe pour l'argument \type{func} de \type{apply-to}, qui sera alors défini comme une paire, avec en 1\high{er} élement, le nom de la sous-fonction, et en 2\high{nd}, une liste, composée des arguments correspondant à chaque instrument.
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \type{func} devient : \inframed{\type{(cons set-func (list args-instrument1 args-instrument2 …))}}
 \blank[0.4em]{args-instrument} est soit un élément unique soit une liste, en fonction du nombre de paramètres requis par \type{set-func}.
@@ -888,7 +888,7 @@ ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[
 \syntax {((set-replace-voice n repla) music)}{}
 Remplace, dans une musique à plusieurs voix simultanées, la voix \type{n}.\\ 
 Si \type+music = << { a b } \\ { c d } >>+,\\ le code
-\type+(replace-voice 2 music #{f g})+ donnera \type+<< { a b } \\ { f g } >>+
+\type+(replace-voice 2 music #{ f g #})+ donnera \type+<< { a b } \\ { f g } >>+
 
 \blank
 \midaligned{ \tfd ------------}\\
@@ -942,14 +942,11 @@ et par
 
 \type{obj} est un {\em instrument} ou une liste d'{\em instrument}s
 
-\type{new-voice} est une {\em musique} ou une liste de
-{\em musique}s.\\
-Utiliser \type{voice-start-pos}, si \type{new-voice}
-commence avant \type{where-pos}.\\
-Utiliser \type{to-pos} si vous voulez stopper le remplacement
-avant la fin de \type{new-voice}.\\ 
+\type{new-voice} est une {\em musique} ou une liste de {\em musique}s.\\
+Utiliser \type{voice-start-pos}, si \type{new-voice} commence avant \type{where-pos}.\\
+Utiliser \type{to-pos} si vous voulez stopper le remplacement avant la fin de \type{new-voice}.\\ 
 Utiliser \type{obj-start-pos} si \type{obj} ne commence pas au début de la pièce (typiquement
-la première mesure, voir la \at{fonction \type{init} page}[init]).
+la mesure~1,~voir la \at{fonction \type{init} page}[init]).
 
 \blank
 \midaligned{ \tfd ------------}
@@ -1042,10 +1039,10 @@ newnotes = {e d c}
 
 %%%%%%%%%
 \func{add-notes} 
-\syntax {(add-notes obj where-pos newnotes1 [newnotes2…][obj-start-pos])}{}
+\syntax {(add-notes obj where-pos newnotes1 [newnotes2]…[obj-start-pos])}{}
 
 Même chose que \type{notes+} mais appliquée cette fois-ci à partir d'une position \type{where-pos} donnée.\\
-\type{obj} peut être ici, un {\em instrument}, une liste d'{\em instrument}s, une {\em musique} ou une liste de {\em musique}s.\\
+\type{obj} peut être ici, un {\em instrument}, une liste d'{\em instrument}s, une {\em musique} ou une liste de {\em musique}s. Si à la fois, \type{newnotes1} et \type{obj} sont des listes, \type{notes+} est appliqué élément à élément.\\
 Voir \in{la fonction \type{rm}}[rm-info] (\at{page}[rm-info]) pour la signification du dernier paramètre optionnel \type{obj-start-pos}.
 \blank[0.9em]
 \midaligned{ \tfd ------------}
@@ -1057,7 +1054,7 @@ Voir \in{la fonction \type{rm}}[rm-info] (\at{page}[rm-info]) pour la significat
 
 \type{dispatch-chords} distribue dans des parties séparées, les notes des accords d'une {\em musique}.\\
 \type{instruments} est la liste d'{\em instrument}s recevant, à la position \type{where-pos}, ces parties.\\
-\type{music-with-chords }est la {\em musique} contenant les accords.
+\type{music-with-chords} est la {\em musique} contenant les accords.
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 La note 1 d'un accord est envoyée au dernier élément de la liste \type{instruments} , puis la note 2 à l'avant
 dernier etc …
@@ -2017,11 +2014,11 @@ Copie \type{n} fois \type{music}.
 %%%%%%%%
 \index{index->string-letters}
 \func{def-letters}
-\syntax {(def-letters measure-list)}{show-infos index->string}
-La fonction permet d'associer des lettres à des mesures particulières. Elle est particulièrement adaptée au style "lettre" des repères (\type{Score.markFormatter = #format-mark-[…]-letters}) \\
-Le paramètre \type{measure-list} est une liste de ces mesures particulières.\\
-\type{index->string} est une fonction qui prend en paramètre un {\em index} (commençant à \type{0}) et qui renvoie une {\em chaîne de caractères}.\\
-Par défaut, \type{index->string} est la fonction interne \type{index->string-letters} qui renvoie à chaque {\em index} la ou les lettre(s) capitale(s) correspondante(s) de l'alphabet, mais en sautant la lettre~"\type{I}"~:
+\syntax {(def-letters measures [index->string][start-index][show-infos?])}{}
+La fonction associe des lettres aux mesures contenues dans la liste : \type{measures}. Elle convient particulièrement quand \type{Score.markFormatter} est de la forme \type{#format-mark-[…]-letters}.\\
+Les 3 paramètres suivant \type{measures} sont optionnels et se distinguent uniquement par leur type.\\
+\type{index->string} est une fonction de rappel renvoyant une {\em chaîne de caractères}, et prenant en paramètre un {\em index} (un entier positif). L'index est incrémenté de 1 à chaque appel, en commençant par la valeur du paramètre \type{start-index} (\type{0} si \type{start-index} non spécifié).\\
+Par défaut, \type{index->string} est la fonction interne \type{index->string-letters} qui renvoie la ou les lettre(s) capitale(s) correspondante(s) à leur index dans l'alphabet, mais en sautant la lettre~"\type{I}"~:
 \blank[0.3em]
 \hbox{\hspace[lilyindent]"\type{A}"…"\type{H}" puis "\type{J}"…"\type{Z}" puis "\type{AA}"…"\type{AH}" 
 puis "\type{AJ}"…"\type{AZ}" etc…}
@@ -2043,11 +2040,11 @@ L'instruction : \type {#(def-letters '(9 25 56 75 88 106))} donne les correspond
 \stoptable
 \hspace[lilyindent]
 }} % end of \hbox
-Si une lettre était déja définie avant l'appel de \type{def-letters}, la fonction fait précéder la lettre par le caractère "\type{_}". Ceci est surtout nécessaire pour les lettres \type{X} et \type{Y}, qui ont déjà une valeur associée dans {\em Lilypond} (\type{0} et \type{1}). Ces  2 lettres deviendront donc {\em toujours} \type{_X} et \type{_Y}. Un message prévient l'utilisateur du changement, sauf si on met le paramètre \type{show-infos} à la valeur \type{#f}.
+Si une lettre était déja définie avant l'appel de \type{def-letters}, la fonction fait précéder la lettre par le caractère "\type{_}". Ceci est surtout nécessaire pour les lettres \type{X} et \type{Y}, qui ont déjà une valeur associée dans {\em Lilypond} (\type{0} et \type{1}). Ces  2 lettres deviendront donc {\em toujours} \type{_X} et \type{_Y}. Un message prévient l'utilisateur du changement, sauf si on inclut \type{#f} dans les options (paramètre \type{show-infos?}) :
 \startmylily #(def-letters '(9 25 …) #f) \stopmylily
 \blank[0.8em]
 \midaligned{ \tfd ------------}
-\godown[-1em]
+\godown[-1.2em]
 
 %% set-frag is not ready enough (bugs remains). Perhaps in a future version of arranger.ly
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                                                 
@@ -2082,7 +2079,7 @@ Si une lettre était déja définie avant l'appel de \type{def-letters}, la fonc
 Insert dans \type+\global+, des \type+\set Score.skipTypesetting = ##t+ ou \type+##f+,  de manière à ne compiler (et ne montrer) que la musique de la partition se trouvant entre les positions \type+from-pos+ et \type+to-pos+ (utile pour les gros "scores").
 \blank[0.8em]
 \midaligned{ \tfd ------------}
-\godown[-1em]                     
+\godown[-1.2em]                     
 
                      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                              
 \subject{Exporter ses instruments}
@@ -2161,14 +2158,6 @@ global = { s1*1000 }                  %%&\em\tfx{& On prévoit une grande longue
 Voici quelques idées d'organisation pour la création d'un arrangement pour une grosse formation. Quelques fonctions sont ici proposées, mais notez bien qu'elles ne font {\em pas} parties de {\em arranger.ly}. Il faudra recopier leurs definitions si on desire les utiliser.\\
 
 {\tfa\bf→} {\bf Structure des fichiers.}
-%\definesymbol[5][$-$]
-%\startitemize[5, joinedup, intro][margin=\lilyspace]
-%\item init.ily : création de \type{global} et initialisation des instruments (\type{init})
-%\item NOTES.ily : remplissage des musique pour les instruments
-%\item dynamics.ily : création de \type{assocDynList}
-%\item SCORE.ly : le conducteur
-%\item parts : dossiers contenant tous les fichiers séparés pour chaque instrument
-%\stopitemize
 
 \hbox{{\hspace[lilyindent]}
 \starttable[s0|ls2|c|c|]
@@ -2200,41 +2189,36 @@ On pourra alors utiliser dans le code, l'instruction \type{(if (part? 'instru) v
 Dans le code suivant, le texte sera aligné à gauche dans le conducteur et à droite dans la partie d'euphonium :\type{ (rm 'euph 5 (txt "en dehors" UP (if (part? 'score) LEFT RIGHT))) }\\
 
 
-{\tfa\bf→} {\bf Parties séparées : allègement de code - fonctions \type{instru->music}}
+{\tfa\bf→} {\bf Parties séparées : allègement de code - fonction \type{instru->music}}
 \index{obj->music}
 \index{instru->music}
 \\
 Préalable : avoir défini \type{assocDynList} (dans le fichier {\em dynamics.ily})\\
-%\definesymbol[5][-]
-%\startitemize[5, joinedup, intro][margin=\lilyspace]
-%\item Avoir mis dans chaque partie séparées les instruction \type{#(define part 'instru)}, comme expliqué ci-dessus.
-%\item Avoir défini \type{assocDynList}. Voir exemple un peu plus loin.
-%\stopitemize
 \type{instru->music} utilise \type{obj->music}, une fonction qui renvoie la musique associée à un instrument \footnote{\type{(obj->music 'clar)} renvoie \type{clar}}, et la fonction \type{make-clef-set} (définie dans le répertoire {\em Lilypond}, fichier \type{scm/parser-clef.scm}), qui est l'équivalent scheme de \type{\clef}.
 \startmylily
 #(define* (instru->music instru #:optional (clef "treble"))
-    (sim (make-clef-set clef) global (obj->music instru) (add-dyn part)))
+    (sim (make-clef-set clef) global (obj->music instru) (add-dyn instru)))
 \stopmylily
 Les parties séparées en clef de sol, pourront être éditées simplement avec :
-\startmylily \new Staff { $(instru->music 'vlI) \stopmylily
+\startmylily \new Staff { $(instru->music 'vlI) } \stopmylily
 Les autres parties devront spécifier la clef :
 \startmylily
 \new Staff { $(instru->music 'viola "alto") } ;; &\tfx\em{&clef d'ut 3&}&
 \new Staff { $(instru->music 'vlc "bass") } ;; &\tfx\em{&clef de fa&}&
 \stopmylily
 Notez que si vous avez mis en tête de fichier \type{#(define part 'instru)}, comme expliqué dans le paragraphe précédent, on peut remplacer le nom de l'instrument par le mot \type{part} :
-\startmylily \new Staff { $(instru->music part [clef]) \stopmylily
+\startmylily \new Staff { $(instru->music part [clef]) } \stopmylily
 \godown[1em]
 
 \index{split-instru}
 {\tfa\bf→} {\bf Conducteur : gérer 2 instruments sur une même portée - fonction \type{split-instru}}\\
-La fonction ci-dessous permet d'éviter les nuances en double. Elle met toutes les nuances communes en bas de la portée; seules les nuances n'appartenant qu'à la voix du haut se trouveront au dessus de la portée.
+La fonction ci-dessous permet d'éviter les nuances en double. Elle met en un exemplaire les nuances communes en bas de la portée; seules les nuances n'appartenant qu'à la voix du haut se trouveront au dessus de la portée.
 \page
 \startmylily
 #(define* (split-instru instru1 instru2 #:optional (clef "treble"))
    (split                    ; &\tfx\em{& << … \\ … >>&}&
       (sim                   ; &\tfx\em{& << … >> &}&
-         clef
+         (make-clef-set clef)
          global
          dynamicUp           ; &\tfx\em{& nuances au dessus de la portée &}&
          (add-dyn (list 'xor instru1 instru2))
@@ -2248,20 +2232,18 @@ La fonction ci-dessous permet d'éviter les nuances en double. Elle met toutes l
 \blank[0.8em]
 Pour un conducteur avec 3 cors par exemple , on peut utiliser \type{instru->music} et \type{split-instru}~:
 \startmylily
-…
 \new StaffGroup <<
-  \new Staff \with { instumentName =  #"cor 1"
+  \new Staff \with { instumentName = #"cor 1" } 
                  $(instru->music 'corI)
-  \new Staff \with { instumentName = \markup \vcenter { "cor " \column { 2 3 }}}
-                 $(split-instru 'corII 'corIII)
-  >>
-…
+  \new Staff \with { instumentName = 
+                            \markup \vcenter {"cor " \column { 2 3 }}}
+                 $(split-instru 'corII 'corIII) >>
 \stopmylily
 
 À la place de \type{split-instru}, on pourra préférer une fonction \type{part-combine-instru}. Il suffira dans la fonction de remplacer \type{split} par \type{part-combine}.\\
 
-
-{\tfa\bf→} {\bf Complément pour l'utilisation de \type{assocDynList}}\\
+{\tfa\bf→} {\bf Complément pour l'utilisation de \type{assocDynList}}
+\blank[0.6em]
 {\bf-} Utilisation avec création de nouveaux signes de nuances :
 \blank[0.3em]
 \startmylily
@@ -2269,9 +2251,9 @@ pocodim = #(make-dynamic-script (markup #:normal-text #:italic "poco dim"))
 piuf = #(make-dynamic-script (markup #:normal-text #:italic "più"
                                      #:dynamic "f"))
 assocDynList = #(assoc-pos-dyn
-  "1 f / 5 pocodim / 8 mf / (10 4) piuf / 12 fff" all)   % &\tfx\em{& (tous les instuments) &}& 
+  "1 f / 5 pocodim / 8 mf / (10 4) piuf / 12 fff" all)  % &\tfx\em{&(tous les instuments) &}& 
 \stopmylily
-\blank[0.3em]
+\blank[0.7em]
 
 {\bf-} Enlever une nuance et la remplacer par une autre :\\
 Pour mettre, par exemple, \type{ff} mesure 12 à la trompette à la place de \type{fff}, il faut d'abord annuler la précédente avec une nuance "vide", sinon Lilypond nous signale une nuance en double.
@@ -2281,7 +2263,7 @@ assocDynList = #(assoc-pos-dyn
   "1 f / 5 pocodim / 8 mf / 10 piuf / 12 fff" all      ;&\tfx\em{& tous (dont trompette)&}& 
   "12 / 12 ff" 'tp )			              %&\tfx\em{& trompette mes 12 : fff -> ff&}&  
 \stopmylily
-\blank[0.3em]
+\blank[0.7em]
 
 {\bf-} Pour alléger le nombre de nuances d'un conducteur dans, par exemple un grand {\em crescendo} orchestral contenant "\type{cresc - - -}" à chaque instruments, on peut utiliser la fonction \type{part?} décrite ci-dessus, afin que la suppression ne soit effective que dans le conducteur.
 \blank[0.3em]
@@ -2290,16 +2272,17 @@ assocDynList = #(assoc-pos-dyn
  (set! assocDynList (append assocDynList (assoc-pos-dyn
    "15 / 18" '(&\tfx\em{& [list des instruments dont on supprime les nuances mes 15 et 18]&}& )))))
 \stopmylily
-\blank[0.3em]
-{\bf-} On peut définir les positions par des variables (voir fonction \goto{\type{def-letters}}[def-letters]\at{ page}[def-letters]) et les utiliser dans \type{assocDynList} sans se soucier des lettres : {\tfb '} 
-{\tfb `} ou {\tfb ,} à mettre habituellement devant les listes et les symboles.
+\blank[0.7em]
+
+{\bf-} On peut définir les positions par des variables (voir fonction \goto{\type{def-letters}}[def-letters]\at{ page}[def-letters]) et les utiliser dans \type{assocDynList} sans se soucier des caractères {\tfb '} {\tfb `} ou {\tfb ,} à mettre habituellement devant les listes et les symboles.
 \startmylily 
-A = #9
-B = #'(2 8 16)
+A = #9           %&\tfx\em{& un numéro de mesure&}& 
+B = #'(2 8 16)   %&\tfx\em{& des temps à l'intérieur d'une mesure&}& 
 assocDynList = #(assoc-pos-dyn
-      "A p / (A 2 8) mp / (+ A 3) mf / ((+ A 3) 2 8) f" 'instruI
-; =>  "9 p / (9 2 8) mp / 12 mf      / (12 2 8) f"
-      "(cons 18 B) < / (cons 21 B) !"
+       "A p / (A 2 8) mp / (+ A 3) mf / ((+ A 3) 2 8) f" 'instruI
+  ; => "9 p / (9 2 8) mp / 12 mf      / (12 2 8) f"
+       "(cons 18 B) < / (cons 21 B) !" 'instruII
+  ; => "(18 2 8 16) < / (21 2 8 16) !"
 \stopmylily
 
 \stoptitle
