@@ -96,37 +96,49 @@
 
 \midaligned{\bf \underbar Contents}
 \placecontent[criterium=all]
-\title[generalites]{GENERAL POINTS}
-\subject[objectifs]{Basic goals :}
-{\em arranger.ly provide an environment facilitating musical arrangement\footnote{We call musical arrangement, the re-orchestration of an original instrumentation}.}A set of functions will allow a rapid re-orchestration of a piece of music, with a minimum and reusable music encodings.
+\title[generalites]{OVERVIEW}
+\subject[objectifs]{Basic goals}
+{\em arranger.ly provides an environment facilitating musical arrangement.} \footnote{To arrange
+herein means to re-orchestrate an original instrumentation.} A set of functions enables quick
+re-orchestration of a piece of music, using a minimal and reusable music encoding.
+%% TODO: Qu'est-ce qu'un « encodage de musique minimal et réutilisable » ?
 \blank[0.7em]
 
 
-
-Un des aspects principaux de {\em arranger.ly} concerne le repérage d'une position musicale, qui sera basé désormais sur les {\em numéros de mesures}\footnote {Lilypond utilise un système basé sur les {\em moment}s : \type{(ly:make-moment 5/4)} par exemple.}. Les méthodes de travail de l'arrangeur s'en trouveront assouplies car il sera désormais possible de travailler non pas de manière linéaire (mesure par mesure et instrument par instrument) mais plus au fils de ses idées : on s'occupe des instruments qui font le theme, puis ceux qui font l'accompagnement, les basses etc…
+The user typically first declares a list of instruments. {\em arranger.ly} takes care of initializing
+each instrument with empty measures, constructed using
+\type{ly:make-moment}, for instance, \type{(ly:make-moment 5/4)}. The arranger's workflow
+is made more flexible: rather than entering music expressions instrument by instrument in a linear
+fashion, it becomes possible to work as the ideas go by -- first deal with the melody, then accompaniment,
+then the bass, etc.
 \blank[0.7em]
-Typiquement, au départ, l'utilisateur déclare une liste d'instruments, et {\em arranger.ly} se charge lui-même d'initialiser les instruments de cette liste par des mesures à compter.
+The user typically first declares a list of instruments. {\em arranger.ly} takes care of initializing
+each instrument with empty measures. Then, in a single command, the user can insert a music fragment
+in several instruments and positions, as well as \quotation{copy-paste} entire music sections in one
+line of code.
 
-L'utilisateur peut ensuite, en une seule commande, insérer un fragment de musique à plusieurs {\em instruments} à la fois, en plusieurs {\em endroits} à la fois, et {\em «copier-coller »} des sections entières de musique en une seule ligne de code.
+Functions allow for transposing an octave higher,
+%% TODO: "doubler à l'octave" est dur à traduire.
+specifying patterns for repeated rythms or articulations, distributing the notes to various instruments in
+a succession of chords, inverting chords,~\dots, so as never to repeat information.
 
-Des fonctions permettront ensuite, d'octavier ou doubler à l'octave une section de musique, d' utiliser des «patterns» pour des rythmes ou des articulations qui se répètent, d'assigner chaque note d'une série d'accords à des instruments, de renverser les accords etc…, l'objectif étant de ne pas avoir à répéter une information plus d'une fois.
+All these functions can be directly used from Scheme, which makes for lighter syntax (no backslash before
+variable names) and easier editing of instrument lists.
 
-Toutes ces fonctions seront utilisables directement au niveau scheme, ce qui allège la syntaxe (pas de \type{\}  devant les noms de variables, pas de \type{#} devant les numéros de mesures etc …), et rend une manipulation des listes d'instruments plus aisée.
-
-Enfin, une fois l'arrangement fini, une fonction permettra d'exporter éventuellement son code source de la manière  habituelle :
+Once the arrangement is finished, it can be exported to usual LilyPond source:
 \blank[0.3em]
 \startmylily
 flute = {…}
 clar = {…}
-etc…
+…
 \stopmylily
 \godown[-0.3em]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subject {Pré-requis logiciels :}
+\subject{Software dependencies}
 \startitemize[2,joinedup,intro]
-\item Lilypond 2.19 ou supérieur
-\item Le fichier {\em arranger.ly} nécessite les fichiers \type{include} suivants :
+\item You need LilyPond 2.19 or higher.
+\item The file {\em arranger.ly} requires the following \type{include} files:
   \starttabulate[|l|l|,before={\blank[1mm]},after={\blank[1mm]}, indenting=yes]
     \NC {\textbullet \hspace[1] \em chordsAndVoices.ly} \NC\small {(\from[chord])} \NC
     \NR
@@ -142,74 +154,82 @@ etc…
     \NR
   \stoptabulate 
 \stopitemize
-Le plus simple est de mettre tous ces fichiers (7 au total avec {\em arranger.ly})
-dans un même répertoire et d'appeler Lilypond avec l'option \type{-include=monrépertoire}. Seule la ligne suivante est alors à ajouter, en début de son fichier ly :\\
+
+It is easiest to put these 6 files in the same folder alongside with {\em arranger.ly},
+and call LilyPond with option \type{--include=myfolder}. Only the following line should then
+be added at the top of one's \type{.ly} file:
 \myindent\type{\include } \type{"arranger.ly"} % pbs d'espace avec \type{\include "arranger.ly"}
 \godown[-0.3em] %\blank[-0.6cm]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subject{Les 2 préalables à l’utilisation des fonctions}
+\subject{Two prerequisites to using the functions}
 \startitemize[n]
-\item Spécifier une variable \type+\global+ contenant tous les changements de mesure de la partition.\\
-Par ex :
+\item Have all meter changes in a \type{\global} variable, e.g.:
 \startmylily global = { \time 4/4 s1*2 \time 5/8 s8*5*2 \time 3/4 s2.*2 } \stopmylily
-{\em arranger.ly} pourra alors convertir les numéros de mesures en {\em moment} Lilypond. 
-\item Appeler la fonction \goto{\type{init}}[init] décrite \at{page}[init] pour déclarer les noms des {\em instrument}s au parser. Cet appel {\em doit} précéder toute utilisation des fonctions qui vont suivre.
-\stopitemize 
+This enables {\em arranger.ly} to convert all measure numbers to LilyPond moments.
+\item Use the \goto{\type{init}}[init] command described at page \at{page}[init] to declare
+instrument names to the parser. This needs to be placed before any call to the functions
+described below.
+\stopitemize
 \page 
 %%%%%%%%%%%%%%%%%
 
-\subject{Conventions et rappels}
-Dans ce document, nous appellerons {\em instrument} tout
-symbole scheme référençant une {\em musique} Lilypond. \\
-La {\em musique} référencée par un {\em instrument} a basiquement la même
-longueur que \type{\global} et commence en même temps (mesure 1 par défaut, avec parfois, une levée (… une {\em anacrouse})).
-Cependant, plus généralement, dans les fonctions qui vont suivre,
-quand on parlera de {\em musique}, il s'agira d'un fragment qui n'a
-pas de position définie, et que l'on pourra insérer à n'importe quelle
-mesure du morceaux.
+\subject{Conventions and reminders}
+In this document, we shall call {\em instrument} any Scheme symbol referencing
+a LilyPond music expression. The music an instrument points to has the same length
+as \type{\global} and begins at the same time (by default, this is measure 1, with an
+optional upbeat). However, in the following text, {\em music} more generally refers to
+a fragment with indeterminate position, which can be inserted at any measure in the piece.
 
-Comme tout symbole, le nom d'un {\em instrument} sera précédé dans un bloc scheme, du  \hbox{caractère \type{'}}\\
-\myindent ex : \type{'flute}\\
-Dans un bloc Lilypond, il faudrait en plus rajouter un \type+#+\\
-\myindent ex : \type+#'flute+\\
-Le nom seul \type{flute} quant à lui, est, dans un bloc scheme,
-équivalent à \type+\flute+ dans un bloc Lilypond.
+Being a symbol, an instrument is denoted in Scheme using a leading \hbox{single vertical
+quote \type{'}}, e.g. \type{'flute}. In running LilyPond input, it additionally
+needs to be prefixed with a hash sign \type{#} in order to be recognized as a Scheme expression.
+The bare name \type{flute} is equivalently used in Scheme or LilyPond.
 
-Une liste d'{\em instrument}s peut s'écrire, dans un bloc scheme :
+In Scheme code, a list of instruments can be written as either
 
-\startmylily '(flute hautbois clarinette)\stopmylily
-où bien
+\startmylily '(flute oboe clarinet)\stopmylily
 
-\startmylily(list 'flute 'hautbois 'clarinette)\stopmylily
-Une liste de {\em musique}s s'écrira
+or
 
-\startmylily(list flute hautbois clarinette)\stopmylily
-où bien avec un «quasiquote»
+\startmylily(list 'flute 'oboe 'clarinet)\stopmylily
+
+A list of music expressions is written as
+
+\startmylily(list flute oboe clarinet)\stopmylily
+
+or using a so-called \quotation{quasiquote}:
 
 \startmylily 
-`(,flute ,hautbois ,clarinette) ;&\em{& notez bien le `( et non '( &}&
+`(,flute ,hautbois ,clarinette) ;&\em{& note the use of `( instead of '( &}&
 \stopmylily
-{\em arranger.ly} fournit des fonctions utilitaires pour faciliter la manipulation de ces listes. (voir \type{lst}, \type{flat-lst}, et \type{zip})
+
+These lists can be manipulated with ease thanks to {\em arranger.ly}'s utility functions
+(see \type{lst}, \type{flat-lst} and \type{zip}).
 \blank[-0.6cm]                 
 %%%%%%%%%%%%%%%%%%
 
 \reference[init]{}
-\index[init-info]{init}                   
-\subject{Initialisation}
-- La fonction \type{init} ci-dessous doit être appellée \emph{après} la declaration de \type{\global} et \emph{avant} tout appel aux autres fonctions. Elle prend, comme arguments, une liste d'\emph{instrument}s, et optionnellement un entier :
+\index[init-info]{init}
+\subject{}
+- The \type{init} function must be called \emph{after} declaring \type{\global} and
+\emph{before} any call to the other functions. It is passed a list of instruments and
+an optional integer.
+
 \syntax {(init instru-list}{measure1-number)}
-Chaque instrument de la liste est déclaré à Lilypond et initialisé par des silences multi-mesures.\\
-Si on a défini \type{global} par :
+
+Each instrument in the list is declared to LilyPond and filled in with multi-measure rests.
+
+If \type{\global} was defined using:
 \startlily
 global = { s1*20 \time 5/8 s8*5*10 \bar "|."}
 \stoplily
-les 2 lignes de code suivant :
+the following code:
 \startlily
 all = #'(flute clar sax tptte cor tbne basse)
 #(init all)
 \stoplily
-seront équivalentes à :
+is equivalent to
 \startlily
 flute = { R1*20 R8*5*10 } 
 clar = { R1*20 R8*5*10 } 
@@ -220,12 +240,19 @@ tbne = { R1*20 R8*5*10 }
 basse = { R1*20 R8*5*10 }
 \stoplily
 \blank[0.8em]
-- \type{instru-list} peut éventuellement être vide : \type{(init '())}. C'est notamment le cas si on veut utiliser les fonctions arranger.ly, pour l'édition directe de la variable \type+\global+, comme montré dans l'\goto{addendum I}[addendum1], \at{page}[addendum1].\\
-Une fois tous les éléments interférents sur la métrique mis en place dans \type+\global+, on peut alors appeller une 2\high{\itxx ème} fois \type{init} avec maintenant une liste d'intruments non vide.
+
+- \type{instru-list} may be empty: \type{(init '())}. A noteworthy use case
+is direct editing of the \type{\global} variable, as shown in \goto{addendum I}[addendum1]
+at page \at{page}[addendum1].
+
+Once all music events influencing the meter are declared in \type{\global}, \type{init}
+can be called a second time with a non-empty instrument list.
 \page
-- La fonction \type{init} prend en compte pour le comptage des mesures, des adaptations
-manuelles des propriétés (du \type+Score+ ou du \type+Timing+) telles \type+measurePosition+, \type+measureLength+, \type+currentBarNumber+,  ainsi que celles amenées par les commandes \type+\partial+, \type+\cadenzaOn+, \type+\cadenzaOff+.
-Pour un \type+\partial+ en début de morceau, \type{init} ajoute même automatiquement à tous les instruments un silence de la durée du \type+\partial+.
+- To count measures, \type{init} takes into account manual overrides applied to properties
+of the \type{Score} context and the \type{Timing} object, such as \type{measurePosition},
+\type{measureLength}, \type{currentBarNumber}, as well a the \type{\partial}, \type{\cadenzaOn}
+and \type{\cadenzaOff} command. If \type{partial} is placed at the very beginning of the piece,
+\type{init} even adds a rest with same duration as the pickup to all the instruments.
 
 \setupcaptions[location=none]
 \startfiguretext[right][exemple1]{}
@@ -249,6 +276,9 @@ all = #'(flute clar sax tptte cor tbne basse)
 
 \stoplily %\blank[2.1cm]%
 \stopfiguretext
+
+%% TRANSLATING STOPPED HERE.
+
 \index{measure-number->moment}
 On pourra utiliser la fonction interne \type{measure-number->moment} pour vérifier que les positions {\em arranger.ly} et {\em Lilypond} correspondent. Dans cet exemple :
 \startmylily#(display (map measure-number->moment '(1 2 3 4 50)))\stopmylily
