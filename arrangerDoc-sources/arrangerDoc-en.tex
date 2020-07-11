@@ -84,10 +84,10 @@
  %\stopsubsubject
  \stopsubsection
 }
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Début du document %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Start of document %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \starttext
 
-%%%%%% Page de titre
+%%%%%% Title page
 \startstandardmakeup
 \midaligned{\tfd\sc Arranger.ly}
 \blank[2cm]
@@ -101,15 +101,8 @@
 {\em arranger.ly provides an environment facilitating musical arrangement.} \footnote{To arrange
 herein means to re-orchestrate an original instrumentation.} A set of functions enables quick
 re-orchestration of a piece of music, using a minimal and reusable music encoding.
-%% TODO: Qu'est-ce qu'un « encodage de musique minimal et réutilisable » ?
 \blank[0.7em]
-
-
-The user typically first declares a list of instruments. {\em arranger.ly} takes care of initializing
-each instrument with empty measures, constructed using
-\type{ly:make-moment}, for instance, \type{(ly:make-moment 5/4)}. The arranger's workflow
-is made more flexible: rather than entering music expressions instrument by instrument in a linear
-fashion, it becomes possible to work as the ideas go by -- first deal with the melody, then accompaniment,
+One of the main aspects of {\em arranger.ly} concerns the locating system of musical positions, which is  now based on {\em bar numbers}\footnote {Lilypond use a system based on {\em moment}s : \type{(ly:make-moment 5/4)} for example.}.The arranger's workflow is made more flexible : rather than entering music expressions instrument by instrument in a linear fashion, it becomes possible to work as the ideas go by -- first deal with the melody, then accompaniment,
 then the bass, etc.
 \blank[0.7em]
 The user typically first declares a list of instruments. {\em arranger.ly} takes care of initializing
@@ -117,9 +110,7 @@ each instrument with empty measures. Then, in a single command, the user can ins
 in several instruments and positions, as well as \quotation{copy-paste} entire music sections in one
 line of code.
 
-Functions allow for transposing an octave higher,
-%% TODO: "doubler à l'octave" est dur à traduire.
-specifying patterns for repeated rythms or articulations, distributing the notes to various instruments in
+Functions allow for octave transposing and octave doubling, specifying patterns for repeated rhythms or articulations, distributing the notes to various instruments in
 a succession of chords, inverting chords,~\dots, so as never to repeat information.
 
 All these functions can be directly used from Scheme, which makes for lighter syntax (no backslash before
@@ -157,7 +148,7 @@ clar = {…}
 
 It is easiest to put these 6 files in the same folder alongside with {\em arranger.ly},
 and call LilyPond with option \type{--include=myfolder}. Only the following line should then
-be added at the top of one's \type{.ly} file:
+be added at the top of one's \type{.ly} file:\\
 \myindent\type{\include } \type{"arranger.ly"} % pbs d'espace avec \type{\include "arranger.ly"}
 \godown[-0.3em] %\blank[-0.6cm]
 
@@ -167,7 +158,7 @@ be added at the top of one's \type{.ly} file:
 \item Have all meter changes in a \type{\global} variable, e.g.:
 \startmylily global = { \time 4/4 s1*2 \time 5/8 s8*5*2 \time 3/4 s2.*2 } \stopmylily
 This enables {\em arranger.ly} to convert all measure numbers to LilyPond moments.
-\item Use the \goto{\type{init}}[init] command described at page \at{page}[init] to declare
+\item Use the \goto{\type{init}}[init] command described at \at{page}[init] to declare
 instrument names to the parser. This needs to be placed before any call to the functions
 described below.
 \stopitemize
@@ -182,9 +173,11 @@ optional upbeat). However, in the following text, {\em music} more generally ref
 a fragment with indeterminate position, which can be inserted at any measure in the piece.
 
 Being a symbol, an instrument is denoted in Scheme using a leading \hbox{single vertical
-quote \type{'}}, e.g. \type{'flute}. In running LilyPond input, it additionally
-needs to be prefixed with a hash sign \type{#} in order to be recognized as a Scheme expression.
-The bare name \type{flute} is equivalently used in Scheme or LilyPond.
+quote \type{'}}\\
+\myindent ex : \type{'flute}\\
+In running LilyPond input, it additionally needs to be prefixed with a hash sign \type{#} in order to be recognized as a Scheme expression.\\
+\myindent ex : \type+#'flute+\\
+The bare name \type{flute} in Scheme is equivalent to \type{\flute} in LilyPond.
 
 In Scheme code, a list of instruments can be written as either
 
@@ -203,15 +196,14 @@ or using a so-called \quotation{quasiquote}:
 \startmylily 
 `(,flute ,hautbois ,clarinette) ;&\em{& note the use of `( instead of '( &}&
 \stopmylily
-
 These lists can be manipulated with ease thanks to {\em arranger.ly}'s utility functions
 (see \type{lst}, \type{flat-lst} and \type{zip}).
 \blank[-0.6cm]                 
 %%%%%%%%%%%%%%%%%%
 
 \reference[init]{}
-\index[init-info]{init}
-\subject{}
+\index[init-info]{init}                   
+\subject{Initialization}
 - The \type{init} function must be called \emph{after} declaring \type{\global} and
 \emph{before} any call to the other functions. It is passed a list of instruments and
 an optional integer.
@@ -251,7 +243,7 @@ can be called a second time with a non-empty instrument list.
 - To count measures, \type{init} takes into account manual overrides applied to properties
 of the \type{Score} context and the \type{Timing} object, such as \type{measurePosition},
 \type{measureLength}, \type{currentBarNumber}, as well a the \type{\partial}, \type{\cadenzaOn}
-and \type{\cadenzaOff} command. If \type{partial} is placed at the very beginning of the piece,
+and \type{\cadenzaOff} command. If \type{\partial} is placed at the very beginning of the piece,
 \type{init} even adds a rest with same duration as the pickup to all the instruments.
 
 \setupcaptions[location=none]
@@ -262,14 +254,14 @@ and \type{\cadenzaOff} command. If \type{partial} is placed at the very beginnin
 global = { 
   \partial 4 s4
   s1*2
-  %&\em{& mesure &}&3&\em{& : seulement &}&2&\em{& temps&}&
+  %&\em{& measure &}&3&\em{& : only &}&2&\em{& beats&}&
   s4 \set Timing.measurePosition =
                   #(ly:make-moment 3/4)
      s4
-  s1                    %&\em{& mesure &}&4
+  s1                    %&\em{& measure &}&4
   \set Score.currentBarNumber = #50
   %&\em{& \set Timing.currentBarNumber = #&}&50
-  s1                    %&\em{& mesure &}&50&\em{& !&}&
+  s1                    %&\em{& measure &}&50&\em{& !&}&
   \bar "|."  }
 all = #'(flute clar sax tptte cor tbne basse)
 #(init all)
