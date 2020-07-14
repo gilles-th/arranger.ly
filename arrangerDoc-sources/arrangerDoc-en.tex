@@ -748,54 +748,50 @@ La barre oblique \type{/} est optionnelle.
 \page
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subject[agencement]{Agencement d'éléments musicaux}
-Les fonctions suivantes permettent de déclarer ou construire
-de la musique, séquentielle ou simultanée, à partir de musiques, éventuellement extraites
-d'instruments.
+\subject[agencement]{Manipulating musical elements}
+The following functions help manipulating sequential or simultaneous musics, extracted from instruments.
 \godown[2em]
 
 %%%%%%%%%
-\func{em} : «e» de \underbar{e}xtract, «m» de \underbar{m}usic, fonction de référence : \type+\extractMusic+%
-\footnote{Voir {\em extractMusic-doc.pdf} à \from[extractMusic]}
+\func{em} : «e» from \underbar{e}xtract, «m» from \underbar{m}usic, reference function : 
+\type+\extractMusic+
+\footnote{See {\em extractMusic-doc.pdf} at \from[extractMusic]}
 \syntax {(em obj from-pos to-pos}{obj-start-pos)}
-Extrait la musique dans l'intervalle de mesures \type{[from-pos to-pos[}. Un évenement musical sera déclaré éligible s'il commence entre ces 2 bornes, et sa durée sera coupée s'il se prolonge après \type{to-pos}.\\
-\type{obj} est typiquement un {\em instrument}, ou une
-liste d'{\em instrument}s\\
-Si \type{obj} est une {\em musique} ou une
-liste de {\em musique}s, le paramètre \type{obj-start-pos} renseignera la fonction sur la position de \type{obj} dans le morceau (par défaut : au début du morceau).
+Extract music in measures range \type{[from-pos to-pos[}. An event will be kept if it begins between theses two limits, and his length will be cut if it lasts after \type{to-pos}.\\
+\type{obj} is typically an {\em instrument}, or a list of {\em instrument}s.\\
+If \type{obj} is a {\em music} or a {\em music}s list, the \type{obj-start-pos} parameter will inform the function about the position of \type{obj} in the piece (by default : the beginning of the piece).
 
-\type{em} renvoie une liste de {\em musique}s si \type{obj}
-est une liste, ou une {\em musique} dans le cas contraire.\\
-Voir l'exemple de la fonction \type{seq}, ci-après.
+\type{em} returns a {\em music}s list if \type{obj} is a list, or a {\em music} in the opposite.\\
+See an example of use in the following example (function \type{seq}).
 \blank[0.3em]
 \midaligned{ \tfd ------------}
 \godown[1em]
 
 %%%%%%%%%
-\func{seq}(abréviation de {\em \underbar{seq}uential})
+\func{seq}(shortcut of {\em \underbar{seq}uential})
 \syntax {(seq musicI musicII musicIII etc…)}{}
 
-Équivalent à : \type+{ \musicI \musicII \musicIII…}+
+Equivalent to : \type+{ \musicI \musicII \musicIII…}+
 
-Tous les arguments sont des {\em musique}s.\\
-\underbar{\sc\Words Exemple} :
+All arguments are {\em music}s.\\
+\underbar{\sc\Words Example} :
 \startmylily
-(rm 'clar 12 (seq (em 'flute 12 15)         ; &\em{&Double la flûte&}&
-                  #{ r2 r4 #}
-                  (em 'violon '(16 -4) 20)) ; &\em{&Double le violon&}&
-\stopmylily  
+(rm 'clar 12 (seq (em 'flute 12 15)         ; &\em{&Double the flute&}&
+                  #{ r2 r4 #}               ; &\em{&Measure 15&}&
+                  (em 'violon '(16 -4) 20)) ; &\em{&Double the violin&}&
+\stopmylily 
 \blank[0.7em]
 \midaligned{ \tfd ------------}
 \godown[0.4em]
 
 %%%%%%%%%
-\func{sim} (abréviation de {\em \underbar{sim}ultaneous})
+\func{sim} (shortcut of {\em \underbar{sim}ultaneous})
 \syntax {(sim musicI musicII musicIII etc…)}{}
 
-Équivalent de \type+<< \musicI \musicII \musicIII …>>+
+Equivalent to : \type+<< \musicI \musicII \musicIII …>>+ 
 
-Tous les arguments sont des {\em musique}s.\\
-Voir un exemple à la fonction \goto{\type{volta-repeat->skip}}[volta-repeat->skip], \at{page}[volta-repeat->skip]
+All arguments are {\em music}s.\\
+See an example in \goto{\type{volta-repeat->skip} function }[volta-repeat->skip], \at{page}[volta-repeat->skip]
 \blank[1em]
 \midaligned{ \tfd ------------}
 \godown[1em]
@@ -804,8 +800,8 @@ Voir un exemple à la fonction \goto{\type{volta-repeat->skip}}[volta-repeat->sk
 \func{split}
 \syntax {(split musicI musicII)}{}
 
-Équivalent de \type+<< \musicI \\ \musicII >>+\\
-Les 2 arguments sont des {\em musique}s.
+Equivalent to : \type+<< \musicI \\ \musicII >>+\\
+Both arguments are {\em music}s.
 \blank[0.3em]
 \midaligned{ \tfd ------------}
 \godown[1em]
@@ -814,8 +810,8 @@ Les 2 arguments sont des {\em musique}s.
 \func{part-combine}
 \syntax {(part-combine musicI musicII)}{}
 
-Équivalent de \type+\partCombine \musicI \musicII+\\
-Les 2 arguments sont des {\em musique}s.
+Equivalent to : \type+\partCombine \musicI \musicII+\\
+Both arguments are {\em music}s.
 \blank[1em]
 \midaligned{ \tfd ------------}
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -824,15 +820,14 @@ Les 2 arguments sont des {\em musique}s.
 \func{def!}
 \syntax {(def! name}{music)}
 
-Équivalent d'une déclaration Lilypond : %
+Equivalent to a Lilypond déclaration : %
 \type+name = \music+
 
-\type{name} est un {\em instrument}, ou une liste d'{\em instrument}s
-(on applique \type{def!} à chaque instrument de la liste).\\
-\type{music} est une {\em musique} ou une liste de {\em musique}s (\type{music1} est associé à \type{instrument1}, \type{music2} à \type{instrument2} etc…).\\
-Si \type{music} est omis, la valeur par défaut est un
-skip \type+{ s1*… }+ de la longueur de \type{\global}.\\
-Voir l'exemple ci dessous, à la fonction \type{volta-repeat->skip}.
+\type{name} is an {\em instrument}, or an '{\em instrument}s list.
+(\type{def!} is applied to each instruments of the list).\\
+\type{music} is a {\em music} or a {\em music}s list.(\type{music1} is associated to \type{instrument1}, \type{music2} to \type{instrument2} etc…)\\
+If \type{music} is omitted, the default value is a skip (\type{s1{*}}...) with the same length as  \type{\global}.\\
+See example below, in function \type{volta-repeat->skip}.
 \blank[1.2em]
 \midaligned{ \tfd ------------}
 \godown[0.5em]
@@ -841,7 +836,7 @@ Voir l'exemple ci dessous, à la fonction \type{volta-repeat->skip}.
 \func{at}
 \syntax {(at pos mus)}{}
 
-Renvoie \type+{ s1*… \mus }+, avec \type{s1*…} d'une longueur égale à celle du début du morceau à \type+pos+.
+Return \type+{ s1*… \mus }+, with \type{s1*…} with a length from beginning of the piece to \type+pos+.
 
 \blank[1.2em]
 \midaligned{ \tfd ------------}
@@ -851,37 +846,42 @@ Renvoie \type+{ s1*… \mus }+, avec \type{s1*…} d'une longueur égale à cell
 \func{cut-end}
 \syntax {(cut-end obj new-end-pos [start-pos])}{}
 
-Coupe la fin des musiques associées à \type{obj} à la position \type{new-end-pos}.\\
-Utile particulièrement pour la construction de \type{\global} ; voir l'\goto{addendum I}[addendum1]  \at{page}[addendum1]
+Cut, at position \type{new-end-pos}, the musics associated with \type{obj}, keeping only the beginning.\\
+It is  particularly usefull during building process of \type{\global}, as shown in \goto{addendum I}[addendum1] \at{page}[addendum1].
 
 \blank[1.2em]
 \midaligned{ \tfd ------------}
-\godown[0.9em]
+\godown[0.2em]
 
 %%%%%%%%%
 \index{pos-sub}
+\blank[-2em]
 \func{volta-repeat->skip}
 \syntax {(volta-repeat->skip r . alts)}{}
-La fonction renvoie une structure \type+\repeat \volta+ où chaque éléments est un \type{\skip}. Le nombre de répétitions est calculé sur le nombre d'éléments de \type{alts} (ou ignoré s'il est vide).
-Tous les arguments sont des rationnels de la forme p/q où q est une puissance de deux (1 2 4 8…). Ils indiquent la longueur de chaque élément.
+
+Returns a \type+\repeat volta [\alternate]+ structure, where each element is a \type{\skip}.\\
+The repetitions count is computed from the elements count of \type{alts} (or ignored if empty).\\
+All arguments are rational numbers, in the p/q form, with q as a power of two (1 2 4 8…). They indicate the length of each element.
 \startmylily (volta-repeat->skip 9 3 5/4) \stopmylily
-est equivalent à :
-\startmylily \repeat volta 2 s1*9 \alternate { s1*3 s4*5 } \stopmylily  \\
-Les arguments peuvent être aussi alternativement, de type \type{moment}, ce qui permet d'utiliser la fonction interne \type{pos-sub} qui renvoie un \type{moment} égal à la différence de 2 positions.\\
-Par exemple, \type{(pos-sub 24 13)} renvoie la longueur de la musique entre la mesure 13 et la mesure 24 : facile à calculer en 4/4 mais plus difficile si la section comporte de nombreux changements de mesures (genre \type{\time 7/8} puis \type{\time 3/4} etc …).\\
-On peut utiliser la fonction \type{def!} décrite auparavent, pour créer une variable qui contiendra les différentes reprises du morceau :\\
-\underbar{\sc\Words Exemple 5} :
+is equivalent to :
+\startmylily \repeat volta 2 s1*9 \alternate { s1*3 s4*5 } \stopmylily \\
+Alternatively, arguments can be of type \type{moment}. It allows the use of the internal function \type{pos-sub} which returns a \type{moment} equal to the difference of the 2 positions.\\
+For example, \type{(pos-sub 24 13)} returns the length between measure 13 and measure 24 : easy to compute in a 4/4 signature, but more difficult if the section has a lot of measure changes (as \type{\time 7/8} then  \type{\time 3/4} etc …).\\
+You can use the \type{def!} function (described above), to create a variable containing the various repetitions in the piece :\\
+\underbar{\sc\Words Example 5} :
 \blank[0.5em]
 \startmylily 
-(def! 'structure)                ; &\em{&Même longeur que \global&}&  
-(rm-with 'structure              ; &\em{&On ajoute les reprises&}&  
-    5 (volta-repeat->skip 9 3 5/4)                        ; &\em{&(en &}&4/4&\em{&)&}& 
-   29 (volta-repeat->skip (pos-sub 38 29) (* 2 3/4) 3/4)) ; &\em{&(en &}&3/4&\em{&)&}&   
-(def! 'global (sim global structure))  ; &\em{&\global = << \global \structure >>&}&
+(def! 'structure)                ; &\em{&same length as \global&}&  
+(rm-with 'structure              ; &\em{&add repetitions&}&  
+    5 (volta-repeat->skip 9 3 5/4)                        ; &\em{&(in &}&4/4&\em{&)&}& 
+   29 (volta-repeat->skip (pos-sub 38 29) (* 2 3/4) 3/4)) ; &\em{&(in &}&3/4&\em{&)&}&   
+(def! 'global (sim global structure))  ; &\em{&global = << \global \structure >>&}&
 \stopmylily
-\blank
+\blank[2em]
 \midaligned{ \tfd ------------}
 \page  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                     
 \subject[gerer-voix]{Gérer les voix (ajout, extraction)}
 %\footnote{Voir {\em chordsAndVoices-doc.pdf} à \from[chord]} 
