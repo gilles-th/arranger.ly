@@ -529,9 +529,9 @@ Dans toutes les fonctions qui vont suivre, tout argument se terminant par \type 
 \blank[0.8em]
 \midaligned{ \tfd ------------}
 
-\index{copy-to-with-func}
 %%%%%%%%%
 \func{copy-to}
+\index{copy-to-with-func}
 \syntax {(copy-to destination source from-pos to-pos . args)}{}
 Copie \type{source} dans \type{destination} entre les
 positions \type{from-pos} et \type{to-pos}\\
@@ -565,9 +565,9 @@ Enfin, on peut remplacer \type{copy-to} par la fonction \type{(copy-to-with-func
 \blank[1em]
 \midaligned{ \tfd ------------}
 
-\index{copy-out-with-func}
 %%%%%%%%%
 \func{copy-out}
+\index{copy-out-with-func}
 \syntax {(copy-out obj from-pos to-pos where-pos . other-where-pos)}{}
 Recopie la section \type{[from-pos to-pos[} d'un instrument
 ou groupe d'instruments \type{obj}, vers la position \type{where-pos},
@@ -620,9 +620,9 @@ Si un \type{repla} veut utiliser la musique d'une section précédente après mo
 \godown[0.4em]
 
 %%%%%%%%%
+\func{apply-to}
 \index{to-set-func}
 \index{compose}
-\func{apply-to} 
 \syntax{(apply-to obj func from-pos to-pos}{obj-start-pos)}
 Applique la fonction \type{func} à la section \type{[from-pos to-pos[} de \type{obj.}\\
 \type{obj} est une {\em musique}, un {\em instrument}, ou une liste de {\em musique}s ou d' {\em instrument}s.\\
@@ -630,12 +630,12 @@ Le paramètre \type{obj-start-pos} permet de spécifier la position du début de
 \blank[0.5em]
 \underbar{Le paramètre \type{func}} :
 \blank[0.7em]
-- \type{func} est une fonction à 1 seul paramètre de type \type{music}.
+{\tfa -} \type{func} est une fonction à 1 seul paramètre de type {\em musique}.
 "{\em arranger.ly}" en définit un certain nombre sous la forme d'une sous-fonction commençant par \type{set-} : \\
 \type{set-transp}, \type{set-pat}, \type{set-ncopy}, \type{set-note}, \type{set-pitch}, \type{set-notes+}, \type{set-arti}, \type{set-reverse}, \type{set-del-events}, \type{set-chords->nmusics}
 (ces fonctions sont décrites plus loin dans ce document).
 \blank[0.6em]
-- On peut, cependant, facilement créer soi-même des fonctions compatibles \type{apply-to}, avec l'aide d'une fonction "enveloppe" appellée \type{to-set-func}, particulièrement adaptée au changement de propriétés musicales. \type{to-set-func} prend elle-même en paramètre une {\em fonction}, à paramètre 
+{\tfa -} On peut, cependant, facilement créer soi-même des fonctions compatibles \type{apply-to}, avec l'aide d'une fonction "enveloppe" appellée \type{to-set-func}, particulièrement adaptée au changement de propriétés musicales. \type{to-set-func} prend elle-même en paramètre une {\em fonction}, à paramètre 
 musical.\\
 Dans l'exemple suivant, on definit une fonction \type{func} qui, utilisée avec \type{apply-to}, transformera tous les \type{c'} en \type{d'}~:
 \blank[0.3em]
@@ -646,7 +646,7 @@ Dans l'exemple suivant, on definit une fonction \type{func} qui, utilisée avec 
 \stopmylily
 %\crlf % ne marche pas
 \blank[0.3em]
-- On peut également regrouper plusieurs opérations en même temps, en utilisant la fonction \type{compose}~:
+{\tfa -} On peut également regrouper plusieurs opérations en même temps, en utilisant la fonction \type{compose}~:
 \blank[0.3em] 
 \startmylily (compose func3 func2 func1 …) \stopmylily 
 \blank[0.3em]
@@ -654,7 +654,7 @@ ce qui donnera, appliquée à un paramètre \type{music} :
 \blank[0.3em]
 \startmylily (func3 (func2 (func1 music)))\stopmylily
 \blank[0.6em]
-- Revenons aux fonctions de "{\em arranger.ly}" mentionées plus haut, de la forme :
+{\tfa -} Revenons aux fonctions de "{\em arranger.ly}" mentionées plus haut, de la forme :
 \blank[0.3em] 
 \startmylily ((set-func args) music) \stopmylily
 \blank[0.3em]
@@ -710,7 +710,7 @@ Simple raccourci pour :
 etc…
 \stopmylily
 La barre oblique \type{/} est optionnelle.\\
-Un clef {obj-start-pos} peut optionellement spécifier un point de départ diffèrent du début du morceau~:
+Une clef : \type{obj-start-pos} peut optionellement spécifier un point de départ diffèrent du début du morceau~:
 \startmylily
 (x-apply-to obj func pos1 pos2 #:obj-start-pos pos3 …)
 \stopmylily
@@ -725,7 +725,8 @@ Copie la section \type{[from-posn to-posn[} de \type{obj1} dans \type{obj2} et c
 La barre oblique \type{/} est optionnelle.
 \blank
 \midaligned{ \tfd ------------}
-\page
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subject[agencement]{Agencement d'éléments musicaux}
@@ -1025,7 +1026,7 @@ music = { <c e g>-\p <d f b>-. }
 \index{set-note†}
 ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
 \syntax {((set-notes+ newnotes1 [newnotes2…]) music))}{}
-Transforme chaque note de \type{music} en accord, en y insérant la note correspondante dans \type{newnotes…}
+Transforme chaque note de {\em musique} en accord, en y insérant la note correspondante dans \type{newnotes…}
 \\
 \underbar{\sc\Words Exemple} :
 \startmylily
@@ -1811,7 +1812,7 @@ assocDynList = #(assoc-pos-dyn
 %%%%%%%%
 \func{instru-pos-dyn->music}
 \syntax {(instru-pos-dyn->music extract-code assoc-pos-dyn-list)}{}
-Même chose que \type{extract-pos-dyn-str}, ci-dessus, mais la chaîne de retour est convertie à l'aide de  \type{add-dynamics} en une {\em music} de la forme :
+Même chose que \type{extract-pos-dyn-str}, ci-dessus, mais la chaîne de retour est convertie à l'aide de  \type{add-dynamics} en une {\em musique} de la forme :
 \startmylily
 { <>\p s1*4 <>\mf s1*29 <>\ff }
 \stopmylily

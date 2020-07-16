@@ -537,65 +537,59 @@ Dans toutes les fonctions qui vont suivre, tout argument se terminant par \type 
 \hairline
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\title[ListageFonctions]{LISTAGE des FONCTIONS}
+\title[ListageFonctions]{LISTINGS of the FUNCTIONS}
 
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                  
-\subject[copiercoller]{Les fonctions de copier-coller}
+\subject[copiercoller]{Copy-paste functions}
 \blank[-2em]
 %%%%%%%%%
 \func{rm}
 \syntax{(rm obj where-pos repla}{repla-extra-pos obj-start-pos)}
-\type{rm} est décrit à part d'une manière très détaillée à la \at{page}[rm-info].
+\type{rm} is described separately in a very detailed manner \at{page}[rm-info].
 \blank[0.8em]
 \midaligned{ \tfd ------------}
 
-\index{copy-to-with-func}
 %%%%%%%%%
 \func{copy-to}
+\index{copy-to-with-func}
 \syntax {(copy-to destination source from-pos to-pos . args)}{}
-Copie \type{source} dans \type{destination} entre les
-positions \type{from-pos} et \type{to-pos}\\
-\type{destination} peut être un {\em instrument}, ou
-une liste contenant des {\em instrument}s ou des listes d'{\em instrument}s.\\
-\type{source} est un {\em instrument}, une liste d'{\em instrument}s, une {\em musique} ou une liste
-de {\em musique}s\\
-On peut copier plusieurs sections à la suite en spécifiant à chaque fois 
-des nouveaux paramètres sources et positions dans le paramètre \type{args}. On pourra séparer 
-éventuellement chaque section par des barres obliques «diviser» \type{/}
+Copy \type{source} in \type{destination} between positions \type{from-pos} and \type{to-pos}\\
+\type{destination} can be an {\em instrument}, or a list of a mix of {\em instrument}s and lists of {\em instrument}s.\\
+\type{source} is an {\em instrument}, or a list of {\em instrument}s, but also a {\em music} or a list of 
+{\em music}s\\
+You can put after several sections, by specifying new sources and new positions in the parameter optional \type{args}. User can optionally separate each section by a slash \type{/}.
 \startmylily
 (copy-to destination sourceA posA1 posA2 / sourceB posB1 posB2 / etc…)
 \stopmylily
-Si on omet un paramètre \type{source} dans une section, la source de la
-section précédente est prise en compte.
+If you omit the parameter \type{source} in a section, the source of the previous section 
+is taken into account.
 \startmylily
 (copy-to destination source pos1 pos2 / pos3 pos4)
 \stopmylily
-est équivalent à : 
+is equivalent to : 
 \startmylily
 (copy-to destination source pos1 pos2 / source pos3 pos4)
 \stopmylily
-Si \type{source} ne commence pas au début du morceau, on peut spécifier une clef optionnelle \type{#:source-start-pos} de la manière suivante :
+If \type{source} do not begin at the beginning of the piece, then the optional key parameter \type{#:source-start-pos} can be used like that :
 \startmylily
 (copy-to destination source pos1 pos2 #:source-start-pos pos3 / pos4 pos5 …)
 \stopmylily
-Enfin, on peut remplacer \type{copy-to} par la fonction \type{(copy-to-with-func func)} qui appliquera \type{func} à  chaque section copiée. Voir l'utilisation de \type{func} à la fonction \goto{\type{apply-to}}[apply-to], \at{page}[apply-to].
+Finally, user can replace \type{copy-to} by the function \type{(copy-to-with-func func)}, which will apply \type{func} to each copied section. See how to use this feature at the function  \goto{\type{apply-to}}[apply-to], \at{page}[apply-to].
 \startmylily
 ((copy-to-with-func func) destination source pos1 pos2 …)
 \stopmylily
 \blank[1em]
 \midaligned{ \tfd ------------}
 
-\index{copy-out-with-func}
 %%%%%%%%%
 \func{copy-out}
+\index{copy-out-with-func}
 \syntax {(copy-out obj from-pos to-pos where-pos . other-where-pos)}{}
-Recopie la section \type{[from-pos to-pos[} d'un instrument
-ou groupe d'instruments \type{obj}, vers la position \type{where-pos},
-puis éventuellement vers d'autres positions. 
+Copy out the section \type{[from-pos to-pos[} of the instrument or list of instruments \type{obj}, to the position \type{where-pos}, and then eventually to other positions.
 \startmylily
-(copy-out obj from-pos to-pos where-pos1 where-pos2 where-pos3 etc…)
+(copy-out obj from-pos to-pos where-pos1 where-pos2 where-pos3 etc...)
 \stopmylily
-On peut remplacer \type{copy-out} par la fonction \type{(copy-out-with-func func)} qui appliquera \type{func} à  chaque section copiée. Voir l'utilisation de \type{func} à la fonction \goto{\type{apply-to}}[apply-to], \at{page}[apply-to].
+User can replace \type{copy-out} by the function \type{(copy-out-with-func func)}, which will apply \type{func} to each copied section. See how to use this feature at the function  \goto{\type{apply-to}}[apply-to], \at{page}[apply-to].
 \startmylily
 ((copy-out-with-func func) obj from-pos to-pos where-pos …)
 \stopmylily
@@ -606,7 +600,7 @@ On peut remplacer \type{copy-out} par la fonction \type{(copy-out-with-func func
 \func{x-rm}
 \syntax {(x-rm obj replacement pos1 pos2 … posn)}{}
 
-Simple raccourci pour :
+Simple shortcut for :
 \startmylily
 (rm obj pos1 replacement)
 (rm obj pos2 replacement)
@@ -621,77 +615,82 @@ Simple raccourci pour :
 \func{rm-with} 
 \syntax {(rm-with obj pos1 repla1 / pos2 repla2 / pos3 repla3 …)}{}
 
-Raccourci pour : 
+Shortcut for : 
 
 \startmylily
 (rm obj pos1 repla1)
 (rm obj pos2 repla2)
 etc…
 \stopmylily
-
-La barre oblique «diviser» \type{/} permet de diviser l'instruction en sections mais est optionnelle.\\
-%Si \type{repla}{\em n} utilise de la musique modifiée dans une section précédente, il est possible %d'utiliser la fonction scheme \type{delay}, par exemple de la manière suivante (voir fonction \type{em} %%\at{page}[em]):
-Si un \type{repla} veut utiliser la musique d'une section précédente après modification , il est possible d'utiliser conjointement, la fonction scheme \type{delay} et la fonction \type{em} de la \at{page}[em]~:
+The slash \type{/} that split the instruction is optional.\\
+If a \type{repla}{\em n} want to use music of a previous section, once modified, please use the scheme function \type{delay} and the function \type{em} of the \at{page}[em] in the following way~:
 \startmylily
-(delay (em obj from-pos to-pos)) ; &\tfx\em{&Extrait la musique de obj déjà modifiée&}&
-\stopmylily
+(delay (em obj pos1 …)) ; &\tfx\em{&Extract obj music after it is modified&}&
+\stopmylily 
 \blank[0.8em]
 \midaligned{ \tfd ------------}
 \godown[0.4em]
 
 %%%%%%%%%
+\func{apply-to}
 \index{to-set-func}
 \index{compose}
-\func{apply-to} 
 \syntax{(apply-to obj func from-pos to-pos}{obj-start-pos)}
-Applique la fonction \type{func} à la section \type{[from-pos to-pos[} de \type{obj.}\\
-\type{obj} est une {\em musique}, un {\em instrument}, ou une liste de {\em musique}s ou d' {\em instrument}s.\\
-Le paramètre \type{obj-start-pos} permet de spécifier la position du début de \type{obj}, si celle-ci est différente de celle du morceau.
+Apply \type{func} to music of \type{obj} inside section \type{[from-pos to-pos[}.\\
+\type{obj} is a {\em musique}, an {\em instrument}, or a list of {\em musique}s or {\em instrument}s.\\ 
+The \type{obj-start-pos} parameter allows user to specify the starting position of \type{obj} when  different from the whole piece.
 \blank[0.5em]
-\underbar{Le paramètre \type{func}} :
+\underbar{The parameter \type{func}} :
 \blank[0.7em]
-- \type{func} est une fonction à 1 seul paramètre de type \type{music}.
-"{\em arranger.ly}" en définit un certain nombre sous la forme d'une sous-fonction commençant par \type{set-} : \\
-\type{set-transp}, \type{set-pat}, \type{set-ncopy}, \type{set-note}, \type{set-pitch}, \type{set-notes+}, \type{set-arti}, \type{set-reverse}, \type{set-del-events}, \type{set-chords->nmusics}
-(ces fonctions sont décrites plus loin dans ce document).
+
+{\tfa -} \type{func} is a function with only one parameter of type \type{music}.\\
+"{\em arranger.ly}" defines a number of such function, in the form of a sub-function whose name begins  with \type{set-}~:\\
+\type{set-transp}, \type{set-pat}, \type{set-ncopy}, \type{set-note}, \type{set-pitch}, \type{set-notes+}, \type{set-arti}, \type{set-reverse}, \type{set-del-events}, \type{set-chords->nmusics}.
+(These functions are described later in this document).
 \blank[0.6em]
-- On peut, cependant, facilement créer soi-même des fonctions compatibles \type{apply-to}, avec l'aide d'une fonction "enveloppe" appellée \type{to-set-func}, particulièrement adaptée au changement de propriétés musicales. \type{to-set-func} prend elle-même en paramètre une {\em fonction}, à paramètre 
-musical.\\
-Dans l'exemple suivant, on definit une fonction \type{func} qui, utilisée avec \type{apply-to}, transformera tous les \type{c'} en \type{d'}~:
+
+{\tfa -} You can, however, easily create your own functions, compatible \type{apply-to}, with the help of a "wrapper" function called \type{to-set-func}, particularly adapted to changing musical properties. \type{to-set-func} takes itself in parameter, a {\em function} with musical parameter.\\
+In the following example, we define a function \type{func} which, when used with \type{apply-to}, will transform all \type{c'} into \type{d'}.
 \blank[0.3em]
+
 \startmylily
 (define func (to-set-func (lambda(m) 
                (if (equal? (ly:music-property m 'pitch #f) #{ c' #}) 
                  (ly:music-set-property! m 'pitch #{ d' #})))))
 \stopmylily
-%\crlf % ne marche pas
+%\crlf % don't work
 \blank[0.3em]
-- On peut également regrouper plusieurs opérations en même temps, en utilisant la fonction \type{compose}~:
+{\tfa -} You can also group several operations together at the same time, using the \type{compose} function~:
 \blank[0.3em] 
 \startmylily (compose func3 func2 func1 …) \stopmylily 
 \blank[0.3em]
-ce qui donnera, appliquée à un paramètre \type{music} :
+…which will result, when applied to a \type{music} parameter, to :
 \blank[0.3em]
 \startmylily (func3 (func2 (func1 music)))\stopmylily
 \blank[0.6em]
-- Revenons aux fonctions de "{\em arranger.ly}" mentionées plus haut, de la forme :
+{\tfa -} Let's go back to the functions of "{\em arranger.ly}" mentioned earlier, functions of the form :
 \blank[0.3em] 
 \startmylily ((set-func args) music) \stopmylily
 \blank[0.3em]
-Pendant l'appel de \type{apply-to}, tous les arguments \type{args} de la sous-fonction \type{set-func} restent identiques et fixés pour tous les instruments contenus dans \type{obj}. Or, il est dans certain cas souhaitable que ces arguments soient au contraire, personnalisables à chaque instrument.\\ Cela sera possible, à la condition d'adopter une nouvelle syntaxe pour l'argument \type{func} de \type{apply-to}, qui sera alors défini comme une paire, avec en 1\high{er} element, le nom de la sous-fonction, et en 2\high{nd}, une liste, composée des arguments correspondant à chaque instrument.
+During the call of \type{apply-to}, all arguments of the sub-function \type{set-func} remain the same and fixed for all instruments contained in \type{obj}. 
+However, it is in certain cases desirable that these arguments are, on the contrary, customizable for each instrument.\\
+This will be possible, provided that a new syntax is adopted for the argument \type{func} of \type{apply-to}, which will then be defined as a pair, with in 1\high{st} element, the name of the sub-function, and in 2\high{nd}, a list, composed with the arguments corresponding to each instrument.
+
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\type{func} devient : \inframed{\type{(cons set-func (list args-instrument1 args-instrument2 …))}}
-\blank[0.4em]{args-instrument} est soit un élément unique soit une liste, en fonction du nombre de paramètres requis par \type{set-func}.
+\type{func} becomes : \inframed{\type{(cons set-func (list args-instrument1 args-instrument2 …))}}
+\blank[0.4em]
+Each \type{args-instrument} of the list is either a single element or either a list itself, depending on the number of parameters required by \type{set-func}.
 \blank[0.3em]
-L'exemple 5 ci-dessous, copie des patterns sur 3 mesures puis change la hauteur des notes de la
-\blank[0.3em] 
-2\high{ème} mesure.
-\blank[0.3em]
-On utilise pour cela 3 fonctions qui sont vues plus tard :
+Example 5 below, copies patterns for 3 measures and then changes the pitch of the notes in
+\blank [0.3em] % the \high below need Y space
+ the 2\high{nd} measure.
+\blank [0.3em]
+
+This is done using 3 functions that will be seen later :
 \startitemize[5,standard,intro][margin=\lilyspace]
-\item La fonction \goto{\type{fill}}[fill] \at{page}[fill] (pattern de {\em musique}s)
-\item La fonction \goto{\type{set-pitch}}[set-pitch] \at{page}[set-pitch], qui attend 1 seul paramètre, de type {\em musique}.
-\item La fonction \goto{\type{chords->nmusics}}[chords->nmusics] \at{page}[chords->nmusics], qui retourne une liste de \type{n} éléments de type …~{\em musique} justement.
+\item The \goto{\type{fill} function}[fill] \at{page}[fill] ({\em music}s patterns)
+\item The \goto{\type{set-pitch} function}[set-pitch] \at{page}[set-pitch]. It waits for a single parameter, of type {\em music}.
+\item The \goto{\type{chords->nmusics} function}[chords->nmusics] \at{page}[chords->nmusics]. It returns a list of \type{n} elements that are just of type …~{\em music}.
 \stopitemize
 
 \blank[1.5em]
@@ -723,14 +722,14 @@ chords = \relative c' {
 \func{x-apply-to}
 \syntax {(x-apply-to obj func from-pos1 to-pos1
               / from-pos2 to-pos2 /…)}{} 
-Simple raccourci pour :
+Simple shortcut for :
 \startmylily
 (apply-to obj func from-pos1 to-pos1)
 (apply-to obj func from-pos2 to-pos2)
 etc…
 \stopmylily
-La barre oblique \type{/} est optionnelle.\\
-Un clef {obj-start-pos} peut optionellement spécifier un point de départ diffèrent du début du morceau~:
+The slash \type{/} is optional.\\
+A key : \type{obj-start-pos} can optionally specify a starting point that differs from the beginning of the song~:
 \startmylily
 (x-apply-to obj func pos1 pos2 #:obj-start-pos pos3 …)
 \stopmylily
@@ -739,10 +738,10 @@ Un clef {obj-start-pos} peut optionellement spécifier un point de départ diff�
 \godown[1.5em]
 
 %%%%%%%%%
-\func{xchg-music} (raccourci de "e\underbar{xch}ange music" : échanger la musque)
+\func{xchg-music} (shortcut of "e\underbar{xch}ange music")
 \syntax {(xchg-music obj1 obj2 from-pos1 to-pos1 / from-pos2 to-pos2 /…)}{}
-Copie la section \type{[from-posn to-posn[} de \type{obj1} dans \type{obj2} et celle de \type{obj2} dans \type{obj1}.\\
-La barre oblique \type{/} est optionnelle.
+Copy \type{[from-posn to-posn[} section from \type{obj1} to \type{obj2}, and the one from \type{obj2} to \type{obj1}.\\
+The slash \type{/} is optional.
 \blank
 \midaligned{ \tfd ------------}
 \page
