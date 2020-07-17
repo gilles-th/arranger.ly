@@ -60,7 +60,7 @@
 \define[2]\syntax
 {% display => syntax : #1 #2
 \blank
-\hbox{\hspace[lilyindent]{\em {\small $\triangleright$} syntaxe }{: }% 
+\hbox{\hspace[lilyindent]{\em {\small $\triangleright$} syntax }{: }% 
 \doifemptyelse{#2}%
 {\inframed{\type{#1}}}%
 {\vcenter\framed[location=middle, width=fit, height=fit]{%% \inframed doesn't center vertically :-(
@@ -882,19 +882,19 @@ You can use the \type{def!} function (described above), to create a variable con
 
 
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                     
-\subject[gerer-voix]{Gérer les voix (ajout, extraction)}
+\subject[gerer-voix]{Managing voices (addition, extraction )}
 %\footnote{Voir {\em chordsAndVoices-doc.pdf} à \from[chord]} 
-Voir aussi {\em chordsAndVoices-doc.pdf} à \from[chord]
+See also {\em chordsAndVoices-doc.pdf} at \from[chord]
 \blank[-1em]
 %%%%%%%%%
 \func{voice} 
 \syntax {(voice n music)}{}
 \index{set-voice}
-ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
+or : (2\high{nd} equivalent form, to be used with \goto{\type{apply-to}}[apply-to])
 \syntax {((set-voice n) music)}{}
-Extrait la voix \type{n} dans une musique à plusieurs voix simultanées.\\ 
-Si \type+music = << { a b } \\ { c d } >>+,\\ le code
-\type+(voice 2 music)+ donnera \type+{ c d }+
+Extract the voice \type{n}, in a music with several simultaneous voices.\\
+If \type+music = << { a b } \\ { c d } >>+, the code :\\
+\type+(voice 2 music)+ will result to : \type+{ c d }+
 
 \blank
 \midaligned{ \tfd ------------}\\
@@ -903,11 +903,11 @@ Si \type+music = << { a b } \\ { c d } >>+,\\ le code
 \func{replace-voice} 
 \syntax {(replace-voice n music repla)}{}
 \index{set-replace-voice}
-ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
+or : (2\high{nd} equivalent form, to be used with \goto{\type{apply-to}}[apply-to])
 \syntax {((set-replace-voice n repla) music)}{}
-Remplace, dans une musique à plusieurs voix simultanées, la voix \type{n}.\\ 
-Si \type+music = << { a b } \\ { c d } >>+,\\ le code
-\type+(replace-voice 2 music #{ f g #})+ donnera \type+<< { a b } \\ { f g } >>+
+Replace, in a simultaneous music, the voice \type{n}.\\
+If \type+music = << { a b } \\ { c d } >>+, the code :\\
+\type+(replace-voice 2 music #{ f g #})+ will result to : \type+<< { a b } \\ { f g } >>+
 
 \blank
 \midaligned{ \tfd ------------}\\
@@ -915,30 +915,29 @@ Si \type+music = << { a b } \\ { c d } >>+,\\ le code
 %%%%%%%%%
 \func{dispatch-voices}
 \syntax {(dispatch-voices obj where-pos music-with-voices}{voices-extra-pos obj-start-pos)} 
-\underbar{\sc\Words Exemple} :
+\underbar{\sc\Words Example} :
 \startlily music = << { c2 d } \\ { e2 f } \\ { g2 b } >> \stoplily 
-Le code :
-\startlily (dispatch-voices '(basson clarinette (hautbois flute)) 8 music) \stoplily 
-produira, à la mesure 8, l'assignement suivant : 
+The code :
+\startlily (dispatch-voices '(bassoon clarinet (oboe flute)) 8 music) \stoplily 
+will produce, measure 8, the following assignment : 
 \starttabulate[|l|l|c|l|]
-    \NC\myindent\NC {\type{'basson}}\NC $\leftarrow$ \NC \type+ { c2 d } +
+    \NC\myindent\NC {\type{'bassoon}}\NC $\leftarrow$ \NC \type+ { c2 d } +
     \NR
-    \NC\myindent\NC {\type{'clarinette}} \NC $\leftarrow$ \NC \type+ { e2 f  } +
+    \NC\myindent\NC {\type{'clarinet}} \NC $\leftarrow$ \NC \type+ { e2 f  } +
     \NR
-    \NC\myindent\NC {\type{'hautbois}} \NC $\leftarrow$ \NC \type+ { g2 b } +
+    \NC\myindent\NC {\type{'oboe}} \NC $\leftarrow$ \NC \type+ { g2 b } +
     \NR
     \NC\myindent\NC {\type{'flute}} \NC $\leftarrow$ \NC \type+ { g2 b } +
     \NR
 \stoptabulate 
-
-Voir \in{la fonction \type{rm}}[rm-info] (\at{page}[rm-info]) pour la signification des arguments optionnels
+See \in{la fonction \type{rm}}[rm-info] (\at{page}[rm-info]) for the signification of the optional  arguments.
 
 \blank
 \midaligned{ \tfd ------------}
 
 %%%%%%%%%
 \hairline
-Les fonctions qui vont suivre sont toutes créées, au niveau des paramètres, sur le même modèle. Chacunes d'elles permettent juste d'obtenir un type de musique simultanée particulier :
+The following functions are all created, at the parameter level, on the same model. Each of them just allows to obtain a particular type of simultaneous music :
 \starttabulate[|l|l|c|l|]
     \NC\myindent\NC {\type{add-voice1/add-voice2}}\NC $\rightarrow$ \NC \type+ << \voiceI \\ \voiceII >> +
     \NR
@@ -953,19 +952,18 @@ Les fonctions qui vont suivre sont toutes créées, au niveau des paramètres, s
 \func{add-voice1, add-voice2}{}
 \syntax{(add-voice1 obj where-pos new-voice}{voice-start-pos to-pos obj-start-pos)}        
 \syntax{(add-voice2 obj where-pos new-voice}{voice-start-pos to-pos obj-start-pos)}
+The music of each {\em instrument}, is replaced at the \type{where-pos} position with 
+\startmylily << [existing music] \\ new-voice >>  &\rm{&for&}& add-voice2 \stopmylily
+and with :
+\startmylily << new-voice \\ [existing music] >>  &\rm{&for&}& add-voice1&\rm{&.&}& \stopmylily
 
-La musique de chaque {\em instrument}, est remplacée à la position \type{where-pos} par : 
-\startmylily << [musique existante] \\ new-voice >>  &\rm{&pour&}& add-voice2 \stopmylily
-et par
-\startmylily << new-voice \\ [musique existante] >>  &\rm{&pour&}& add-voice1&\rm{&.&}& \stopmylily
+\type{obj} is an {\em instrument} or a list of {\em instrument}s
 
-\type{obj} est un {\em instrument} ou une liste d'{\em instrument}s
-
-\type{new-voice} est une {\em musique} ou une liste de {\em musique}s.\\
-Utiliser \type{voice-start-pos}, si \type{new-voice} commence avant \type{where-pos}.\\
-Utiliser \type{to-pos} si vous voulez stopper le remplacement avant la fin de \type{new-voice}.\\ 
-Utiliser \type{obj-start-pos} si \type{obj} ne commence pas au début de la pièce (typiquement
-la mesure~1,~voir la \at{fonction \type{init} page}[init]).
+\type{new-voice} is a {\em music} or a list of {\em music}s.\\
+Use \type{voice-start-pos}, if \type{new-voice} begins before \type{where-pos}.\\
+Use \type{to-pos} if tou want to stop the replacement before the end of \type{new-voice}.\\ 
+Use \type{obj-start-pos} if \type{obj} doesn't begin to the beginning of the piece (typically  
+measure~1,~see \at{\type{init} function, page}[init]).
 
 \blank
 \midaligned{ \tfd ------------}
@@ -975,9 +973,9 @@ la mesure~1,~voir la \at{fonction \type{init} page}[init]).
 \func{merge-in}
 \syntax{(merge-in obj where-pos new-voice}{voice-start-pos to-pos obj-start-pos)}
 
-La musique de \type{obj} est remplacée à la mesure \type{where-pos} par : 
+music of \type{obj} is replaced , measure \type{where-pos}, by : 
 \startmylily << new-voice [existing music] >> \stopmylily
-Pour les paramètres optionnels, voir ci-dessus (\type{add-voice1}).
+For optional parameters, see above (\type{add-voice1}).
 \blank[1em]
 \midaligned{ \tfd ------------}
 \godown[0.8em]
@@ -985,14 +983,14 @@ Pour les paramètres optionnels, voir ci-dessus (\type{add-voice1}).
 %%%%%%%%%
 \func{merge-in-with}
 \syntax {(merge-in-with obj pos1 music1 / pos2 music2 / pos3 music3 …)}{}
-est un raccourci pour :
+is a shortcut for :
 \startmylily 
 (merge-in obj pos1 music1)
 (merge-in obj pos2 music2)
 (merge-in obj pos3 music3)	
 …
 \stopmylily
-La barre oblique \type{/} est optionnelle
+The slash \type{/} is optionnal
 \blank
 \midaligned{ \tfd ------------}
 \godown[0.8em]
@@ -1001,12 +999,11 @@ La barre oblique \type{/} est optionnelle
 \func{combine1, combine2}{}
 \syntax{(combine1 obj where-pos new-voice}{voice-start-pos to-pos obj-start-pos)}        
 \syntax{(combine2 obj where-pos new-voice}{voice-start-pos to-pos obj-start-pos)}
-
-La musique de chaque {\em instrument}, est remplacée à la position \type{where-pos} par : 
-\startmylily \partCombine [musique existante] \new-voice  &\rm{&pour&}& combine2 \stopmylily
-et par
-\startmylily \partCombine \new-voice [musique existante]  &\rm{&pour&}& combine1&\rm{&.&}& \stopmylily
-\\Voir la fonction \type{add-voice} en haut de la page, pour les paramètres.
+music of each {\em instrument}, is replaced, at  \type{where-pos} position, by :  
+\startmylily \partCombine [existing music] \new-voice  &\rm{&for&}& combine2 \stopmylily
+and by
+\startmylily \partCombine \new-voice [existing music]  &\rm{&for&}& combine1&\rm{&.&}& \stopmylily
+\\See \type{add-voice} function in the top of this page, for optional parameters.
 \blank[1em]
 \midaligned{ \tfd ------------}
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1017,7 +1014,7 @@ et par
 \func{note}
 \syntax {(note n [m p …] music)}{}
 \index{set-note}
-ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
+or : (2\high{nd} equivalent form, to be used with \goto{\type{apply-to}}[apply-to])
 \syntax {((set-note n [m p …]) music)}{}
 Extrait la n\high{\itxx ième} note de chaque accord.\\
 Si d'autres nombres sont spécifiés, (\type{m}, \type{p} …), \type{note}
@@ -1041,7 +1038,7 @@ music = { <c e g>-\p <d f b>-. }
 \func{notes+}
 \syntax {(notes+ music newnotes1 [newnotes2…])}{}
 \index{set-note†}
-ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
+or : (2\high{nd} equivalent form, to be used with \goto{\type{apply-to}}[apply-to])
 \syntax {((set-notes+ newnotes1 [newnotes2…]) music))}{}
 Transforme chaque note de \type{music} en accord, en y insérant la note correspondante dans \type{newnotes…}
 \\
@@ -1099,7 +1096,7 @@ Les arguments optionnels disponibles, sont les mêmes que \goto{la fonction \typ
 \func{reverse-chords}  
 \syntax {(reverse-chords n music}{strict-comp?)}
 \index{set-reverse}
-ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
+or : (2\high{nd} equivalent form, to be used with \goto{\type{apply-to}}[apply-to])
 \syntax {((set-reverse n [strict-comp?]) music)}{}
 Renverse \type{n} fois les accords contenus dans \type{music}.\\
 La note déplacée est octaviée autant de fois qu'il est nécessaire pour que sa hauteur soit supérieure (inférieure si \type{n<0}) à la note qui la précède.\\
@@ -1181,7 +1178,7 @@ en une {\em musique} simultanée \type+<<{a b} \\ {c d}>>+
 \func{chords->nmusics} 
 \syntax {(chords->nmusics n music)}{}
 \index{set-chords->nmusics}
-ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
+or : (2\high{nd} equivalent form, to be used with \goto{\type{apply-to}}[apply-to])
 \syntax {((set-chords->nmusics n) music)}{}
 
 Transforme une séquence d'accords en une {\em liste} de %
@@ -1293,7 +1290,7 @@ La syntaxe 2 peut s'utiliser de la manière suivante :
 %%%%%%%%%
 \func{octave}
 \syntax {(octave n obj)}{}
-ou : (2\high{ème} forme équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
+or : (2\high{nd} equivalent form, to be used with \goto{\type{apply-to}}[apply-to])
 \index{set-octave}
 \syntax {((set-octave n) obj)}{}
 
@@ -1506,7 +1503,7 @@ Idem que pour la fonction \type{fill} ci-dessus mais produit des \type{\repeat p
 %%%%%%%%%
 \func{tweak-notes-seq} : pattern de {\em notes}
 \syntax {(tweak-notes-seq n-list music)}{} 
-ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
+or : (2\high{nd} equivalent form, to be used with \goto{\type{apply-to}}[apply-to])
 \index{set-tweak-notes-seq}
 \syntax {((set-tweak-notes-seq n-list) music)}{}
 \type{music} est une musique contenant des notes.\\
@@ -2023,7 +2020,7 @@ permet, utilisée avec la fonction \type{set-del-events}, d'effacer toutes les n
 \func{n-copy}
 \syntax {(n-copy n music)}{}
 \index{set-ncopy}
-ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
+or : (2\high{nd} equivalent form, to be used with \goto{\type{apply-to}}[apply-to])
 \syntax {((set-ncopy n) music)}{}
 Copie \type{n} fois \type{music}.
 \blank[0.3em]

@@ -876,7 +876,7 @@ Voir aussi {\em chordsAndVoices-doc.pdf} à \from[chord]
 ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
 \syntax {((set-voice n) music)}{}
 Extrait la voix \type{n} dans une musique à plusieurs voix simultanées.\\ 
-Si \type+music = << { a b } \\ { c d } >>+,\\ le code
+Si \type+music = << { a b } \\ { c d } >>+, le code :\\
 \type+(voice 2 music)+ donnera \type+{ c d }+
 
 \blank
@@ -889,7 +889,7 @@ Si \type+music = << { a b } \\ { c d } >>+,\\ le code
 ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
 \syntax {((set-replace-voice n repla) music)}{}
 Remplace, dans une musique à plusieurs voix simultanées, la voix \type{n}.\\ 
-Si \type+music = << { a b } \\ { c d } >>+,\\ le code
+Si \type+music = << { a b } \\ { c d } >>+, le code :\\
 \type+(replace-voice 2 music #{ f g #})+ donnera \type+<< { a b } \\ { f g } >>+
 
 \blank
@@ -897,7 +897,7 @@ Si \type+music = << { a b } \\ { c d } >>+,\\ le code
 
 %%%%%%%%%
 \func{dispatch-voices}
-\syntax {(dispatch-voices obj where-pos music-with-voices}{voices-extra-pos obj-start-pos)} 
+\syntax {(dispatch-voices obj where-pos music-with-voices}{voices-extra-pos obj-start-pos)}
 \underbar{\sc\Words Exemple} :
 \startlily music = << { c2 d } \\ { e2 f } \\ { g2 b } >> \stoplily 
 Le code :
@@ -989,7 +989,7 @@ La musique de chaque {\em instrument}, est remplacée à la position \type{where
 \startmylily \partCombine [musique existante] \new-voice  &\rm{&pour&}& combine2 \stopmylily
 et par
 \startmylily \partCombine \new-voice [musique existante]  &\rm{&pour&}& combine1&\rm{&.&}& \stopmylily
-\\Voir la fonction \type{add-voice} en haut de la page, pour les paramètres.
+\\Voir la fonction \type{add-voice} en haut de la page, pour les paramètres optionnels.
 \blank[1em]
 \midaligned{ \tfd ------------}
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
