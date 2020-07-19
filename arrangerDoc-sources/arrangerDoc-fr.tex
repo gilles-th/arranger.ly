@@ -1002,16 +1002,13 @@ et par
 \index{set-note}
 ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
 \syntax {((set-note n [m p …]) music)}{}
-Extrait la n\high{\itxx ième} note de chaque accord.\\
-Si d'autres nombres sont spécifiés, (\type{m}, \type{p} …), \type{note}
-formera des accords, en recherchant dans l'accord d'origine, la note de rang spécifié par ce nombre.
-
-S'il n'y a pas au moins une note correspondante à un des nombres, \type{note} renvoie la dernière note de l'accord.\\
+Extrait la n\high{\itxx ième} note de chaque accord (dans un ordre identique à celui du fichier source).\\
+Si d'autres nombres sont spécifiés, (\type{m}, \type{p} …), \type{note} formera des accords, en recherchant dans l'accord d'origine, la note correspondante à chacun de ces nombres.\\
+Si aucune correspondance n'est trouvée, \type{note} renvoie la dernière note de l'accord.\\ 
 
 \underbar{\sc\Words Exemple} :
 \startmylily
 music = { <c e g>-\p <d f b>-. }
-…
 (note 1 music)   &$\Longrightarrow$& { c-\p d-. }
 (note 2 3 music) &$\Longrightarrow$& { <e g>-\p <f b>-. }
 (note 4 music)   &$\Longrightarrow$& { g-\p b-. }
@@ -1026,14 +1023,14 @@ music = { <c e g>-\p <d f b>-. }
 \index{set-note†}
 ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
 \syntax {((set-notes+ newnotes1 [newnotes2…]) music))}{}
-Transforme chaque note de {\em musique} en accord, en y insérant la note correspondante dans \type{newnotes…}
-\\
+Transforme chaque note de \type{music} en accord, et y insère la note des \type{newnotes}  correspondante.\\
+Un \type{\skip} dans \type{newnotes} laisse la note originale inchangée.\\
+
 \underbar{\sc\Words Exemple} :
 \startmylily
-music  = {c'4 b <e c'>2}
-newnotes = {e d c}	
-…
-(notes+ music newnotes) &$\Longrightarrow$& {<e c'>4 <d b> <c e c'>2}
+music = { c'4  b  <g c'>2  c'  c' }
+notes = { e  <d f>  e      s   c  }	
+(notes+ music notes) &$\Longrightarrow$& { <e c'>4 <d f b> <e g c'>2 c' <c c'> }
 \stopmylily
 \blank[0.9em]
 \midaligned{ \tfd ------------}
@@ -1044,7 +1041,8 @@ newnotes = {e d c}
 \syntax {(add-notes obj where-pos newnotes1 [newnotes2]…[obj-start-pos])}{}
 
 Même chose que \type{notes+} mais appliquée cette fois-ci à partir d'une position \type{where-pos} donnée.\\
-\type{obj} peut être ici, un {\em instrument}, une liste d'{\em instrument}s, une {\em musique} ou une liste de {\em musique}s. Si à la fois, \type{newnotes1} et \type{obj} sont des listes, \type{notes+} est appliqué élément à élément.\\
+\type{obj} peut être ici, un {\em instrument}, une liste d'{\em instrument}s, une {\em musique} ou une liste de {\em musique}s.\\
+Les \type{newnotes} sont des {\em musique}s, mais si à la fois \type{newnotes1} et \type{obj} sont des listes, \type{notes+} est appliqué élément à élément.\\
 Voir \in{la fonction \type{rm}}[rm-info] (\at{page}[rm-info]) pour la signification du dernier paramètre optionnel \type{obj-start-pos}.
 \blank[0.9em]
 \midaligned{ \tfd ------------}
@@ -1054,16 +1052,14 @@ Voir \in{la fonction \type{rm}}[rm-info] (\at{page}[rm-info]) pour la significat
 \func{dispatch-chords}  
 \syntax {(dispatch-chords instruments where-pos music-with-chords . args)}{}
 
-\type{dispatch-chords} distribue dans des parties séparées, les notes des accords d'une {\em musique}.\\
+\type{dispatch-chords} assigne chaque notes des accords d'une {\em musique} à des parties séparées.\\
 \type{instruments} est la liste d'{\em instrument}s recevant, à la position \type{where-pos}, ces parties.\\
 \type{music-with-chords} est la {\em musique} contenant les accords.
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-La note 1 d'un accord est envoyée au dernier élément de la liste \type{instruments} , puis la note 2 à l'avant
-dernier etc …
+La note 1 d'un accord est envoyée au dernier élément de la liste \type{instruments} , puis la note 2 à l'avant dernier etc…\\
 Le code :
 \startmylily
 music = { <c e g>4 <d f b>-. }
-…
 (dispatch-chords '(alto (tenorI tenorII) basse) 6 music)
 \stopmylily
 donnera à la mesure 6 :
@@ -1074,9 +1070,9 @@ tenorII &$\leftarrow$& { e4 f-. }
 alto    &$\leftarrow$& { g4 b-. }
 \stopmylily
 Les arguments optionnels disponibles, sont les mêmes que \goto{la fonction \type{rm}}[rm-info] (\at{page}[rm-info]) 
-\blank[0.6em]
+\blank[1em]
 \midaligned{ \tfd ------------}
-\godown[1em]
+\godown[1.6em]
 
 %%%%%%%%%
 \func{reverse-chords}  
@@ -1088,9 +1084,9 @@ Renverse \type{n} fois les accords contenus dans \type{music}.\\
 La note déplacée est octaviée autant de fois qu'il est nécessaire pour que sa hauteur soit supérieure (inférieure si \type{n<0}) à la note qui la précède.\\
 Le paramètre optionnel \type{strict-comp?} propose soit, s'il est à \type{#t}, la comparaison : {\em strictement} supérieure ({\em strictement} inférieure pour \type{n<0}), soit s'il est à \type{#f}, la comparaison : supérieure (inférieure) ou {\em égale}.\\
 Par défaut, \type{strict-comp?} est à \type{#f} pour \type{set-reverse} et à \type{#t} pour \type{reverse-chords} !
-\blank[0.7em]
+\blank[2em]
 \underbar{\sc\Words Exemple} (en mode hauteur absolue) :
-\blank[0.3em]
+\blank[1.3em]
 \startmylily
                    music    &\hbox to 1.3em {\\$=$\\}\hbox to 0.1em {\\}&   { <c e g>   <c g e'>    <c e c'> }
 (reverse-chords 1 music)    &$\Longrightarrow$&   {   <e g c'>  <g e' c''>  <e c' c''> }
@@ -1102,7 +1098,7 @@ Par défaut, \type{strict-comp?} est à \type{#f} pour \type{set-reverse} et à 
 
 (reverse-chords 1 music #f) &$\Longrightarrow$&   {   <e g c'>  <g e' c''>  <e c' c'> }
 \stopmylily
-\blank[0.8em]
+\blank
 \midaligned{ \tfd ------------}
 \godown[1.2em]
 
@@ -1112,7 +1108,7 @@ Par défaut, \type{strict-comp?} est à \type{#f} pour \type{set-reverse} et à 
 
 Ajoute des crochets aux accords, contenant au moins 2 notes, et non liés à l'accord précédent par un tilde  \type{~} \\
 Cette fonction étend la fonction \type{\braketifyChords} definie dans {\em copyArticulations.ly} en acceptant aussi en paramètre, une liste de {\em musique}s, un {\em instrument}, ou une liste d'{\em instrument}s.
-\blank[0.9em]
+\blank[1.5em]
 \midaligned{ \tfd ------------}
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
