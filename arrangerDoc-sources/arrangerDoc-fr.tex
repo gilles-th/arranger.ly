@@ -299,17 +299,18 @@ Voici la syntaxe de \type{rm} :
 \mbox{un {\em instrument}, par exemple : \type{'flute }}
 \mbox{une liste d'{\em instrument}s : \type{'(clar tptte sax), }}
 \mbox{mais il peut être aussi une {\em musique} : \type{music ou #{…#}} }
-\mbox{ou une liste de {\em musique}s : \type{(list musicA musicB musicC) }}
+\mbox {ou une liste de {\em musique}s : \type{(list musicA musicB musicC…)}} 
 }
 \right.$
+
 \blank[medium]
 - \type{where-pos} indique où effectuer le remplacement. C'est un numéro de mesure, ou, plus \startnarrower[left] exactement, une {\em position musicale}, telle définie dans le paragraphe suivant, \at{page}[positions_musicales].\stopnarrower
 
-- \type{repla} est une {\em musique} ou une liste
-de {\em musique}s.
+- \type{repla} est une {\em musique} ou une liste de {\em musique}s, mais la syntaxe avec \type{unquote '} est \startnarrower[left] acceptée~:~\type{'(musicA musicB musicC…)}.\stopnarrower
 
 - \type{repla-extra-pos }et\type{ obj-start-pos }sont
-aussi des {\em positions musicales} (voir utilisation ci-après).
+aussi des {\em positions musicales}.
+\startnarrower[left] (voir utilisation ci-après).\stopnarrower
 \blank
 {\hbox{\hspace[lilyindent]{\em {\small $\triangleright$} retour }{: }}}
 \blank
@@ -994,7 +995,7 @@ et par
 \midaligned{ \tfd ------------}
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subject[gerer-accords]{Gérer les accords }
+\subject[gerer-accords]{Gérer les accords}
 \blank[-1em]
 %%%%%%%%%
 \func{note}
@@ -1190,7 +1191,7 @@ Voir une utilisation de \type{chords->nmusics} à \goto{l'exemple 5}[exemple5] d
 
                      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subject[gerer-hauteur]{Gérer les hauteurs des notes }
+\subject[gerer-hauteur]{Gérer les hauteurs des notes}
 \blank[-2em]
 %%%%%%%%%
 \func{rel}

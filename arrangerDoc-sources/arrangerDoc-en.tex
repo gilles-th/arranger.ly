@@ -325,11 +325,10 @@ Voici la syntaxe de \type{rm} :
 \blank[medium]
 - \type{where-pos} indique où effectuer le remplacement. C'est un numéro de mesure, ou, plus \startnarrower[left] exactement, une {\em position musicale}, telle définie dans le paragraphe suivant, \at{page}[positions_musicales].\stopnarrower
 
-- \type{repla} est une {\em musique} ou une liste
-de {\em musique}s.
+- \type{repla} est une {\em musique} ou une liste de {\em musique}s, mais la syntaxe avec \type{unquote '} est \startnarrower[left] acceptée~:~\type{'(musicA musicB musicC…)}.\stopnarrower
 
-- \type{repla-extra-pos }et\type{ obj-start-pos }sont
-aussi des {\em positions musicales} (voir utilisation ci-après).
+- \type{repla-extra-pos }et\type{ obj-start-pos }sont aussi des {\em positions musicales}.
+\startnarrower[left] (voir utilisation ci-après).\stopnarrower
 \blank
 {\hbox{\hspace[lilyindent]{\em {\small $\triangleright$} retour }{: }}}
 \blank
@@ -1125,45 +1124,41 @@ This function extends the \type{\braketifyChords} function defined in {\em copyA
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                     
-\subject[gerer-accords-voix]{Gérer accords et voix ensemble}
+\subject[gerer-accords-voix]{Managing chords and voices together}
 \blank[-2em] 
 
 %%%%%%%%%
+%%%%%%%%%
 \func{treble-of}
 \syntax {(treble-of music)}{}
- 
-Extrait dans la première voix, la dernière note de chaque
-accord.
+
+Extract in first voice, the last note of each chord.
 
 \blank
-\midaligned{ \tfd ------------}\\
-
+\midaligned{ \tfd ------------}
 %%%%%%%%%
 \func{bass-of} 
 \syntax {(bass-of music)}{} 
 
-Extrait dans la dernière voix, la première note de chaque
-accord.
+Extract in last voice, the first note of each chord.
 
 \blank
-\midaligned{ \tfd ------------}\\
-
+\midaligned{ \tfd ------------}
 %%%%%%%%%
 \func{voices->chords} 
 \syntax {(voices->chords music)}{} 
 
-Transforme une {\em musique} simultanée \type+<<{a b} \\ {c d}>>+ \\%
-en une {\em musique} séquentielle \type+{<a c> <b d>}+
+Transform a simultaneous {\em music} \type+<<{a b}\\{c  d}>>+ \\%
+in a sequential {\em music} \type+{<a c> <b d>}+
 
 \blank
-\midaligned{ \tfd ------------}\\
-
+\midaligned{ \tfd ------------}
 %%%%%%%%%
 \func{chords->voices} 
 \syntax {(chords->voices music)}{} 
 
-Transforme une séquence d'accords \type+{<a c> <b d>}+ \\
-en une {\em musique} simultanée \type+<<{a b} \\ {c d}>>+
+Transform a sequence of chords \type+{<a c> <b d>}+ \\
+in a simultaneous {\em music}  \type+<<{a b}\\{c  d}>>+
 
 \blank
 \midaligned{ \tfd ------------}\\
@@ -1175,10 +1170,10 @@ en une {\em musique} simultanée \type+<<{a b} \\ {c d}>>+
 or : (2\high{nd} equivalent form, to be used with \goto{\type{apply-to}}[apply-to])
 \syntax {((set-chords->nmusics n) music)}{}
 
-Transforme une séquence d'accords en une {\em liste} de %
-\type{n} {\em musiques}\\
-Pour : \type+music = {<e g c'> <d f b> <c e g c'>}+\\
-La fonction \type{chords->nmusics} donnera les listes suivantes :
+Transform a sequence of chords in a {\em list} of %
+\type{n} {\em music}s\\
+For : \type+music = {<e g c'> <d f b> <c e g c'>}+\\
+the \type{chords->nmusics} function give the following list :
 
 \blank
 \hbox{{\hspace[lilyindent]}
@@ -1195,7 +1190,7 @@ La fonction \type{chords->nmusics} donnera les listes suivantes :
 \stoptable
 }
 \blank[1.5em]
-Voir une utilisation de \type{chords->nmusics} à \goto{l'exemple 5}[exemple5] de la \at{page}[exemple5].
+See a use of \type{chords->nmusics} at \goto{example 5}[exemple5] of \at{page}[exemple5].
 \blank[1.5em]
 \midaligned{ \tfd ------------}
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
