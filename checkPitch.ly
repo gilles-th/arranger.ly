@@ -1,6 +1,9 @@
 \version "2.20.0"
 %% LSR = http://lsr.di.unimi.it/LSR/Item?id=773
-%% version Y/M/D = 2020/07/04
+%% version Y/M/D = 2020/08/04
+%% Last modification :
+%%   - add same-pitch-as
+%%   - optimization of correct-out-of-range
 
 #(define ((set-compare-pitch? . syms) p1 p2)
 "syms can be a set of 'above 'below 'equal"
@@ -13,6 +16,9 @@
    ((memq 'below syms) (comp? p1 p2))
    (else #f)))
 
+% Note : a (shift-octave pitch octave-shift) is defined in
+% scm/music-functions.scm but not with define-public !
+% re-invent the wheel...
 #(define (pitch-octavize p limit-pitch . syms)
 "Transpose repeateadly pitch p by one octave in the good direction,
 while p is above limit-pitch if 'above is in syms, or
@@ -85,27 +91,34 @@ colorizeOutOfRange = #(define-music-function (low-pitch high-pitch music)
                      evt))))
   #{ \customOutOfRange $low-pitch $high-pitch #colorfunc $music #}))
 
-% a scheme function : music and range as music
+% a scheme function : music and range as music.
 % range in the form of : <c g'> or { c g' }
+
 #(define (correct-out-of-range music range)
-(let ((low #f)
-      (high #f))
-(music-map                  ; first pitch -> low, second pitch -> high
-  (lambda (evt)
-     (let ((p (ly:music-property evt 'pitch)))
-        (if (ly:pitch? p) (cond
-           ((not low)(set! low p))
-           ((not high)(set! high p))))
-        evt))
-  range)
-(music-map
-   (lambda (evt)
-     (let ((p (ly:music-property evt 'pitch)))
-        (if (ly:pitch? p)
-          (ly:music-set-property! evt 'pitch
-            (pitch-octavize (pitch-octavize p low 'below) high 'above)))
-        evt))
-    (ly:music-deep-copy music))))
+"Same as correctOctave but range is a chord or a sequential music
+of 2 notes specifying low and high pitches range."
+(let ((ranges (music-pitches range))) ; defined in scm/music-functions.scm
+  (if (< (length ranges) 2)
+    music
+    (correctOctave 'below (first ranges)
+      (correctOctave 'above (second ranges)
+        (ly:music-deep-copy music))))))
+
+% defines a callback function for arranger.ly users.
+% If you don't need any argument in args, use perhaps instead (not sure) :
+% #(define ((same-pitch-as p1) p2)
+%    (equal? p1 p2))
+#(define ((same-pitch-as p1 . args) p2)
+"Tests octave, notename and alteration equality of pitches p1 and p2.
+Ignores octaves if 'any-octave is in args.
+For alterations, an other comparison predicate than = can be specified in args.
+It can be > < >= <= or even + - * to ignore alterations"
+   (define alteration-comp (or (find procedure? args) =)) ; the alteration predicate
+   (define any-octave? (memq 'any-octave args))           ; ignore octave ?
+ (and (= (ly:pitch-notename p1) (ly:pitch-notename p2))
+      (or any-octave?
+          (= (ly:pitch-octave p1) (ly:pitch-octave p2)))
+      (alteration-comp (ly:pitch-alteration p1)(ly:pitch-alteration p2))))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -137,11 +150,8 @@ music = \relative c' {
 }
 
 range = < g' g'' >
-#(define musicII (correct-out-of-range music range))
-
-\new Staff \with { instrumentName = "4"}
-        \musicII   % staff 6 %}
-
+\new Staff \with { instrumentName = "4 Alt"}
+        $(correct-out-of-range music range)
 %{
 convert-ly (GNU LilyPond) 2.19.82  convert-ly: Traitement de «  »...
 Conversion en cours : 2.19.80

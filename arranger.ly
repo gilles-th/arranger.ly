@@ -401,7 +401,7 @@ and optionnaly set the number of first measure."
 %% If it is not the case, you will have to set the additional parameter obj-start-pos
 %% For example, (em music 4 5 3) will extract the 2nd measure of music, because music
 %% begins measure 3 in the score.
-%% A more generic function generic function is defined first. Used rather internally
+%% A more generic function is defined first. It is used rather internally.
 #(define* ((em-with-func func) obj from-pos to-pos #:optional obj-start-pos)
 "Extracts music between the 2 by-measure-number positions from-pos and to-pos, and apply func to it.
 obj can be a music, an instrument (a parser-defined symbol), a list of music
@@ -437,9 +437,9 @@ obj-start-pos is the position where obj was designed to begin in the score."
 %% rm (= replace music) behaves like \ReplaceMusic (see extractMusic.ly) but can
 %% deal with several instruments at the same time.
 %% Please, note the difference of, for example
-%%   (rm music 4 #{ c'1 #}) %% returns a copy music with measure 4 replaced by a c'1
-%%                          %%  but music is kept unmodified
-%%   (rm 'instru 4 #{ c'1 #}) %% idem but 'instru is re-affected to the return value.
+%%   (rm music 4 #{ c'1 #}) %% returns a copy of music with measure 4 replaced by a c'1
+%%                          %% but music is kept unmodified
+%%   (rm 'instru 4 #{ c'1 #}) %% idem but the return value is re-affected to 'instru.
 
 #(define* (rm obj where-pos replacement
                               #:optional repla-extra-pos obj-start-pos)
@@ -1359,23 +1359,22 @@ dynSetDir = #(define-music-function (music direction)(ly:music? number?)
   >>
 #})
 
-#(define (fix-pitch music octave note-index alteration)
-"Fix all notes to (ly:make-pitch octave note-index alteration) and
-make music untransposable."
-(let ((fix-pitch (ly:make-pitch octave note-index alteration)))
-  (if (ly:pitch? fix-pitch)
-    (let ((res (music-map
-             (lambda (x)
-               (let ((p (ly:music-property x 'pitch)))
-                 (if (ly:pitch? p)(ly:music-set-property! x 'pitch fix-pitch))
-                 x))
-             (note 1 music)))) ; keeps only the first note of chords
-        (if (eq? (ly:music-property res 'untransposable) #t) ;; can be '()
-          res
-          (make-music 'TransposedMusic 'element res 'untransposable #t)))
-    music)))
-#(define ((set-fix-pitch octave note-index alteration) music)
-(fix-pitch music octave note-index alteration))
+#(define (fix-pitch music arg1 . other-args)
+"Fixes pitches of music notes, to pitch arg1 or to (ly:make-pitch -1 arg1 0) or
+to (ly:make-pitch arg1 arg2) or to (ly:make-pitch arg1 arg2 arg3)"
+(let ((fix-pitch (case (length other-args)
+                   ((2 1)(apply ly:make-pitch (cons arg1 other-args)))
+                   ((0) (if (ly:pitch? arg1) arg1 (ly:make-pitch -1 arg1 0)))
+                   (else (ly:error "fix-pitch syntax error : too many arguments")))))
+   (music-map
+     (lambda(evt) ; noteEvent? is defined in chordsAndVoices.ly
+       (if (noteEvent? evt)(ly:music-set-property! evt 'pitch fix-pitch))
+       evt)
+     (note 1 music)))) % copies music and keeps only the first note in chords
+
+
+#(define ((set-fix-pitch . args) music)
+(apply fix-pitch music args))
 
 #(define ((set-range range) music)   ; see checkPitch.ly
 (correct-out-of-range music range))  % ex :  range = { c, c'' } or <c c'>
@@ -1395,7 +1394,9 @@ A slash / can optionally be used to separate all pitch percu-sym sections"
        (if (< len 2)
          ht
          (let loop ((lst lst) (next-len (- len 2)))
-           (hash-set! ht (first lst) (second lst))
+           (hash-set! ht (let ((p (first lst))) ; a pitch or a number, as in fix-pitch
+                            (if (ly:pitch? p) p (ly:make-pitch -1 p 0)))
+                         (second lst))
            (if (< next-len 2)
              ht
              (loop (cddr lst) (- next-len 2)))))))
