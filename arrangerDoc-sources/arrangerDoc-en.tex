@@ -80,7 +80,7 @@
  \startsubsection[number=no,list=#1,reference=#1]{}
  %\startsubsubject[list=#1,reference=#1]{}   % don't work !
  {\switchtobodyfont[20pt] \checkmark} 
- {\sca the function \cap{\bf #1}}
+ {\sca function \cap{\bf #1}}
  %\stopsubsubject
  \stopsubsection
 }
@@ -98,23 +98,31 @@
 \placecontent[criterium=all]
 \title[generalites]{OVERVIEW}
 \subject[objectifs]{Basic goals}
-{\em arranger.ly provides an environment facilitating musical arrangement.} \footnote{To arrange
-herein means to re-orchestrate an original instrumentation.} A set of functions enables quick
-re-orchestration of a piece of music, using a minimal and reusable music encoding.
+{\em arranger.ly provides an environment facilitating musical arrangement.}
+\footnote{To arrange herein means to re-orchestrate an original instrumentation.}
+A set of functions enables quick re-orchestration of a piece of music, using 
+ minimal and reusable music encoding.
 \blank[0.7em]
-One of the main aspects of {\em arranger.ly} concerns the locating system of musical positions, which is  now based on {\em bar numbers}\footnote {Lilypond use a system based on {\em moment}s : \type{(ly:make-moment 5/4)} for example.}.The arranger's workflow is made more flexible : rather than entering music expressions instrument by instrument in a linear fashion, it becomes possible to work as the ideas go by -- first deal with the melody, then accompaniment,
+One of the main aspects of {\em arranger.ly} concerns the locating system of
+musical positions, which is  now based on {\em bar numbers}\footnote {Lilypond
+uses a system based on {\em moment}s : \type{(ly:make-moment 5/4)} for example.}.
+The arranger's workflow is made more flexible : rather than entering music
+expressions instrument by instrument in a linear fashion, it becomes possible
+to work as the ideas go by -- first deal with the melody, then accompaniment,
 then the bass, etc.
 \blank[0.7em]
-The user typically first declares a list of instruments. {\em arranger.ly} takes care of initializing
-each instrument with empty measures. Then, in a single command, the user can insert a music fragment
-in several instruments and positions, as well as \quotation{copy-paste} entire music sections in one
+Typically, the user first declares a list of instruments. {\em arranger.ly}
+takes care of initializing each instrument with empty measures. Then, in a
+single command, the user can insert a music fragment in several instruments
+and positions, as well as \quotation{copy-paste} entire music sections in one
 line of code.
 
-Functions allow for octave transposing and octave doubling, specifying patterns for repeated rhythms or articulations, distributing the notes to various instruments in
-a succession of chords, inverting chords,~\dots, so as never to repeat information.
+Functions allow for octave transposing and octave doubling, specifying patterns
+for repeated rhythms or articulations, distributing the notes to various instruments
+in a succession of chords, inverting chords,~\dots, so as never to repeat information.
 
-All these functions can be directly used from Scheme, which makes for lighter syntax (no backslash before
-variable names) and easier editing of instrument lists.
+All these functions can be directly used from Scheme, which makes for lighter
+syntax (no backslash before variable names) and easier editing of instrument lists.
 
 Once the arrangement is finished, it can be exported to usual LilyPond source:
 \blank[0.3em]
@@ -146,9 +154,9 @@ clar = {…}
   \stoptabulate 
 \stopitemize
 
-It is easiest to put these 6 files in the same folder alongside with {\em arranger.ly},
-and call LilyPond with option \type{--include=myfolder}. Only the following line should then
-be added at the top of one's \type{.ly} file:\\
+It is easiest to put these 6 files in the same folder alongside with
+{\em arranger.ly}, and call LilyPond with option \type{--include=myfolder}.
+Only the following line should then be added at the top of your \type{.ly} file:\\
 \myindent\type{\include } \type{"arranger.ly"} % pbs d'espace avec \type{\include "arranger.ly"}
 \godown[-0.3em] %\blank[-0.6cm]
 
@@ -166,10 +174,10 @@ described below.
 %%%%%%%%%%%%%%%%%
 
 \subject{Conventions and reminders}
-In this document, we shall call {\em instrument} any Scheme symbol referencing
+In this document, we call {\em instrument} any Scheme symbol referencing
 a LilyPond music expression. The music an instrument points to has the same length
 as \type{\global} and begins at the same time (by default, this is measure 1, with an
-optional upbeat). However, in the following text, {\em music} more generally refers to
+optional upbeat). By contrast, in the following text, {\em music} more generally refers to
 a fragment with indeterminate position, which can be inserted at any measure in the piece.
 
 Being a symbol, an instrument is denoted in Scheme using a leading \hbox{single vertical
@@ -204,7 +212,7 @@ These lists can be manipulated with ease thanks to {\em arranger.ly}'s utility f
 \reference[init]{}
 \index[init-info]{init}                   
 \subject{Initialization}
-- The \type{init} function must be called \emph{after} declaring \type{\global} and
+The \type{init} function must be called \emph{after} declaring \type{\global} and
 \emph{before} any call to the other functions. It is passed a list of instruments and
 an optional integer.
 
@@ -212,7 +220,7 @@ an optional integer.
 
 Each instrument in the list is declared to LilyPond and filled in with multi-measure rests.
 
-If \type{\global} was defined using:
+Assuming \type{\global} was defined using:
 \startlily
 global = { s1*20 \time 5/8 s8*5*10 \bar "|."}
 \stoplily
@@ -233,18 +241,19 @@ basse = { R1*20 R8*5*10 }
 \stoplily
 \blank[0.8em]
 
-- \type{instru-list} may be empty: \type{(init '())}. A noteworthy use case
-is direct editing of the \type{\global} variable, as shown in \goto{addendum I}[addendum1]
-at page \at{page}[addendum1].
+\type{instru-list} may be empty: \type{(init '())}. A noteworthy use case
+is direct editing of the \type{\global} variable, as shown in
+\goto{addendum I}[addendum1] at \at{page}[addendum1].
 
 Once all music events influencing the meter are declared in \type{\global}, \type{init}
-can be called a second time with a non-empty instrument list.
-\page
-- To count measures, \type{init} takes into account manual overrides applied to properties
-of the \type{Score} context and the \type{Timing} object, such as \type{measurePosition},
-\type{measureLength}, \type{currentBarNumber}, as well a the \type{\partial}, \type{\cadenzaOn}
-and \type{\cadenzaOff} command. If \type{\partial} is placed at the very beginning of the piece,
-\type{init} even adds a rest with same duration as the pickup to all the instruments.
+can be called a second time with a non-empty instrument list.\\
+
+To count measures, \type{init} takes into account manual overrides applied to
+properties of the \type{Score} context and the \type{Timing} object, such as
+\type{measurePosition}, \type{measureLength}, \type{currentBarNumber}, as well
+as the \type{\partial}, \type{\cadenzaOn} and \type{\cadenzaOff} commands. If
+\type{\partial} is placed at the very beginning of the piece, \type{init} even
+adds a rest with same duration as the pickup to all the instruments.
 
 \setupcaptions[location=none]
 \startfiguretext[right][exemple1]{}
@@ -269,27 +278,37 @@ all = #'(flute clar sax tptte cor tbne basse)
 \stoplily %\blank[2.1cm]%
 \stopfiguretext
 
-%% TRANSLATING STOPPED HERE.
-
 \index{measure-number->moment}
-On pourra utiliser la fonction interne \type{measure-number->moment} pour vérifier que les positions {\em arranger.ly} et {\em Lilypond} correspondent. Dans cet exemple :
-\startmylily#(display (map measure-number->moment '(1 2 3 4 50)))\stopmylily
-renverra le nombre de noires depuis le début du morceau pour les mesures 1 2 3 4 et 50 :
-\startmylily (#<Mom 1/4> #<Mom 5/4> #<Mom 9/4> #<Mom 11/4> #<Mom 15/4>)\stopmylily
+The internal function \type{measure-number->moment} may be used to ensure that
+{\em arranger.ly} and {\em LilyPond} stay in sync. For example,
+
+\startmylily
+#(display (map measure-number->moment '(1 2 3 4 50)))
+\stopmylily
+prints the number of quarter notes elapsed from music start for measures 1, 2,
+3, 4 and 50:
+\startmylily
+(#<Mom 1/4> #<Mom 5/4> #<Mom 9/4> #<Mom 11/4> #<Mom 15/4>)
+\stopmylily
 \blank[1em]  % crlf 
-- Le paramètre optionnel \type{measure1-number}\crlf
-La fonction \type{init} peut prendre en dernier argument un nombre entier qui indiquera le numéro de la première mesure (1 par défaut) . Cela peut être utile si on décide de rajouter, disons 3 mesures d'introduction à notre arrangement ; remplacer le code par défaut par :
+
+\type{init} accepts an integer as optional last argument, indicating  the
+numbering of the first measure. It defaults to 1. This is useful to add, say
+3 measures of intro to the arrangement.
+
 \startmylily 
 (init all -2) 
 \stopmylily
-permet de décaler automatiquement toutes les positions de mesures déjà entrées. Si vous vous trouvez dans cette situation, il pourra être judicieux dans un premier temps de mettre en début de \type{\global}, la ligne suivante : 
+This automatically shifts all previously entered measure positions. In this case,
+it is relevant while arranging to add
 \startmylily
 \set Score.currentBarNumber = #-2
 \stopmylily
-et laisser le paramètre \type{measure1-number} à 1.
-Puis, une fois le morceaux totalemement terminé, supprimer la ligne du \type{currentBarNumber} ci-dessus (les numéros de mesures recommenceront à~1 à la première mesure) et finir en mettant  \type{measure1-number} à -2.
+at the beginning of \type{\global}, and let \type{measure1-number} default to 1.
+Then, once the arrangement is finished, this line can be removed while \type{measure1-number}
+is set to -2.
 
-D'une manière générale, les réglages suivants peuvent être utiles pendant le travail :
+From a general point of view, the following settings are useful while working:
 \blank[1em]
 \startmylily
 tempSettings = { 
@@ -301,48 +320,47 @@ tempSettings = {
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                     
 \reference[rm-info]{}           
-\subject{La fonction de base : \type{rm}}
+\subject{The basic function: \type{rm}}
 %\label{rm}%
-\type{rm} signifie «\underbar{r}eplace \underbar{m}usic».
-La fonction, typiquement, redéfinit un {\em instrument} en remplaçant une partie de sa musique existante, par le fragment de musique donné en paramètre.\crlf
-\type{rm} est en fait une extension de la fonction \type+\replaceMusic+
-de «{\em extractMusic.ly}».\crlf
-Consulter éventuellement le chapitre 8 de la documentation {\em extractMusic-doc.pdf}, à~:\crlf
+\type{rm} means \quotation{\underbar{r}eplace \underbar{m}usic}.
+This function typically redefines an {\em instrument}, replacing part of
+its existing music with the music fragment given as an argument.\crlf
+\type{rm} is actually an extension of \type{\replaceMusic} from {\em extractMusic.ly}.
+Optional reading is chapter 8 from this file's documentation at~:\crlf %%%% TODO: missing URL?
 \hbox{\hspace[lilyindent]\from[extractMusic]}
 \page %%%%%%%%%%%%%%%%%%%%%%%%
-Voici la syntaxe de \type{rm} :
+Below is the syntax of \type{rm} :
 
 \syntax{(rm obj where-pos repla}{repla-extra-pos obj-start-pos)}
 
-- \type{obj} est $\left\{
+- \type{obj} is $\left\{
 \vcenter{%
-\mbox{un {\em instrument}, par exemple : \type{'flute }}
-\mbox{une liste d'{\em instrument}s : \type{'(clar tptte sax), }}
-\mbox{mais il peut être aussi une {\em musique} : \type{music ou #{…#}} }
-\mbox{ou une liste de {\em musique}s : \type{(list musicA musicB musicC) }}
+\mbox{an {\em instrument}, e.g. \type{'flute }}
+\mbox{a list of {\em instrument}s : \type{'(clar tptte sax)}}
+\mbox{but may also be a {\em music} : \type{music or #{…#}} }
+\mbox{or a list of {\em music}s : \type{(list musicA musicB musicC) }}
 }
 \right.$
 \blank[medium]
-- \type{where-pos} indique où effectuer le remplacement. C'est un numéro de mesure, ou, plus \startnarrower[left] exactement, une {\em position musicale}, telle définie dans le paragraphe suivant, \at{page}[positions_musicales].\stopnarrower
+- \type{where-pos} indicates the bar where replacement is performed. More precisely,
+it is a {\em music position} as defined in the next paragraph (\at{page}[positions_musicales]).
 
-- \type{repla} est une {\em musique} ou une liste de {\em musique}s, mais la syntaxe avec \type{unquote '} est \startnarrower[left] acceptée~:~\type{'(musicA musicB musicC…)}.\stopnarrower
+- \type{repla} is a {\em music} or a list of {\em music}s, but syntax with \type{unquote '} is
+valid~:~\type{'(musicA musicB musicC…)}. %% TODO: unclear
 
-- \type{repla-extra-pos }et\type{ obj-start-pos }sont aussi des {\em positions musicales}.
-\startnarrower[left] (voir utilisation ci-après).\stopnarrower
+- \type{repla-extra-pos } and \type{ obj-start-pos } are {\em music positions} too (read on).
 \blank
-{\hbox{\hspace[lilyindent]{\em {\small $\triangleright$} retour }{: }}}
+{\hbox{\hspace[lilyindent]{\em {\small $\triangleright$} return}{: }}}
 \blank
-- Si \type{obj} est un {\em instrument} ou une {\em musique},
-\type{rm} renvoie la {\em musique} obtenue après remplacement\startnarrower[left]%
- effectué. Dans le cas d'un {\em instrument}, cette nouvelle valeur est réaffectée automatiquement au symbole le représentant.\stopnarrower
+- If \type{obj} is an {\em instrument} or a {\em music}, \type{rm} returns the music
+obtained after performing the replacement. This new value is automatically assigned
+to the appropriate symbol.
 
-- Si \type{obj} est une liste d'{\em instrument}s ou
-de {\em musique}s, \type{rm} renvoie la liste des {\em musique}s
-obtenues.
+- If \type{obj} is a list of instruments or musics, \type{rm} returns a list of musics.
 \blank[0.7cm]
 \startfiguretext[right][exemple2]{}
 {\vbox{\blank[-1.1em]\externalfigure[exemple02.pdf][wfactor=175, align=flushright]}}
-\underbar{\sc\Words exemple 2}
+\underbar{\sc\Words example 2}
 \blank[0.7cm]
 \startlily
 global = { s1*4 \bar "|." } 
@@ -361,30 +379,28 @@ musC = { g,1 c1 }
 \stoplily %\blank[2.1cm]%
 \stopfiguretext
 \blank[0.7cm]
-Par défaut, pour la fonction \type{rm}, la musique entière
-du paramètre \type{repla} est pris en compte, mais on peut n'en prendre
-qu'une partie en spécifiant de manière adéquat le paramètre optionnel
-\type{repla-extra-pos}.\crlf 
-En voici le principe :
+
+By default, \type{rm} accounts for the entire music given in \type{repla}.
+It is however possible to extract only part of it by specifying the optional
+parameter \type{repla-extra-pos}. The principle is as follows:
+
 \hairline
-\type{repla} est positionné à la plus petite des
-valeurs des positions \type{where-pos} et \hbox{\type{repla-extra-pos} :}
+\type{repla} is positioned at the lowest position between \type{where-pos} and \type{repla-extra-pos}.
 \definesymbol[5][$\rightarrow$]
 \startitemize[5, joinedup, intro][margin=\lilyspace]
-\item si \type{repla-extra-pos} est avant \type{where-pos},
-la partie {[}\type{repla-extra-pos} \type{where-pos}{[} {\em ne
-sera} {\em pas} remplacée (on ignore le début du paramètre \type{repla}). 
-\item si \type{where-pos} est avant \type{repla-extra-pos},
-seule la partie {[}\type{where-pos} \type{repla-extra-pos}{[}
-de l’instrument {\em sera} remplacée (on ignore la
-fin du paramètre \type{repla}).
+\item if \type{repla-extra-pos} is before \type{where-pos},
+the part {[}\type{repla-extra-pos}, \type{where-pos}{[}
+is {\em not} replaced. The beginning of \type{repla} is ignored.
+\item If \type{where-pos} is before \type{repla-extra-pos},
+only {[}\type{where-pos}, \type{repla-extra-pos}{[}
+from the instrument is replaced, and the end of \type{repla} is ignored.
 \stopitemize
 \hairline
 
 \blank[0.7cm]
-La pratique en est plus intuitive :
+Examples are most intuitive:
 \page
-\underbar{\sc\Words exemple 3}
+\underbar{\sc\Words example 3}
 \startfiguretext[right][exemple3]{}
 {\vbox{\blank[0.15em]\externalfigure[exemple03.pdf][wfactor=220, align=flushright]}}
 \startlily
@@ -398,13 +414,12 @@ mus = \relative c' {
 \stoplily %\blank[2.1cm]%
 \stopfiguretext
 
-- L' argument optionnel \type{obj-start-pos} permet de préciser où débute \type{obj} 
- (\type{repla-extra-pos} lui, concerne \type{repla}). C'est typiquement le cas si \type{obj} est
-une { \em musique} (et non un {\em instrument}).On utilisera alors la valeur de retour de \type{rm}.\\
+- Optional parameter \type{obj-start-pos} may precise where \type{obj} begins
+(\type{repla-extra-pos} relates to \type{repla}). Typically, \type{obj} is a
+{\em music} rather than an {\em instrument} and the return value is used.
 
-Dans \in{l'exemple}[exemple3], si on voulait changer le fa de la mesure 6, par
-un mib, et assigner le résultat à un autre instrument (disons un saxo),
-on pourrait écrire :
+In \in{example}[exemple3], we change the F note at bar 6
+into an E flat, assigning the result to another instrument, a sax.
 
 \defineparagraphs[mypar][n=3,before={\blank}, after={\blank}, distance=1em]
 \setupparagraphs[mypar][1][width=0.42\textwidth, style=type]
@@ -426,22 +441,23 @@ on pourrait écrire :
 ; \#f\crlf
 ; 4
 \mypar
-permet de déclarer des variables locales\crlf
-mesure où placer le mib\crlf
+declares local variables\crlf
+bar that is replaced with an E flat\crlf
 repla-extra-pos,\crlf
-position de début de music
+position where music begins
 \stopmypar
 \hairline
-Notez bien la différence entre : \type{(rm music…)} et \type{(rm 'music…)} Dans le premier cas, \type{music} reste inchangé ; on ne récupère que la valeur de retour. Dans le second cas, cette valeur de retour est affectée à un symbole.(Celui-ci représenterait un instrument dont le nom serait \type{'music}).
+Do note the difference between \type{(rm music…)} and \type{(rm 'music…)}. The former
+returns a new musical expression without actually modifying \type{music}, whereas the
+latter assigns this return value back to the \type{'music} instrument.
 \hairline
 \blank
-- Dans le cas où le paramètre \type{obj} est une liste d'{\em instrument}s,
-un élément de cette liste peut être lui-même une liste d'{\em instrument}s.
-Ainsi, pour :
+- In case \type{obj} is a list of instruments, any element of this list may in turn
+be a list of instruments. Thus,
 \startmylily
 (rm '(flute (clar sax) bassClar) 5 '(musicA musicB musicC))
 \stopmylily 
-l'assignement à la mesure 5 se fait comme suit : \crlf
+will trigger assignments as in this diagram:\crlf
 \vtop{\hbox{
  \hspace[lilyindent]
  \starttable[|lT|c|l|]
@@ -458,50 +474,68 @@ l'assignement à la mesure 5 se fait comme suit : \crlf
 
 
                      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subject[positions_musicales]{Les positions musicales et numéros de mesures, en détails}
-- On indique une position par son numéro de mesure, mais quid si une position musicale ne commence pas juste au début d'une mesure ? La syntaxe à employer dans ce cas là, se présentera sous la forme d'une {\em liste d'entiers} : 
-\startmylily '(n i j k …) \stopmylily
-où \type{n} est le numéro de la mesure, et \type{i j k} …, des puissances de deux ( 1, 2, 4, 8, 16 etc…) représentant la distance par rapport au début de la mesure \type{n} 
+\subject[positions_musicales]{Music positions and bar numbers explained}
+A position is denoted by a bar number. What if the position should not begin at
+the start of a measure? In such a case, the position is a {\em list of integers}:
+\startmylily
+'(n i j k …)
+\stopmylily
+where \type{n} is the bar number, and \type{i j k …} are powers of two (1, 2, 4,
+8, 16, etc.) denoting the distance from the beginning of the \type{n}-th bar.
+Thus, in a \type{4/4} beat, \type{'(5 2 4)} is a position, located in measure 5,
+after a half note (\type{2}) and a quarter note (\type{4}), that is, fifth measure,
+fourth beat.
 
-Par exemple \type{'(5 2 4) }indique la position de la musique se trouvant à la mesure 5, après une blanche (\type{2}), puis après une noire (\type{4}) soit, dans une mesure à \type{4/4} :  mesure 5, 4ème temps.\\
+Any \type{n} lower than the \type{measure1-number} passed to \type{init}, which
+defaults to 1, will be silently transformed into that number. In the previous
+example, \type{'(0 2 4)} points to the same location as \type{'(1 2 4)}.
 
-- Tout \type{n} inférieur à 1 (ou au nombre transmis en paramètre dans \type{init}, -3 par exemple) sera transformé en 1 (resp. en -3). L'erreur ne sera pas signalée, mais la position \type{'(0 2 4)} pointe vers le même endroit que \type{'(1 2 4)}…\\
+{\em Negative} values for \type{i j k …} are allowed. In a 4/4 beat,
+\type{'(5 2 4)} is the same position as \type{'(6 -4)}, which reads
+\quotation{One quarter note before measure 6.}. This is the only way to access
+a pickup at the start of the piece: \type{'(6 -4)} is the beginning of a tune
+starting with \type{\partial 4 …}.
 
-- Les {\em valeurs négatives} pour \type{i j k …} sont admises. Le code \type{'(5 2 4)} peut aussi s'écrire \type{'(6 -4)} {[}mesure 6, moins la valeur d'une noire{]}. Les valeurs négatives sont le seul moyen d'accéder à une levée en début de morceau~:~position \type{'(1 -4)} pour \type{\partial 4 s4}.\\
-%\hbox{\myindent\type{'(1 -4)} pour \type{\partial 4 s4}.}\\
+Any note held at the beginning of the replacement is appropriately shortened by
+\type{rm}.
 
-- Avec la fonction \type{rm}, une note qui commence avant la position passée en paramètre mais qui se poursuit après, sera raccourcie en conséquense.
-
-Dans l'\in{exemple}{ précédent (}[exemple3]\at{page}{)}[exemple3], le code : 
-\startmylily (rm 'clar '(5 2 4) #{ r4 #})\stopmylily
-donnerait pour la clarinette à la mesure 5 : 
+In the previous example, this code: 
+\startmylily
+(rm 'clar '(5 2 4) #{ r4 #})
+\stopmylily
+would yield
 \startmylily 
 {c2. r4}
-\stopmylily 
-$\Longrightarrow$ le do ronde est transformé en blanche
-pointée.
+\stopmylily
+as the clarinet's fifth measure, turning the whole C note into a dotted half note.
+
 \reference[multirestWarning]{}
 \hairline
-Attention : si les notes et les silences peuvent se «couper» en des valeurs plus petites, il n'en est pas de même pour les silences multi-mesures ( \type{R1 R1*2} etc…) qui ne peuvent se couper qu'à des barres de mesures.
+Beware: while notes and rests may be arbitrarily split into smaller values,
+full-measure rests (written with capital \type{R}) can only be shortened at bar lines.
 \hairline
 \blank
-Ainsi, toujours dans cet \in{exemple}{ de la page \at{}[exemple3]}[exemple3], le code : 
-\startmylily(rm 'flute '(5 2 4) #{ c''4 #})\stopmylily
-produirait un avertissement du genre :
+This is why, in our example,
 \startmylily
-&\it\rm{&«Avertissement : échec du contrôle de mesure (barcheck) à 3/4
+(rm 'flute '(5 2 4) #{ c''4 #})
+\stopmylily
+would trigger a warning resembling:
+\startmylily
+&\it\rm{&«warning: barcheck failed at: 1/2
                       r\longa R1*1000000000»&}&
 \stopmylily
-(Cette ligne est une ligne de code de la fonction \type{init} dans  {\em «arranger.ly»}… )\\
-La solution ici est : 
+(This line originates from the {\em arranger.ly} file.)
+
+The solution is:
 \startmylily
-(rm 'flute 5 #{ r2 r4 c''4 #}) ;&\em{& on met les silences à la main !&}&
+(rm 'flute 5 #{ r2 r4 c''4 #}) ;&\em{&rests written out by hand&}&
 \stopmylily
 %\crlf % <- ne marche pas ici
 \blank[1em]
 
-- Voici pour finir, un exemple montrant l'utilisation des positions avec la commande 
-\type{\cadenzaOn}
+This last example demonstrate the use of positions with the \type{\cadenzaOn}
+command.
+
 \blank[1em]
 \underbar{\sc\Words exemple 4}
 \startfiguretext[right][exemple4]{}
@@ -521,18 +555,27 @@ global = {
    (rm 'clar 3 #{ c'2. #}))
 \stoplily
 \stopfiguretext
-%\blank[-2em] % <- ne marche pas ici
-Si on veut insérer un mi avant la mesure 3, on pourra utiliser des nombres négatifs :
-\startmylily (rm 'clar '(3 -2 -4) #{ e'2. #}) \stopmylily
-{\em arranger.ly} utilise quelque fois en interne une autre syntaxe pour les positions :
-\startmylily '(n moment) \stopmylily
-Son utilisation ici, pour insérer le mi donnerait :
-\startmylily (rm 'clar `(2 ,(ly:music-length cadenza)) #{ e'2. #}) \stopmylily
+
+In order to insert an E note before measure 3, one can use negative number:
+\startmylily
+(rm 'clar '(3 -2 -4) #{ e'2. #})
+\stopmylily
+
+Internally, {\em arranger.ly} occasionally uses a different syntax for positions:
+\startmylily
+'(n moment)
+\stopmylily
+
+Here, this would translate into
+\startmylily
+(rm 'clar `(2 ,(ly:music-length cadenza)) #{ e'2. #})
+\stopmylily
 
 \blank[0.7cm]
-- Convention
 \hairline
-Dans toutes les fonctions qui vont suivre, tout argument se terminant par \type {-pos} (\type {from-pos}, \type {to-pos}, \type {where-pos} etc…) seront du type {\em position}, tel qu'il vient d'être décrit dans tout ce paragraphe. Seront aussi de ce type, les noms tels que \type {pos1}, \type {pos2} etc…
+In all following functions, any argument ending in \type{-pos} (such as
+\type{from-pos}, \type{to-pos}, \type{where-pos}, etc.) shall be positions as
+described in this paragraph, as well as \type{pos1}, \type{pos2}, etc.
 \hairline
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
