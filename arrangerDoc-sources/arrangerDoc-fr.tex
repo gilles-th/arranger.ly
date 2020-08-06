@@ -297,7 +297,7 @@ Voici la syntaxe de \type{rm} :
 - \type{obj} est $\left\{
 \vcenter{%
 \mbox{un {\em instrument}, par exemple : \type{'flute }}
-\mbox{une liste d'{\em instrument}s : \type{'(clar tptte sax), }}
+\mbox{une liste d'{\em instrument}s : \type{'(clar tptte sax)}}
 \mbox{mais il peut être aussi une {\em musique} : \type{music ou #{…#}} }
 \mbox {ou une liste de {\em musique}s : \type{(list musicA musicB musicC…)}} 
 }
@@ -306,7 +306,7 @@ Voici la syntaxe de \type{rm} :
 \blank[medium]
 - \type{where-pos} indique où effectuer le remplacement. C'est un numéro de mesure, ou, plus \startnarrower[left] exactement, une {\em position musicale}, telle définie dans le paragraphe suivant, \at{page}[positions_musicales].\stopnarrower
 
-- \type{repla} est une {\em musique} ou une liste de {\em musique}s, mais la syntaxe avec \type{unquote '} est \startnarrower[left] acceptée~:~\type{'(musicA musicB musicC…)}.\stopnarrower
+- \type{repla} est une {\em musique} ou une liste de {\em musique}s, mais la syntaxe avec \type{quote '} est \startnarrower[left] acceptée~:~\type{'(musicA musicB musicC…)}.\stopnarrower
 
 - \type{repla-extra-pos }et\type{ obj-start-pos }sont
 aussi des {\em positions musicales}.
@@ -323,7 +323,7 @@ de {\em musique}s, \type{rm} renvoie la liste des {\em musique}s
 obtenues.
 \blank[0.7cm]
 \startfiguretext[right][exemple2]{}
-{\vbox{\blank[-1.1em]\externalfigure[exemple02.pdf][wfactor=175, align=flushright]}}
+{\vbox{\blank[-1.1em]\externalfigure[exemple02-fr.pdf][wfactor=175, align=flushright]}}
 \underbar{\sc\Words exemple 2}
 \blank[0.7cm]
 \startlily
@@ -376,7 +376,7 @@ mus = \relative c' {
 #(begin
   (rm 'fl 7 mus 4)
   (rm 'cl 4 mus #f) ;&\em{& (rm 'cl &}&4&\em{& mus)&}&
-  (rm 'basse 4 music 6))
+  (rm 'bs 4 mus 6))
 \stoplily %\blank[2.1cm]%
 \stopfiguretext
 
@@ -427,13 +427,13 @@ l'assignement à la mesure 5 se fait comme suit : \crlf
 \vtop{\hbox{
  \hspace[lilyindent]
  \starttable[|lT|c|l|]
-     'flute \NC $\leftarrow$ \NC \type{\musicA} \FR
+    \type{'flute} \NC $\leftarrow$ \NC \type{\musicA} \FR
     \NR
-    'clar \NC $\leftarrow$ \NC \type{\musicB} \MR
+    \type{'clar} \NC $\leftarrow$ \NC \type{\musicB} \MR
     \NR
-     'sax \NC $\leftarrow$ \NC \type{\musicB} \MR
+    \type{'sax} \NC $\leftarrow$ \NC \type{\musicB} \MR
     \NR
-    'bassClar \NC $\leftarrow$ \NC \type{\musicC} \LR
+    \type{'bassClar  } \NC $\leftarrow$ \NC \type{\musicC} \LR
     \NR
   \stoptable}
 }
@@ -449,13 +449,13 @@ Par exemple \type{'(5 2 4) }indique la position de la musique se trouvant à la 
 
 - Tout \type{n} inférieur à 1 (ou au nombre transmis en paramètre dans \type{init}, -3 par exemple) sera transformé en 1 (resp. en -3). L'erreur ne sera pas signalée, mais la position \type{'(0 2 4)} pointe vers le même endroit que \type{'(1 2 4)}…\\
 
-- Les {\em valeurs négatives} pour \type{i j k …} sont admises. Le code \type{'(5 2 4)} peut aussi s'écrire \type{'(6 -4)} {[}mesure 6, moins la valeur d'une noire{]}. Les valeurs négatives sont le seul moyen d'accéder à une levée en début de morceau~:~position \type{'(1 -4)} pour \type{\partial 4 s4}.\\
-%\hbox{\myindent\type{'(1 -4)} pour \type{\partial 4 s4}.}\\
+- Les {\em valeurs négatives} pour \type{i j k …} sont admises. Le code \type{'(5 2 4)} peut aussi s'écrire en \type{4/4}~: \type{'(6 -4)} soit \quotation{mesure 6, moins la valeur d'une noire}. Les valeurs négatives sont le seul moyen d'accéder à une levée en début de morceau~:~position \type{'(1 -4)} pour \type{\partial 4 …}
+\blank[0.5em]
 
 - Avec la fonction \type{rm}, une note qui commence avant la position passée en paramètre mais qui se poursuit après, sera raccourcie en conséquense.
 
 Dans l'\in{exemple}{ précédent (}[exemple3]\at{page}{)}[exemple3], le code : 
-\startmylily (rm 'clar '(5 2 4) #{ r4 #})\stopmylily
+\startmylily (rm 'cl '(5 2 4) #{ r4 #})\stopmylily
 donnerait pour la clarinette à la mesure 5 : 
 \startmylily 
 {c2. r4}
@@ -466,25 +466,24 @@ pointée.
 \hairline
 Attention : si les notes et les silences peuvent se «couper» en des valeurs plus petites, il n'en est pas de même pour les silences multi-mesures ( \type{R1 R1*2} etc…) qui ne peuvent se couper qu'à des barres de mesures.
 \hairline
-\blank
+\blank[0.5em]
 Ainsi, toujours dans cet \in{exemple}{ de la page \at{}[exemple3]}[exemple3], le code : 
-\startmylily(rm 'flute '(5 2 4) #{ c''4 #})\stopmylily
+\startmylily(rm 'fl '(5 2 4) #{ c''4 #})\stopmylily
 produirait un avertissement du genre :
 \startmylily
-&\it\rm{&«Avertissement : échec du contrôle de mesure (barcheck) à 3/4
-                      r\longa R1*1000000000»&}&
+&\it\quotation{{&Avertissement : échec du contrôle de mesure (barcheck) à 3/4
+  mmR = { #infinite-mmR \tag #'mmWarning R1 }&}}&
 \stopmylily
-(Cette ligne est une ligne de code de la fonction \type{init} dans  {\em «arranger.ly»}… )\\
+(La 2\high{ème} ligne est une ligne de code du fichier {\em «extractMusic.ly»}… )\\
 La solution ici est : 
 \startmylily
-(rm 'flute 5 #{ r2 r4 c''4 #}) ;&\em{& on met les silences à la main !&}&
+(rm 'fl 5 #{ r2 r4 c''4 #}) ;&\em{& on met les silences à la main !&}&
 \stopmylily
-%\crlf % <- ne marche pas ici
-\blank[1em]
+\blank[0.5em]
 
 - Voici pour finir, un exemple montrant l'utilisation des positions avec la commande 
 \type{\cadenzaOn}
-\blank[1em]
+\blank[0.2em]
 \underbar{\sc\Words exemple 4}
 \startfiguretext[right][exemple4]{}
 {\vbox{\blank[1.7em]\externalfigure[exemple04.pdf][wfactor=200, align=flushright]}}
@@ -503,18 +502,23 @@ global = {
    (rm 'clar 3 #{ c'2. #}))
 \stoplily
 \stopfiguretext
-%\blank[-2em] % <- ne marche pas ici
+\godown[-1.3em]
 Si on veut insérer un mi avant la mesure 3, on pourra utiliser des nombres négatifs :
 \startmylily (rm 'clar '(3 -2 -4) #{ e'2. #}) \stopmylily
 {\em arranger.ly} utilise quelque fois en interne une autre syntaxe pour les positions :
-\startmylily '(n moment) \stopmylily
+\startmylily `(n ,moment)    ;&\it\rm{& ou : (list n moment)&}& \stopmylily
 Son utilisation ici, pour insérer le mi donnerait :
 \startmylily (rm 'clar `(2 ,(ly:music-length cadenza)) #{ e'2. #}) \stopmylily
-
-\blank[0.7cm]
-- Convention
+Noter enfin que la syntaxe \type{`(n ,(ly:make-moment p/q))} peut s'alléger en
+\type{'(n p/q)}, à condition que le quotient \type{p/q} ne soit pas réductible à 1 entier.
+\startmylily 
+(rm 'clar '(2 5/4) #{ e'2. #})  ;&\it\rm{& ok avec 5/4 : même résultat que le code précédent&}&  \stopmylily
+Par contre, \type{8/4} donnerait \type{(ly:make-moment 1/2)} et non \type{(ly:make-moment 2/1)}
+\blank[1.2em]
+- \underbar{Convention} :
+\godown[-0.1em]
 \hairline
-Dans toutes les fonctions qui vont suivre, tout argument se terminant par \type {-pos} (\type {from-pos}, \type {to-pos}, \type {where-pos} etc…) seront du type {\em position}, tel qu'il vient d'être décrit dans tout ce paragraphe. Seront aussi de ce type, les noms tels que \type {pos1}, \type {pos2} etc…
+Dans toutes les fonctions qui vont suivre, tout argument se terminant par \type {-pos} (\type {from-pos}, \type {to-pos}, \type {where-pos} etc…) sera du type {\em position}, tel qu'il vient d'être décrit dans tout ce paragraphe. Seront aussi de ce type, les noms tels que \type {pos1}, \type {pos2} etc…
 \hairline
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1233,10 +1237,10 @@ Utilisable avec \goto{\em apply-to}[apply-to]. Voir \goto{l'exemple 5}[exemple5]
 \syntax {((set-transp octave note-index alteration/2) obj [obj2 [obj3 …]])}{}
 \syntax {((set-transp func) obj [obj2 [obj3 …]])}{}
 
-Applique la fonction scheme Lilypond \type{ly:pitch-transpose} à chaque hauteur de notes de `obj, avec le paramètre {\em "delta-pitch"} égal :
+Applique la fonction scheme Lilypond \type{ly:pitch-transpose} à chaque hauteur de notes de \type{obj}, avec le paramètre {\em "delta-pitch"} égal :
 \startitemize[joinedup,intro]
   \nop soit à la valeur de \type{(ly:make-pitch octave note-index alteration/2)} (syntaxe 1)
-  \nop soit à la valeur retournée par la fonction \type{func(p)} (syntaxe 2). ( \type{p} {\em pitch} courant à transposer).
+  \nop soit à la valeur retournée par la fonction \type{func(p)} (syntaxe 2). (\type{p} {\em pitch} courant à transposer).
 \stopitemize
 \blank
 %%Le 3\high{\itxx ième} paramètre (altérations) est un multiple de $\pm1/2$ \\
@@ -1254,21 +1258,38 @@ et peut s'utiliser de la manière suivante :
    (rm '(AclarI AclarII) 1 (3rd cl1 cl2))  ; &\em{\small &sons réels transcrits en la&}&
    (apply-to 'saxAlto enhar 10 15)   ; &\em{\small &met [10-15] au ton enharmonique&}&
 \stoplily
-La syntaxe 2 peut s'utiliser de la manière suivante :
-\startlily
-#(let* ((func (lambda(p) ; &\em{\small &Transposition modale de do majeur à la mineur&}&
-          (ly:make-pitch 0 -2         ; &\em{\small &renvoie p une tierce en dessous&}&
-            (if (member (ly:pitch-notename p) '(2 5)) ;  &\em{\small  &2 = mi, 5 = la&}&
-              -1/2       ; &\em{\small &une tierce majeure en dessous pour mi et la&}&
-              0))))      ; &\em{\small &une tierce mineure pour les autres notes&}&
-         (doM->lam (set-transp func)))
-   (apply-to 'vlI doM->lam 50 66)          ; &\em{\small &transpose [50 66] &}&                
-   (rm all 50 (doM->lam (em all 1 16))     ; &\em{\small &copie [1 16] transposé  &}&                 
-\stoplily
+La fonction \type{maj->min} présentée maintenant, utilise la syntaxe 2 pour adapter l'intervalle de transposition aux alentours des notes modales (degré III et VI) du ton majeur d'origine. 
+\startfiguretext[right][set-transp-func]{}
+ {\vbox{\blank[-0.2em]\externalfigure[set-transp-func-fr][wfactor=345, align=flushright]}}
+ {\vbox{\blank[-0.1em]
+\setupinterlinespace[medium]
+Les 3 instruments sont au départ identiques, puis \type{'II} et \type{'III} sont transposés en mineur.}}
+\stopfiguretext
+\setupinterlinespace[small]
+\godown[-0.55em]
+La fonction \type{maj->min} est definie de la manière suivante :
+\page
+\startmylily
+#(define (maj->min from-pitch to-pitch)  ;&\em{\small& renvoie la fonction lambda &}&
+   (let ((delta (ly:pitch-diff to-pitch from-pitch))
+         (special-pitches (music-pitches ;&\em{\small& voir scm/music-functions.scm &}&
+           (ly:music-transpose #{ dis e eis gis a ais #} from-pitch))))
+     (lambda(p) (ly:make-pitch           ;&\em{\small& renvoie le "delta pitch" &}&
+       0 
+       (ly:pitch-steps delta) 
+       (+ (ly:pitch-alteration delta)  ;&\em{\small& l'intervalle varie en fonction de p &}&   
+          (if (find (same-pitch-as p 'any-octave) special-pitches)
+            -1/2  0))))))      ;&\em{\small& same-pitch-as est defini dans checkPitch.ly &}&
+\stopmylily
+Il ne reste plus qu'à choisir le paramètre \type{to-pitch} à appliquer à \type{'II} et \type{'III} :
+\startmylily 
+(apply-to 'II (set-transp (maj->min  #{ c' #} #{ a #})) 1 8) 
+(apply-to 'III (set-transp (maj->min #{ c' #} #{ c' #})) 1 8))            
+\stopmylily
 
 \blank[0.8em]
 \midaligned{ \tfd ------------}
-\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\godown[0.6em]
 
 %%%%%%%%%
 \func{octave}
@@ -1283,32 +1304,33 @@ Cependant, au même titre que \type{rel} et \type{octave+}, elle bénéficie d'u
 En voici quelques possibilités.
 
 \underbar{1\high{er} cas} : mettre un theme à l'octave à des instruments de tessitures différentes.
-\blank[3mm]
+\blank[1mm]
 \startmylily
 (rm '(vlI vlII alto (vlc ctb)) 18 (octave 2 1 0 -1 theme))
 \stopmylily 
-\blank[3mm]
+\blank[1mm]
 La fonction renvoie la liste \type{((octave 2 theme)(octave 1 theme)} etc …\type{)}\\
 Noter que le violoncelle et la contrebasse reçoivent la même musique : \type{(octave -1 theme)}\\
 
 \underbar{2\high{ème} cas} : mettre à l'octave plusieurs musiques à la fois.
-\blank[3mm]
+\blank[1mm]
 \startmylily
 (rm '(instruI instruII instruIII instruIV) 18 (octave 1 m1 m2 m3 m4))
 \stopmylily 
-\blank[3mm]
+\blank[1mm]
 Toutes les musiques \type{m1 m2 m3 m4} sont transposées à l'octave.\\
 
 \underbar{3\high{ème} cas} : grand mélange !
-\blank[3mm]
+\blank[1mm]
 \startmylily
 (rm '(vlI vlII alto (vlc ctb)) 18 (octave 2 m1 1 m2 m3 -1 m4))
 \stopmylily 
-\blank[3mm]
-\type{m1} est transposée de 2 octaves au dessus, \type{m2} et \type{m3} : 1 octave et \type{m4} une octave en dessous.
+\blank[1mm]
+\type{m1} est transposée de 2 octaves au dessus, \type{m2} et \type{m3} : 1 octave et \type{m4} :~1 octave en dessous.
 
 \blank
-\midaligned{ \tfd ------------}\\
+\midaligned{ \tfd ------------}
+\godown[0.6em]
 
 %%%%%%%%%
 \func{octavize} 
@@ -1317,7 +1339,8 @@ Toutes les musiques \type{m1 m2 m3 m4} sont transposées à l'octave.\\
 \type{octavize} transpose de \type{n} octaves l'{\em instrumen}t (ou la liste d'{\em instrument}s)\type{ obj} entre les positions \type{[from-pos1 to-pos1]}, \type{[from-pos2 to-pos2]}, etc…
 
 \blank
-\midaligned{ \tfd ------------}\\
+\midaligned{ \tfd ------------}
+\godown[0.6em]
 
 %%%%%%%%%
 \func{octave+}
@@ -1327,43 +1350,47 @@ Raccourci de \type!(notes+ music (octave n music))! (voir \in{\type{notes+}}[not
 \type{octave+} bénéficie de la même extension de syntaxe que \type{octave} (voir ci-dessus) et \type{rel}.
 
 \blank
-\midaligned{ \tfd ------------}\\
+\midaligned{ \tfd ------------}
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%
 \func{add-note-octave} 
 \syntax {(add-note-octave n obj from-pos1 to-pos1 [/ from-pos2 to-pos2 /…])}{} 
 
-Applique \type{(octave+ n music)} pour chaque sections %
-\type+[from-pos to-pos]+ spécifiées.
+Applique la fonction \type{(octave+ n music)} précédente à chaque section \type+[from-pos to-pos]+.
 
-\blank
+\godown[0.6em]
 \midaligned{ \tfd ------------}
-\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\godown[-0.6em]
 
 %%%%%%%%%
 \hairline
-Les 2 fonctions suivantes : \type{fix-pitch} et \type{pitches->percu} sont plus particulièrement destinées aux percussions. Elles mettent un pont entre des notes avec hauteur et des notes de percussions
+Les 2 fonctions suivantes : \type{fix-pitch} et \type{pitches->percu} sont plus particulièrement destinées aux percussions. Elles mettent un pont entre des notes avec hauteur et des notes de percussions.
 \hairline
 \blank[-2em]
 
 %%%%%%%%%
-\func{fix-pitch} 
-\syntax {(fix-pitch music octave note-index alteration)}{} 
-
-Fixe toutes les notes à la hauteur \type{(ly:make-pitch
-octave note-index alteration)} et rend \type{music} in-transposable.
-
-\blank
-\midaligned{ \tfd ------------}\\
-
+\func{fix-pitch}
+\syntax {(fix-pitch music pitch)}{}
+\syntax {(fix-pitch music [octave] note-index [alteration])}{}
+\index{set-fix-pitch}
+Fixe toutes les notes à la hauteur \type{pitch} ou \type{(ly:make-pitch
+octave note-index alteration)}.
+\type{octave} ne peut être omis (\type{-1} par défaut) que si \type{alteration} l'est aussi (\type{0} par défaut)\\
+La fonction équivalente : \type{((set-fix-pitch …) music)} reprend ces mêmes paramètres.
+\blank[0.5em]
+\midaligned{ \tfd ------------}
+\godown[0.3em]
 
 %%%%%%%%%
 \func{pitches->percu} 
 \syntax {(pitches->percu music percu-sym-def . args)}{}
-Convertit les notes en des notes de type percussion.
-L'argument \type{args} est une suite de hauteur(pitch)/symbole de percussion. Pour chaque note de \type{music}, la fonction recherche le symbole de percussion correspondant. À défaut d'en trouver, le symbole  \type{percu-sym-def} est donné. L'instrument de percussion est assigné à la propriété \type{'drum-style} de la note.
-
-\blank[0.7cm]
+Convertit les notes en des notes de type percussion.\\
+L'argument \type{args} est une suite : d'une hauteur (pitch), d'un symbole de percussion, et  optionnellement, d'une barre oblique \type{/}, de séparation avec le groupe suivant.\\
+Pour chaque note de \type{music}, la fonction recherche le symbole de percussion correspondant. À défaut d'en trouver, le symbole  \type{percu-sym-def} est donné.\\
+L'instrument de percussion est assigné à la propriété \type{'drum-style} de la note.\\
+Noter enfin que tout nombre \type{n} sera transformé en \type{(ly:make-pitch -1 n 0)} par la fonction.
+\blank[0.2em]
 \underbar{\sc\Words exemple 6}
 \startfiguretext[right][exemple6]{}
 {\externalfigure[exemple06.pdf][wfactor=150, align=flushright]}
@@ -1372,28 +1399,28 @@ music = <<
    { e8 e e e e e e e} \\ 
    { c4 d8 c c4 d8 c } >>
 percu = #(pitches->percu music 'hihat /
-                       #{ c #} 'bassdrum /
-                       #{ d #} 'snare)
+                       #{ c #} 'bassdrum /  ;&\em{\small& ou : 0 'bassdrum /&}&
+                       #{ d #} 'snare)      ;&\em{\small& ou : 1 'snare)&}&
 \new DrumStaff \drummode { \percu }
 \stoplily
 \stopfiguretext
 
-\blank
-\midaligned{ \tfd ------------}\\
+\godown[-1.6em]
+\midaligned{ \tfd ------------}
+\godown[0.1em]
 
 %%%%%%%%%
-\func{set-range} 
+\func{set-range} (voir : \type{correct-out-of-range} dans {\em checkPitch.ly})
 \syntax {((set-range range) music)}{} 
 
-\type{range} est de la forme \type{{c, c''}} ou
-\type{<c, c''>}
-
+\type{range} est de la forme \type{{c, c''}} ou \type{<c, c''>}\\
 Transpose à l'octave idoine, toutes les notes en dehors
 de \type{range}. La fonction permet par exemple d'ajuster la partition à la tessiture d'un instrument.\\
 Peut être utiliser avec \goto{\type{apply-to}}[apply-to].
 
-\blank
-\midaligned{ \tfd ------------}\\
+\godown[-0.1em]
+\midaligned{ \tfd ------------}
+\godown[0.3em]
 
 %%%%%%%%%
 \func{display-transpose} 
@@ -1401,12 +1428,12 @@ Peut être utiliser avec \goto{\type{apply-to}}[apply-to].
 
 Déplace visuellement les notes de \type{amount} positions vers le haut ou le bas.
 
-\blank
+\godown[0.6em]
 \midaligned{ \tfd ------------}
+
                      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
                      
-%%\blank[4em] 
-\page                
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                
 \subject[utiliser-pattern]{Utiliser des «patterns»}
 \blank[-1em] 
 
@@ -1776,9 +1803,9 @@ d'{\em instrument}s associée à un {\em pos-dyn-str} donné, contient cet {\em 
 \NC \type{extract-code} \VL liste associée \NC\SR
 \HL
 \NC \type{'a} \VL contient 'a \NC\FR
-\NC \type{'(and a b)} \VL contient 'a {\bold \underbar et} 'b \NC\MR
-\NC \type{'(or a b)} \VL contient 'a {\bold \underbar ou} 'b \NC\MR
-\NC \type{'(xor a b)} \VL contient 'a mais {\bold \underbar pas} 'b \NC\LR
+\NC \type{'(and a b)} \VL contient \type{'a} {\bold \underbar et} \type{'b} \NC\MR
+\NC \type{'(or a b)} \VL contient \type{'a} {\bold \underbar ou} \type{'b} \NC\MR
+\NC \type{'(xor a b)} \VL contient \type{'a} mais {\bold \underbar pas} \type{'b} \NC\LR
 \stoptable 
 }\\
 - On peut mettre plus de 2 éléments à un opérateur. Le 3\high{\itxx ème} élément est combiné avec le résultat de l'opération des 2 premiers.
@@ -2145,7 +2172,7 @@ global = { s1*1000 }                  %%&\em\tfx{& On prévoit une grande longue
 %\startfiguretext[middle][exemple7]{}
 {\externalfigure[exemple10.pdf][wfactor=fit]}
 %\stopfiguretext
-\midaligned{\underbar{\sc\Words exemple 11}}
+\midaligned{\underbar{\sc\Words exemple 10}}
 \stoptitle
 
 \starttitle[

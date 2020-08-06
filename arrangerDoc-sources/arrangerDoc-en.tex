@@ -76,11 +76,11 @@
  %% \index{#1}   % <- #1 can end with character + which will not be displayed in index ! :-(
  %% (bad) workaround :
  \ctxlua{context.index((string.gsub("#1","+", "†")))}  %%  replace in index, any + character by †
-              %% Note the double parenthesis to force a single return value seule valeur of gsub
+                           %% Note the double parenthesis to force a single return value  of gsub
  \startsubsection[number=no,list=#1,reference=#1]{}
  %\startsubsubject[list=#1,reference=#1]{}   % don't work !
  {\switchtobodyfont[20pt] \checkmark} 
- {\sca function \cap{\bf #1}}
+ {\sca the function \cap{\bf #1}}
  %\stopsubsubject
  \stopsubsection
 }
@@ -98,31 +98,23 @@
 \placecontent[criterium=all]
 \title[generalites]{OVERVIEW}
 \subject[objectifs]{Basic goals}
-{\em arranger.ly provides an environment facilitating musical arrangement.}
-\footnote{To arrange herein means to re-orchestrate an original instrumentation.}
-A set of functions enables quick re-orchestration of a piece of music, using 
- minimal and reusable music encoding.
+{\em arranger.ly provides an environment facilitating musical arrangement.} \footnote{To arrange
+herein means to re-orchestrate an original instrumentation.} A set of functions enables quick
+re-orchestration of a piece of music, using a minimal and reusable music encoding.
 \blank[0.7em]
-One of the main aspects of {\em arranger.ly} concerns the locating system of
-musical positions, which is  now based on {\em bar numbers}\footnote {Lilypond
-uses a system based on {\em moment}s : \type{(ly:make-moment 5/4)} for example.}.
-The arranger's workflow is made more flexible : rather than entering music
-expressions instrument by instrument in a linear fashion, it becomes possible
-to work as the ideas go by -- first deal with the melody, then accompaniment,
+One of the main aspects of {\em arranger.ly} concerns the locating system of musical positions, which is  now based on {\em bar numbers}\footnote {Lilypond use a system based on {\em moment}s : \type{(ly:make-moment 5/4)} for example.}.The arranger's workflow is made more flexible : rather than entering music expressions instrument by instrument in a linear fashion, it becomes possible to work as the ideas go by -- first deal with the melody, then accompaniment,
 then the bass, etc.
 \blank[0.7em]
-Typically, the user first declares a list of instruments. {\em arranger.ly}
-takes care of initializing each instrument with empty measures. Then, in a
-single command, the user can insert a music fragment in several instruments
-and positions, as well as \quotation{copy-paste} entire music sections in one
+The user typically first declares a list of instruments. {\em arranger.ly} takes care of initializing
+each instrument with empty measures. Then, in a single command, the user can insert a music fragment
+in several instruments and positions, as well as \quotation{copy-paste} entire music sections in one
 line of code.
 
-Functions allow for octave transposing and octave doubling, specifying patterns
-for repeated rhythms or articulations, distributing the notes to various instruments
-in a succession of chords, inverting chords,~\dots, so as never to repeat information.
+Functions allow for octave transposing and octave doubling, specifying patterns for repeated rhythms or articulations, distributing the notes to various instruments in
+a succession of chords, inverting chords,~\dots, so as never to repeat information.
 
-All these functions can be directly used from Scheme, which makes for lighter
-syntax (no backslash before variable names) and easier editing of instrument lists.
+All these functions can be directly used from Scheme, which makes for lighter syntax (no backslash before
+variable names) and easier editing of instrument lists.
 
 Once the arrangement is finished, it can be exported to usual LilyPond source:
 \blank[0.3em]
@@ -154,9 +146,9 @@ clar = {…}
   \stoptabulate 
 \stopitemize
 
-It is easiest to put these 6 files in the same folder alongside with
-{\em arranger.ly}, and call LilyPond with option \type{--include=myfolder}.
-Only the following line should then be added at the top of your \type{.ly} file:\\
+It is easiest to put these 6 files in the same folder alongside with {\em arranger.ly},
+and call LilyPond with option \type{--include=myfolder}. Only the following line should then
+be added at the top of one's \type{.ly} file:\\
 \myindent\type{\include } \type{"arranger.ly"} % pbs d'espace avec \type{\include "arranger.ly"}
 \godown[-0.3em] %\blank[-0.6cm]
 
@@ -174,10 +166,10 @@ described below.
 %%%%%%%%%%%%%%%%%
 
 \subject{Conventions and reminders}
-In this document, we call {\em instrument} any Scheme symbol referencing
+In this document, we shall call {\em instrument} any Scheme symbol referencing
 a LilyPond music expression. The music an instrument points to has the same length
 as \type{\global} and begins at the same time (by default, this is measure 1, with an
-optional upbeat). By contrast, in the following text, {\em music} more generally refers to
+optional upbeat). However, in the following text, {\em music} more generally refers to
 a fragment with indeterminate position, which can be inserted at any measure in the piece.
 
 Being a symbol, an instrument is denoted in Scheme using a leading \hbox{single vertical
@@ -212,7 +204,7 @@ These lists can be manipulated with ease thanks to {\em arranger.ly}'s utility f
 \reference[init]{}
 \index[init-info]{init}                   
 \subject{Initialization}
-The \type{init} function must be called \emph{after} declaring \type{\global} and
+- The \type{init} function must be called \emph{after} declaring \type{\global} and
 \emph{before} any call to the other functions. It is passed a list of instruments and
 an optional integer.
 
@@ -220,7 +212,7 @@ an optional integer.
 
 Each instrument in the list is declared to LilyPond and filled in with multi-measure rests.
 
-Assuming \type{\global} was defined using:
+If \type{\global} was defined using:
 \startlily
 global = { s1*20 \time 5/8 s8*5*10 \bar "|."}
 \stoplily
@@ -241,24 +233,23 @@ basse = { R1*20 R8*5*10 }
 \stoplily
 \blank[0.8em]
 
-\type{instru-list} may be empty: \type{(init '())}. A noteworthy use case
-is direct editing of the \type{\global} variable, as shown in
-\goto{addendum I}[addendum1] at \at{page}[addendum1].
+- \type{instru-list} may be empty: \type{(init '())}. A noteworthy use case
+is direct editing of the \type{\global} variable, as shown in \goto{addendum I}[addendum1]
+at page \at{page}[addendum1].
 
 Once all music events influencing the meter are declared in \type{\global}, \type{init}
-can be called a second time with a non-empty instrument list.\\
-
-To count measures, \type{init} takes into account manual overrides applied to
-properties of the \type{Score} context and the \type{Timing} object, such as
-\type{measurePosition}, \type{measureLength}, \type{currentBarNumber}, as well
-as the \type{\partial}, \type{\cadenzaOn} and \type{\cadenzaOff} commands. If
-\type{\partial} is placed at the very beginning of the piece, \type{init} even
-adds a rest with same duration as the pickup to all the instruments.
+can be called a second time with a non-empty instrument list.
+\page
+- To count measures, \type{init} takes into account manual overrides applied to properties
+of the \type{Score} context and the \type{Timing} object, such as \type{measurePosition},
+\type{measureLength}, \type{currentBarNumber}, as well a the \type{\partial}, \type{\cadenzaOn}
+and \type{\cadenzaOff} command. If \type{\partial} is placed at the very beginning of the piece,
+\type{init} even adds a rest with same duration as the pickup to all the instruments.
 
 \setupcaptions[location=none]
 \startfiguretext[right][exemple1]{}
 {\vbox{\blank[-0.6em]\externalfigure[exemple01.pdf][wfactor=180, align=flushright]}}
-\underbar{\sc\Words exemple 1}
+\underbar{\sc\Words example 1}
 \startlily[bodyfont=10pt]
 global = { 
   \partial 4 s4
@@ -275,27 +266,24 @@ global = {
 all = #'(flute clar sax tptte cor tbne basse)
 #(init all)
 
-\stoplily %\blank[2.1cm]%
+\stoplily
 \stopfiguretext
 
 \index{measure-number->moment}
 The internal function \type{measure-number->moment} may be used to ensure that
 {\em arranger.ly} and {\em LilyPond} stay in sync. For example,
-
 \startmylily
 #(display (map measure-number->moment '(1 2 3 4 50)))
 \stopmylily
-prints the number of quarter notes elapsed from music start for measures 1, 2,
-3, 4 and 50:
+prints the number of quarter notes elapsed from music start for measures 1, 2, 3, 4 and 50:
 \startmylily
 (#<Mom 1/4> #<Mom 5/4> #<Mom 9/4> #<Mom 11/4> #<Mom 15/4>)
 \stopmylily
 \blank[1em]  % crlf 
-
+- The optional parameter \type{measure1-number}\crlf
 \type{init} accepts an integer as optional last argument, indicating  the
 numbering of the first measure. It defaults to 1. This is useful to add, say
 3 measures of intro to the arrangement.
-
 \startmylily 
 (init all -2) 
 \stopmylily
@@ -326,7 +314,7 @@ tempSettings = {
 This function typically redefines an {\em instrument}, replacing part of
 its existing music with the music fragment given as an argument.\crlf
 \type{rm} is actually an extension of \type{\replaceMusic} from {\em extractMusic.ly}.
-Optional reading is chapter 8 from this file's documentation at~:\crlf %%%% TODO: missing URL?
+Optional reading is chapter~8 from this file's documentation at~:\crlf
 \hbox{\hspace[lilyindent]\from[extractMusic]}
 \page %%%%%%%%%%%%%%%%%%%%%%%%
 Below is the syntax of \type{rm} :
@@ -336,35 +324,34 @@ Below is the syntax of \type{rm} :
 - \type{obj} is $\left\{
 \vcenter{%
 \mbox{an {\em instrument}, e.g. \type{'flute }}
-\mbox{a list of {\em instrument}s : \type{'(clar tptte sax)}}
+\mbox{a list of {\em instrument}s : \type{'(clar tpt sax)}}
 \mbox{but may also be a {\em music} : \type{music or #{…#}} }
 \mbox{or a list of {\em music}s : \type{(list musicA musicB musicC) }}
 }
 \right.$
 \blank[medium]
 - \type{where-pos} indicates the bar where replacement is performed. More precisely,
-it is a {\em music position} as defined in the next paragraph (\at{page}[positions_musicales]).
+it is a  \startnarrower[left] {\em music position} as defined in the next paragraph (\at{page}[positions_musicales]).\stopnarrower
 
-- \type{repla} is a {\em music} or a list of {\em music}s, but syntax with \type{unquote '} is
-valid~:~\type{'(musicA musicB musicC…)}. %% TODO: unclear
+- \type{repla} is a {\em music} or a list of {\em music}s, but syntax with \type{quote '} is valid~:
+\startnarrower[left] \type{'(musicA musicB musicC…)}.\stopnarrower
 
-- \type{repla-extra-pos } and \type{ obj-start-pos } are {\em music positions} too (read on).
+- \type{repla-extra-pos }and\type{ obj-start-pos } are {\em music positions} too  (read on).
 \blank
-{\hbox{\hspace[lilyindent]{\em {\small $\triangleright$} return}{: }}}
+{\hbox{\hspace[lilyindent]{\em {\small $\triangleright$} return }{: }}}
 \blank
 - If \type{obj} is an {\em instrument} or a {\em music}, \type{rm} returns the music
-obtained after performing the replacement. This new value is automatically assigned
-to the appropriate symbol.
+obtained after performing the \startnarrower[left] replacement. In the case of an {\em instrument}, this new value is automatically reassigned to the symbol representing it.\stopnarrower
 
-- If \type{obj} is a list of instruments or musics, \type{rm} returns a list of musics.
+- If \type{obj} is a list of {\em instrument}s or {\em music}s, \type{rm} returns the list of the obtained {\em music}s.
 \blank[0.7cm]
 \startfiguretext[right][exemple2]{}
-{\vbox{\blank[-1.1em]\externalfigure[exemple02.pdf][wfactor=175, align=flushright]}}
-\underbar{\sc\Words example 2}
+{\vbox{\blank[-1.1em]\externalfigure[exemple02-en.pdf][wfactor=175, align=flushright]}}
+\underbar{\sc\Words exemple 2}
 \blank[0.7cm]
 \startlily
 global = { s1*4 \bar "|." } 
-all = #'(fl cl sax tptte cor tbne basse) 
+all = #'(fl cl sax tpt horn tbn bass) 
 #(init all)
 
 musA = \relative c' { e2 d c1 }
@@ -372,20 +359,19 @@ musB = { f1 e1 }
 musC = { g,1 c1 }
 
 #(begin 
-  (rm 'flute 1 #{ c'''1 #})
-  (rm '(clar sax tptte) 2 #{ c''1 #}) 
-  (rm '(cor tbne basse) 3 
+  (rm 'fl 1 #{ c'''1 #})
+  (rm '(cl sax tpt) 2 #{ c''1 #}) 
+  (rm '(horn tbn bass) 3 
                   '(musA musB musC)))
 \stoplily %\blank[2.1cm]%
 \stopfiguretext
 \blank[0.7cm]
-
-By default, \type{rm} accounts for the entire music given in \type{repla}.
-It is however possible to extract only part of it by specifying the optional
-parameter \type{repla-extra-pos}. The principle is as follows:
-
+By default, the \type{rm} function accounts for the entire music given in \type{repla}.
+It is however possible to take only a part of it by specifying the optional
+parameter \type{repla-extra-pos}.\crlf
+The principle is as follows:
 \hairline
-\type{repla} is positioned at the lowest position between \type{where-pos} and \type{repla-extra-pos}.
+\type{repla} is positioned at the lowest position between \type{where-pos} and \type{repla-extra-pos} :
 \definesymbol[5][$\rightarrow$]
 \startitemize[5, joinedup, intro][margin=\lilyspace]
 \item if \type{repla-extra-pos} is before \type{where-pos},
@@ -400,7 +386,7 @@ from the instrument is replaced, and the end of \type{repla} is ignored.
 \blank[0.7cm]
 Examples are most intuitive:
 \page
-\underbar{\sc\Words example 3}
+\underbar{\sc\Words exemple 3}
 \startfiguretext[right][exemple3]{}
 {\vbox{\blank[0.15em]\externalfigure[exemple03.pdf][wfactor=220, align=flushright]}}
 \startlily
@@ -410,16 +396,16 @@ mus = \relative c' {
 #(begin
   (rm 'fl 7 mus 4)
   (rm 'cl 4 mus #f) ;&\em{& (rm 'cl &}&4&\em{& mus)&}&
-  (rm 'basse 4 music 6))
-\stoplily %\blank[2.1cm]%
+  (rm 'bs 4 mus 6))
+\stoplily
 \stopfiguretext
 
 - Optional parameter \type{obj-start-pos} may precise where \type{obj} begins
-(\type{repla-extra-pos} relates to \type{repla}). Typically, \type{obj} is a
-{\em music} rather than an {\em instrument} and the return value is used.
+(\type{repla-extra-pos}, above, related to \type{repla}). Typically here, \type{obj} is a
+{\em music} rather than an {\em instrument} and the return value of \type{rm} is used.
 
-In \in{example}[exemple3], we change the F note at bar 6
-into an E flat, assigning the result to another instrument, a sax.
+In \in{example}[exemple3], we change now the F note at bar 6 into an E flat, assigning the
+result to another instrument, a sax.
 
 \defineparagraphs[mypar][n=3,before={\blank}, after={\blank}, distance=1em]
 \setupparagraphs[mypar][1][width=0.42\textwidth, style=type]
@@ -452,8 +438,8 @@ returns a new musical expression without actually modifying \type{music}, wherea
 latter assigns this return value back to the \type{'music} instrument.
 \hairline
 \blank
-- In case \type{obj} is a list of instruments, any element of this list may in turn
-be a list of instruments. Thus,
+- In case \type{obj} is a list of {\em instrument}s, any element of this list may in turn
+be a list of {\em instrument}s. Thus,
 \startmylily
 (rm '(flute (clar sax) bassClar) 5 '(musicA musicB musicC))
 \stopmylily 
@@ -461,13 +447,13 @@ will trigger assignments as in this diagram:\crlf
 \vtop{\hbox{
  \hspace[lilyindent]
  \starttable[|lT|c|l|]
-     'flute \NC $\leftarrow$ \NC \type{\musicA} \FR
+    \type{'flute} \NC $\leftarrow$ \NC \type{\musicA} \FR
     \NR
-    'clar \NC $\leftarrow$ \NC \type{\musicB} \MR
+    \type{'clar} \NC $\leftarrow$ \NC \type{\musicB} \MR
     \NR
-     'sax \NC $\leftarrow$ \NC \type{\musicB} \MR
+    \type{'sax} \NC $\leftarrow$ \NC \type{\musicB} \MR
     \NR
-    'bassClar \NC $\leftarrow$ \NC \type{\musicC} \LR
+    \type{'bassClar  } \NC $\leftarrow$ \NC \type{\musicC} \LR
     \NR
   \stoptable}
 }
@@ -475,68 +461,61 @@ will trigger assignments as in this diagram:\crlf
 
                      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subject[positions_musicales]{Music positions and bar numbers explained}
-A position is denoted by a bar number. What if the position should not begin at
-the start of a measure? In such a case, the position is a {\em list of integers}:
-\startmylily
-'(n i j k …)
-\stopmylily
+%\blank[0.8em]
+- A position is denoted by a bar number. What if the position should not begin at
+the start of a measure? In such a case, the position is a {\em list of integers}: 
+\startmylily '(n i j k …) \stopmylily
 where \type{n} is the bar number, and \type{i j k …} are powers of two (1, 2, 4,
-8, 16, etc.) denoting the distance from the beginning of the \type{n}-th bar.
-Thus, in a \type{4/4} beat, \type{'(5 2 4)} is a position, located in measure 5,
-after a half note (\type{2}) and a quarter note (\type{4}), that is, fifth measure,
-fourth beat.
+8, 16, etc…) denoting the distance from the beginning of the \type{n}-th bar. 
 
-Any \type{n} lower than the \type{measure1-number} passed to \type{init}, which
-defaults to 1, will be silently transformed into that number. In the previous
-example, \type{'(0 2 4)} points to the same location as \type{'(1 2 4)}.
+Thus, \type{'(5 2 4)} is a position, located in measure 5, after a half note (\type{2})
+and a quarter note (\type{4}), that is, in a \type{4/4} beat, fifth measure, fourth beat.\\
 
-{\em Negative} values for \type{i j k …} are allowed. In a 4/4 beat,
-\type{'(5 2 4)} is the same position as \type{'(6 -4)}, which reads
-\quotation{One quarter note before measure 6.}. This is the only way to access
-a pickup at the start of the piece: \type{'(6 -4)} is the beginning of a tune
-starting with \type{\partial 4 …}.
+- Any \type{n} lower than the \type{measure1-number} passed to \type{init}, which
+defaults to 1, will be silently transformed into that number. In practice, it means that
+\type{'(0 2 4)} points to the same location as \type{'(1 2 4)}…\\
 
-Any note held at the beginning of the replacement is appropriately shortened by
-\type{rm}.
+- {\em Negative} values for \type{i j k …} are allowed.
+\\In a 4/4 beat, \type{'(5 2 4)} is the same position as \type{'(6 -4)}, which reads
+\quotation{One quarter note before measure 6.}.\\
+Negative values are the only way to access a pickup at the start of the piece: \type{'(1 -4)} is the beginning of a tune starting with \type{\partial 4 …}.\\
 
-In the previous example, this code: 
+- Any note still held at the beginning of the replacement is appropriately shortened by \type{rm}.
+
+In the \in{previous example}{ (}[exemple3]\at{page}{)}[exemple3], this code: 
 \startmylily
-(rm 'clar '(5 2 4) #{ r4 #})
+(rm 'cl '(5 2 4) #{ r4 #})
 \stopmylily
-would yield
+would yield, as the clarinet's fifth measure, to:
 \startmylily 
 {c2. r4}
 \stopmylily
-as the clarinet's fifth measure, turning the whole C note into a dotted half note.
-
+$\Longrightarrow$ the whole C note turns into a dotted half note.
 \reference[multirestWarning]{}
 \hairline
 Beware: while notes and rests may be arbitrarily split into smaller values,
 full-measure rests (written with capital \type{R}) can only be shortened at bar lines.
 \hairline
-\blank
-This is why, in our example,
+\blank[0.5em]
+This is why, in our \in{example}{ on page \at{}[exemple3]}[exemple3],
 \startmylily
-(rm 'flute '(5 2 4) #{ c''4 #})
+(rm 'fl '(5 2 4) #{ c''4 #})
 \stopmylily
 would trigger a warning resembling:
 \startmylily
-&\it\rm{&«warning: barcheck failed at: 1/2
-                      r\longa R1*1000000000»&}&
+&\it\quotation{{&warning: barcheck failed at: 3/4
+ mmR = { #infinite-mmR \tag #'mmWarning R1 }&}}&
 \stopmylily
-(This line originates from the {\em arranger.ly} file.)
-
+(The 2\high{nd} line originates from the {\em extractMusic.ly} file.)\\
 The solution is:
 \startmylily
-(rm 'flute 5 #{ r2 r4 c''4 #}) ;&\em{&rests written out by hand&}&
+(rm 'fl 5 #{ r2 r4 c''4 #})    ;&\em{& rests written out by hand !&}&
 \stopmylily
 %\crlf % <- ne marche pas ici
 \blank[1em]
 
-This last example demonstrate the use of positions with the \type{\cadenzaOn}
-command.
-
-\blank[1em]
+- This last example demonstrate the use of positions with the \type{\cadenzaOn} command.
+\blank[0.2em]
 \underbar{\sc\Words exemple 4}
 \startfiguretext[right][exemple4]{}
 {\vbox{\blank[1.7em]\externalfigure[exemple04.pdf][wfactor=200, align=flushright]}}
@@ -555,26 +534,30 @@ global = {
    (rm 'clar 3 #{ c'2. #}))
 \stoplily
 \stopfiguretext
-
+\godown[-1.5em]
 In order to insert an E note before measure 3, one can use negative number:
 \startmylily
 (rm 'clar '(3 -2 -4) #{ e'2. #})
 \stopmylily
 
 Internally, {\em arranger.ly} occasionally uses a different syntax for positions:
-\startmylily
-'(n moment)
-\stopmylily
+\startmylily `(n ,moment)    ;&\it\rm{& or : (list n moment)&}& \stopmylily
 
-Here, this would translate into
+To insert the E, the following would then be possible:
 \startmylily
 (rm 'clar `(2 ,(ly:music-length cadenza)) #{ e'2. #})
 \stopmylily
+Note finally that the syntax \type{`(n ,(ly:make-moment p/q))} can be reduced to \type{'(n p/q)}, provided that the quotient \type{p/q} is not reducible to an integer.
+\startmylily 
+(rm 'clar '(2 5/4) #{ e'2. #})  ;&\it\rm{& ok with 5/4 : same result as previous code&}&  \stopmylily
+On the other hand, \type{8/4} would be \type{(ly:make-moment 1/2)}, not \type{(ly:make-moment 2/1)}.
 
-\blank[0.7cm]
+\blank[1.2em]
+- \underbar{Convention} :
+\blank[0.1em]
 \hairline
 In all following functions, any argument ending in \type{-pos} (such as
-\type{from-pos}, \type{to-pos}, \type{where-pos}, etc.) shall be positions as
+\type{from-pos}, \type{to-pos}, \type{where-pos}, etc.) shall be \type{position}s as
 described in this paragraph, as well as \type{pos1}, \type{pos2}, etc.
 \hairline
 
@@ -1240,13 +1223,13 @@ See a use of \type{chords->nmusics} at \goto{example 5}[exemple5] of \at{page}[e
 
                      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subject[gerer-hauteur]{Gérer les hauteurs des notes}
+\subject[gerer-hauteur]{Managing pitch of notes}
 \blank[-2em]
 %%%%%%%%%
 \func{rel}
 \syntax {(rel [n] music)}{}
-Renvoie : \type{\relative} {\em hauteur} \type{\music}\\
-\midaligned{ {\em hauteur} étant le do central c' transposé de \type{n} octaves.}
+returns : \type{\relative} {\em pitch} \type{\music}\\
+\midaligned{{\em pitch} as the central \type{c'}, transposed by \type{n} octaves.\type{    }}
 %\rightaligned{{\em hauteur} étant le do central c' transposé de \type{n} octaves.}
 
 \hbox{{\hspace[lilyindent]}
@@ -1263,17 +1246,17 @@ Renvoie : \type{\relative} {\em hauteur} \type{\music}\\
 \stoptable
 } % end of \hbox
 
-Une syntaxe étendue est possible. Voir la fonction \goto{\type{octave}}[octave] \at{page}[octave]
+An extended syntax is possible. See \goto{\type{octave} function}[octave], \at{page}[octave].
 
 \blank[1em]
 \midaligned{ \tfd ------------}\\
 
 %%%%%%%%%
-\func{set-pitch} (fonction de référence \type+\changePitch+)%
+\func{set-pitch} (reference function : \type+\changePitch+)
 \syntax {((set-pitch from-notes) obj)}{}
 
-Échange la hauteur des notes de \type{obj} par celles de \type{from-notes}.
-Utilisable avec \goto{\em apply-to}[apply-to]. Voir \goto{l'exemple 5}[exemple5] de la \at{page}[exemple5].
+Replace pitch of notes in \type{obj} by those in \type{from-notes}.
+To use typically with \in{\type{apply-to}}[apply-to]\at{(page}{)}[apply-to].See \goto{example 5}[exemple5] at \at{page}[exemple5].
 \blank[0.6em]
 \midaligned{ \tfd ------------}\\
 
@@ -1281,43 +1264,57 @@ Utilisable avec \goto{\em apply-to}[apply-to]. Voir \goto{l'exemple 5}[exemple5]
 \func{set-transp}
 \syntax {((set-transp octave note-index alteration/2) obj [obj2 [obj3 …]])}{}
 \syntax {((set-transp func) obj [obj2 [obj3 …]])}{}
-
-Applique la fonction scheme Lilypond \type{ly:pitch-transpose} à chaque hauteur de notes de `obj, avec le paramètre {\em "delta-pitch"} égal :
+Apply the Lilypond scheme function \type{ly:pitch-transpose} to each pitch of \type{obj}, with a {\em "delta-pitch"} parameter equal to :
 \startitemize[joinedup,intro]
-  \nop soit à la valeur de \type{(ly:make-pitch octave note-index alteration/2)} (syntaxe 1)
-  \nop soit à la valeur retournée par la fonction \type{func(p)} (syntaxe 2). ( \type{p} {\em pitch} courant à transposer).
+  \nop either the return value of \type{(ly:make-pitch octave note-index alteration/2)} (syntax 1)
+  \nop either the return value of the \type{func(p)} function (syntax 2).(\type{p} current pitch to transpose).
 \stopitemize
-\blank
-%%Le 3\high{\itxx ième} paramètre (altérations) est un multiple de $\pm1/2$ \\
-
-Les paramètres \type{obj} sont des {\em musique}s, des {\em instrument}s ou une liste d'un de ces 2
-types.\\
-La fonction renvoie la {\em musique} transposée, ou une liste de {\em musique}s transposées.\\
-\type{set-transp} est compatible avec \in{\type{apply-to}}[apply-to]
-et peut s'utiliser de la manière suivante :
+\blank[0.2em]
+The \type{obj} parameters are {\em music}s, {\em instrument}s or a list of one of these 2 types.\\
+The function returns the transposed {\em music}, or a list of transposed {\em music}s\\
+\type{set-transp} is  compatible with \in{\type{apply-to}}[apply-to] and can be used as 
+follows :
 \startlily
-#(let((5th (set-transp 0 4 0))}      ; 4&\em{\small & notes au dessus = une quinte&}&
-      (3rd (set-transp 0 2 -1/2))    ; &\em{\small &comme de do à mib&}&
-      (enhar (set-transp 0 1 -1)))   ; &\em{\small &de do à rebb = enharmonie&}&
-   (rm all 67 (5th (em all 11 23)))  ; &\em{\small &[11-23] est copié à 67 à la quinte&}&
-   (rm '(AclarI AclarII) 1 (3rd cl1 cl2))  ; &\em{\small &sons réels transcrits en la&}&
-   (apply-to 'saxAlto enhar 10 15)   ; &\em{\small &met [10-15] au ton enharmonique&}&
+#(let((5th (set-transp 0 4 0))}      ; &\em{\small &4 notes above = a fifth&}&
+      (3rd (set-transp 0 2 -1/2))    ; &\em{\small &like from c to ees&}&
+      (enhar (set-transp 0 1 -1)))   ; &\em{\small &from c to deses = enharmony&}&
+   (rm all 67 (5th (em all 11 23)))  ; &\em{\small &[11-23] is copied at 67 to the fifth&}&
+   (rm '(AclarI AclarII) 1 (3rd cl1 cl2))  ; &\em{\small &concert pitch transposed in A&}&
+   (apply-to 'saxAlto enhar 10 15)   ; &\em{\small &set [10-15] in the enharmonic tone&}&
 \stoplily
-La syntaxe 2 peut s'utiliser de la manière suivante :
-\startlily
-#(let* ((func (lambda(p) ; &\em{\small &Transposition modale de do majeur à la mineur&}&
-          (ly:make-pitch 0 -2         ; &\em{\small &renvoie p une tierce en dessous&}&
-            (if (member (ly:pitch-notename p) '(2 5)) ;  &\em{\small  &2 = mi, 5 = la&}&
-              -1/2       ; &\em{\small &une tierce majeure en dessous pour mi et la&}&
-              0))))      ; &\em{\small &une tierce mineure pour les autres notes&}&
-         (doM->lam (set-transp func)))
-   (apply-to 'vlI doM->lam 50 66)          ; &\em{\small &transpose [50 66] &}&                
-   (rm all 50 (doM->lam (em all 1 16))     ; &\em{\small &copie [1 16] transposé  &}&                 
-\stoplily
+The function \type{maj->min} presented now, uses syntax 2 to adapt the transposition interval around the modal notes (degree III and VI) of the original major key. 
+\startfiguretext[right][set-transp-func]{}
+ {\vbox{\blank[-0.2em]\externalfigure[set-transp-func-en][wfactor=345, align=flushright]}}
+ {\vbox{\blank[-0.38em]
+\setupinterlinespace[medium]
+The 3 instruments are initially identical, then \type{'II} and \type{'III} are transposed into minor.}}
+\stopfiguretext
+\setupinterlinespace[small]
+\godown[-0.4em]
+The function \type{maj->min} is defined as follows:
+\page
+\startmylily
+#(define (maj->min from-pitch to-pitch)  ;&\em{\small& return the function lambda &}&
+   (let ((delta (ly:pitch-diff to-pitch from-pitch))
+         (special-pitches (music-pitches ;&\em{\small& defined in scm/music-functions.scm &}&
+           (ly:music-transpose #{ dis e eis gis a ais #} from-pitch))))
+     (lambda(p) (ly:make-pitch           ;&\em{\small& return the delta pitch &}&
+       0 
+       (ly:pitch-steps delta) 
+       (+ (ly:pitch-alteration delta)    ;&\em{\small& the interval varies according to p &}&   
+          (if (find (same-pitch-as p 'any-octave) special-pitches)
+            -1/2  0))))))        ;&\em{\small& same-pitch-as is defined in checkPitch.ly &}&
+\stopmylily
+All that's left is to choose which \type{to-pitch} parameter to apply to \type{'II} and \type{'III}:
+\startmylily 
+(apply-to 'II (set-transp (maj->min  #{ c' #} #{ a #})) 1 8) 
+(apply-to 'III (set-transp (maj->min #{ c' #} #{ c' #})) 1 8))            
+\stopmylily
 
 \blank[0.8em]
 \midaligned{ \tfd ------------}
-\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\godown[0.6em]
+
 
 %%%%%%%%%
 \func{octave}
@@ -1326,93 +1323,98 @@ or : (2\high{nd} equivalent form, to be used with \goto{\type{apply-to}}[apply-t
 \index{set-octave}
 \syntax {((set-octave n) obj)}{}
 
-Basiquement, \type{octave} est un simple raccourci de la fonction \type{(set-transp n 0 0)},
-\type{n} pouvant être positif (transposition vers le haut) ou négatif (transposition vers le bas).\\
-Cependant, au même titre que \type{rel} et \type{octave+}, elle bénéficie d'une syntaxe étendue.\\
-En voici quelques possibilités.
-
-\underbar{1\high{er} cas} : mettre un theme à l'octave à des instruments de tessitures différentes.
-\blank[3mm]
+Basically, \type{octave} is a simple shortcut to the function \type{(set-transp n 0 0)}, where \type{n} can be positive (upward transposition) or negative (downward transposition).\\
+However, like the \type{rel} and \type{octave+} functions, it has an extended syntax.\\
+Here are some possibilities.
+\blank[0.6em]
+\underbar{1\high{st} case}: put a theme in different octaves, to instruments of different tessitura.
+\blank[1mm]
 \startmylily
-(rm '(vlI vlII alto (vlc ctb)) 18 (octave 2 1 0 -1 theme))
+(rm '(vlI vlII va (vc db)) 18 (octave 2 1 0 -1 theme))
 \stopmylily 
-\blank[3mm]
-La fonction renvoie la liste \type{((octave 2 theme)(octave 1 theme)} etc …\type{)}\\
-Noter que le violoncelle et la contrebasse reçoivent la même musique : \type{(octave -1 theme)}\\
-
-\underbar{2\high{ème} cas} : mettre à l'octave plusieurs musiques à la fois.
-\blank[3mm]
+\blank[1mm]
+The function returns the list \type{((octave 2 theme)(octave 1 theme)} etc …\type{)}\\
+Note that the cello and the double bass receive the same music: \type{(octave -1 theme)}
+\blank[0.6em]
+\underbar{2\high{nd} case} : put in a specified octave, several musics at the same time.
+\blank[1mm]
 \startmylily
 (rm '(instruI instruII instruIII instruIV) 18 (octave 1 m1 m2 m3 m4))
 \stopmylily 
-\blank[3mm]
-Toutes les musiques \type{m1 m2 m3 m4} sont transposées à l'octave.\\
-
-\underbar{3\high{ème} cas} : grand mélange !
-\blank[3mm]
+\blank[1mm]
+All musics \type{m1 m2 m3 m4} are transposed to the octave.
+\blank[0.6em]
+\underbar{3\high{rd} case} : great mix !
+\blank[1mm]
 \startmylily
-(rm '(vlI vlII alto (vlc ctb)) 18 (octave 2 m1 1 m2 m3 -1 m4))
+(rm '(vlI vlII va (vc db)) 18 (octave 2 m1 1 m2 m3 -1 m4))
 \stopmylily 
-\blank[3mm]
-\type{m1} est transposée de 2 octaves au dessus, \type{m2} et \type{m3} : 1 octave et \type{m4} une octave en dessous.
+\blank[1mm]
+\type{m1} is transposed 2 octaves up, \type{m2} and \type{m3} are transposed : 1 octave up, and \type{m4} is transposed : 1 octave down.
 
 \blank
-\midaligned{ \tfd ------------}\\
+\midaligned{ \tfd ------------}
+\godown[0.6em]
 
 %%%%%%%%%
 \func{octavize} 
 \syntax {(octavize n obj from-pos1 to-pos1 [/ from-pos2 to-pos2 /…])}{} 
 
-\type{octavize} transpose de \type{n} octaves l'{\em instrumen}t (ou la liste d'{\em instrument}s)\type{ obj} entre les positions \type{[from-pos1 to-pos1]}, \type{[from-pos2 to-pos2]}, etc…
+\type{octavize} transpose by \type{n} octaves the {\em instrumen}t (or the list of {\em instrument}s)\type{ obj}, between the positions \type{[from-pos1 to-pos1]}, \type{[from-pos2 to-pos2]}, etc…
 
 \blank
-\midaligned{ \tfd ------------}\\
+\midaligned{ \tfd ------------}
+\godown[0.6em]
 
 %%%%%%%%%
 \func{octave+}
 \syntax {(octave+ n music)}{}
 
-Raccourci de \type!(notes+ music (octave n music))! (voir \in{\type{notes+}}[notes+]\at{page}{}[notes+]) mais sans doubler les articulations des notes octaviées.\\
-\type{octave+} bénéficie de la même extension de syntaxe que \type{octave} (voir ci-dessus) et \type{rel}.
-
-\blank
-\midaligned{ \tfd ------------}\\
-
-%%%%%%%%%
-\func{add-note-octave} 
-\syntax {(add-note-octave n obj from-pos1 to-pos1 [/ from-pos2 to-pos2 /…])}{} 
-
-Applique \type{(octave+ n music)} pour chaque sections %
-\type+[from-pos to-pos]+ spécifiées.
+Shortcut of \type!(notes+ music (octave n music))! (see \in{\type{notes+}}[notes+] \at{page}{}[notes+]) but without doubling articulations.\\
+\type{octave+} has the same extended syntax as \type{octave} (see above) and \type{rel}.
 
 \blank
 \midaligned{ \tfd ------------}
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%
+\func{add-note-octave} 
+\syntax {(add-note-octave n obj from-pos1 to-pos1 [/ from-pos2 to-pos2 /…])}{} 
+
+Apply the previous \type{(octave+ n music)} function to each \type+[from-pos to-pos]+ section.
+
+\godown[0.6em]
+\midaligned{ \tfd ------------}
+\godown[-0.6em]
+
+%%%%%%%%%
 \hairline
-Les 2 fonctions suivantes : \type{fix-pitch} et \type{pitches->percu} sont plus particulièrement destinées aux percussions. Elles mettent un pont entre des notes avec hauteur et des notes de percussions
+The 2 following functions : \type{fix-pitch} and \type{pitches->percu} are more specifically designed for percussion. They put a bridge between notes with pitch and percussion notes.
 \hairline
 \blank[-2em]
 
 %%%%%%%%%
-\func{fix-pitch} 
-\syntax {(fix-pitch music octave note-index alteration)}{} 
+\func{fix-pitch}
+\syntax {(fix-pitch music pitch)}{}
+\syntax {(fix-pitch music [octave] note-index [alteration])}{}
+\index{set-fix-pitch}
 
-Fixe toutes les notes à la hauteur \type{(ly:make-pitch
-octave note-index alteration)} et rend \type{music} in-transposable.
-
-\blank
-\midaligned{ \tfd ------------}\\
-
+Sets all the notes to pitch \type{pitch} or \type{(ly:make-pitch octave note-index alteration)}.\\
+\type{octave} can only be omitted (\type{-1} by default) if \type{alteration} is omitted (\type{0} by default).\\
+The equivalent function: \type{((set-fix-pitch ...) music)} takes the same parameters.
+\blank[0.5em]
+\midaligned{ \tfd ------------}
+\godown[0.3em]
 
 %%%%%%%%%
 \func{pitches->percu} 
 \syntax {(pitches->percu music percu-sym-def . args)}{}
-Convertit les notes en des notes de type percussion.
-L'argument \type{args} est une suite de hauteur(pitch)/symbole de percussion. Pour chaque note de \type{music}, la fonction recherche le symbole de percussion correspondant. À défaut d'en trouver, le symbole  \type{percu-sym-def} est donné. L'instrument de percussion est assigné à la propriété \type{'drum-style} de la note.
-
-\blank[0.7cm]
+Converts notes to percussion-type notes.\\
+The argument \type{args} is a sequence of : a pitch, a percussion symbol, and optionally a separation slash \type{/} with the following group.\\
+For each note of \type{music}, the function searches for the corresponding percussion symbol. If none is found, the symbol \type{percu-sym-def} is given.\\
+The percussion instrument is assigned to the \type{'drum-style} property of the note.\\
+Finally, note that any number \type{n} is transformed into \type{(ly:make-pitch -1 n 0)} by the function.
+\blank[0.2em]
 \underbar{\sc\Words exemple 6}
 \startfiguretext[right][exemple6]{}
 {\externalfigure[exemple06.pdf][wfactor=150, align=flushright]}
@@ -1421,41 +1423,40 @@ music = <<
    { e8 e e e e e e e} \\ 
    { c4 d8 c c4 d8 c } >>
 percu = #(pitches->percu music 'hihat /
-                       #{ c #} 'bassdrum /
-                       #{ d #} 'snare)
+                       #{ c #} 'bassdrum /  ;&\em{\small& or : 0 'bassdrum /&}&
+                       #{ d #} 'snare)      ;&\em{\small& or : 1 'snare)&}&
 \new DrumStaff \drummode { \percu }
 \stoplily
 \stopfiguretext
 
-\blank
-\midaligned{ \tfd ------------}\\
+\godown[-1.6em]
+\midaligned{ \tfd ------------}
+\godown[0.1em]
 
 %%%%%%%%%
-\func{set-range} 
+\func{set-range} (see : \type{correct-out-of-range} in {\em checkPitch.ly})
 \syntax {((set-range range) music)}{} 
 
-\type{range} est de la forme \type{{c, c''}} ou
-\type{<c, c''>}
+\type{range} is in the form \type{{c, c''}} or \type{<c, c''>}\\
+Transposes to the right octave, all notes out of \type{range}. The function allows you to adjust the score to the tessitura of an instrument, for example.\\
+Can be used with \goto{\type{apply-to}} [apply-to].
 
-Transpose à l'octave idoine, toutes les notes en dehors
-de \type{range}. La fonction permet par exemple d'ajuster la partition à la tessiture d'un instrument.\\
-Peut être utiliser avec \goto{\type{apply-to}}[apply-to].
-
-\blank
-\midaligned{ \tfd ------------}\\
+\godown[-0.1em]
+\midaligned{ \tfd ------------}
+\godown[0.3em]
 
 %%%%%%%%%
 \func{display-transpose} 
 \syntax {(display-transpose music amount)}{} 
 
-Déplace visuellement les notes de \type{amount} positions vers le haut ou le bas.
+Visually moves notes from \type{amount} positions up or down.
 
-\blank
+\godown[0.6em]
 \midaligned{ \tfd ------------}
+
                      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
                      
-%%\blank[4em] 
-\page                
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                               
 \subject[utiliser-pattern]{Utiliser des «patterns»}
 \blank[-1em] 
 
@@ -1825,10 +1826,10 @@ d'{\em instrument}s associée à un {\em pos-dyn-str} donné, contient cet {\em 
 \NC \type{extract-code} \VL liste associée \NC\SR
 \HL
 \NC \type{'a} \VL contient 'a \NC\FR
-\NC \type{'(and a b)} \VL contient 'a {\bold \underbar et} 'b \NC\MR
-\NC \type{'(or a b)} \VL contient 'a {\bold \underbar ou} 'b \NC\MR
-\NC \type{'(xor a b)} \VL contient 'a mais {\bold \underbar pas} 'b \NC\LR
-\stoptable 
+\NC \type{'(and a b)} \VL contient \type{'a} {\bold \underbar et} \type{'b} \NC\MR
+\NC \type{'(or a b)} \VL contient \type{'a} {\bold \underbar ou} \type{'b} \NC\MR
+\NC \type{'(xor a b)} \VL contient \type{'a} mais {\bold \underbar pas} \type{'b} \NC\LR
+\stoptable  
 }\\
 - On peut mettre plus de 2 éléments à un opérateur. Le 3\high{\itxx ème} élément est combiné avec le résultat de l'opération des 2 premiers.
 \startmylily
@@ -2092,8 +2093,7 @@ Si une lettre était déja définie avant l'appel de \type{def-letters}, la fonc
 \startmylily #(def-letters '(9 25 …) #f) \stopmylily
 \blank[0.8em]
 \midaligned{ \tfd ------------}
-\godown[-1.2em]
-
+\godown[-1.3em]
 
 %% set-frag is not ready enough (bugs remains). Perhaps in a future version of arranger.ly
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                                                 
@@ -2128,7 +2128,7 @@ Si une lettre était déja définie avant l'appel de \type{def-letters}, la fonc
 Insert dans \type+\global+, des \type+\set Score.skipTypesetting = ##t+ ou \type+##f+,  de manière à ne compiler (et ne montrer) que la musique de la partition se trouvant entre les positions \type+from-pos+ et \type+to-pos+ (utile pour les gros "scores").
 \blank[0.8em]
 \midaligned{ \tfd ------------}
-\godown[-1em]                     
+\godown[-1.2em]                     
 
                      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                              
 \subject{Exporter ses instruments}
@@ -2149,6 +2149,7 @@ Si \type{filename} existe déjà, les definitions des instruments seront ajouté
 Cette fonction est encore au stade expérimental ! Agir avec prudence.
 \hairline
 \page
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \starttitle[
@@ -2193,9 +2194,9 @@ global = { s1*1000 }                  %%&\em\tfx{& On prévoit une grande longue
 \stoplily
 
 %\startfiguretext[middle][exemple7]{}
-{\externalfigure[exemple11.pdf][wfactor=fit]}
+{\externalfigure[exemple10.pdf][wfactor=fit]}
 %\stopfiguretext
-\midaligned{\underbar{\sc\Words exemple 11}}
+\midaligned{\underbar{\sc\Words exemple 10}}
 \stoptitle
 
 \starttitle[

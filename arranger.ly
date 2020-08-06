@@ -1,5 +1,5 @@
 \version "2.20.0"
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2020/07/04 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2020/08/04 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%% For Lilypond 2.20 or higher %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The main goal of arranger.ly is to provide a set of functions to make arrangements
 % (for ex : a symphonic piece for a concert band (wood-winds and percussions only))
