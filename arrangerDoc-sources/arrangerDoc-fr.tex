@@ -1469,9 +1469,9 @@ Voir \goto{\type{tweak-notes-seq}}[tweak-notes-seq] (\at{page}[tweak-notes-seq])
 Renvoie : \type+\copyArticulations \pattern \music+ ,%
 \type+\music+ étant la musique référencée par \type{obj}.
 Si \type{obj} est une liste, la fonction retourne une liste.\\
-Un autre nom de fonction a été défini : \type{ca}. Son utilisation permet une syntaxe alternative :
+Une fonction équivalente a été définie : \type{ca}. Son utilisation permet une syntaxe alternative :
 \startmylily
-(ca pattern obj) &$\Longrightarrow$& ((set-arti pattern) obj))
+(ca pattern obj) &$\Longleftrightarrow$& ((set-arti pattern) obj))
 \stopmylily
 \blank
 \midaligned{ \tfd ------------}\\
@@ -1547,9 +1547,8 @@ patI = { r8 c16 c c8 c c c }
 \func{x-pos} : pattern de {\em numéros de mesure}
 \syntax {(x-pos from-measure to-measure}{pos-pat (step 1))} 
 
-\type{from-measure} et \type{to-measure} sont des numéros de mesures (des entiers naturels).\\
-\type{pos-pat} est une liste de {\em position}s%
-\footnote {Les positions sont définies \in{dans le paragraphe «positions musicales»}[positions_musicales], \at{page}[positions_musicales].}, avec une lettre, habituellement n, à la place du numéro de mesure.\\
+\type{from-measure} et \type{to-measure} sont des numéros de mesures (des nombres entiers).\\
+\type{pos-pat} est une liste de {\em position}s \footnote {Les positions sont définies \in{dans le paragraphe \quotation{positions musicales}}[positions_musicales], \at{page}[positions_musicales].}, avec une lettre, habituellement n, à la place du numéro de mesure.\\
 \type{x-pos} convertit cette liste, en remplaçant n (la lettre) par le numéro de mesure  \type{from-measure} et en l'augmentant récursivement de \type{step} unités, tant que cette valeur reste strictement inférieure à \type{to-measure}.\\
 Par defaut, \type{pos-pat} = \type{'(n)}, \type{step} = 1
 \page
@@ -1594,20 +1593,19 @@ cls = #'(clI clII)
 
 \type{text} est un {\em markup} \\
 \type{dir} est la {\em direction} de \type{text} : %
-1 (UP), -1 (DOWN), ou par défaut 0 (automatique)\\
-\type{X-align} est la valeur de la propriété {\em self-alignment-X} de \type{text} : %
--1 par défaut\\
-\type{Y-offset} est la valeur de la propriété {\em Y-offset} du text : 0 par défaut\\ 
+\type{1} (ou \type{UP}), \type{-1} (ou \type{DOWN}), ou par défaut \type{0} (automatique).\\
+\type{X-align} est la valeur de la propriété {\em self-alignment-X} de \type{text} : \type{-1} par défaut.\\
 \hbox{{\hspace[lilyindent]}
 \starttable[|c|c|]  
 \NC \type{X-align} \VL alignement du texte \NC\SR
 \HL
-\NC $> 0$ \VL à droite \NC\FR
-\NC $< 0$ \VL à gauche \NC\MR
-\NC $= 0$ \VL centré \NC\LR
+\NC -1 ou \type{LEFT}\VL à gauche \NC\FR
+\NC 1 ou \type{RIGHT}\VL à droite \NC\MR
+\NC 0 ou \type{CENTER} \VL centré \NC\LR
 \stoptable 
 }\\
-
+\type{Y-offset} est la valeur de la propriété {\em Y-offset} du text : 0 par défaut\\
+La fonction retourne un {\em skip}.\\
 \underbar{\sc\Words Exemple} :
 \startmylily (txt "Bonjour" UP 0 -2) \stopmylily
 est équivalent à :

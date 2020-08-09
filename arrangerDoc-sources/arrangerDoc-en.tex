@@ -1457,99 +1457,99 @@ Visually moves notes from \type{amount} positions up or down.
                      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
                      
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                               
-\subject[utiliser-pattern]{Utiliser des «patterns»}
+\subject[utiliser-pattern]{Using «patterns»}
 \blank[-1em] 
 
 %%%%%%%%%
-\func{set-pat}  : pattern de {\em rythme} (fonction référence \type+\changePitch+%
-\footnote{Voir {\em changePitch-doc.pdf} à \from[changePitch]})
+\func{set-pat}  : {\em rhythm} pattern (reference function is \type+\changePitch+%
+\footnote{See {\em changePitch-doc.pdf} at \from[changePitch]})
 \index{cp}
 \index{cp1}
 \index{cp2}
 \syntax {((set-pat pattern [include-ending-rest?]) obj)}{}
 
-Renvoie : \type+\changePitch \pattern \music+ ,%
-\type+\music+ étant la musique référencée par \type{obj}.\\
-Si \type{obj} est une liste, la fonction retourne une liste.\\
-Une fois la dernière note de \type{obj} atteinte, les éventuels silences de \type{pattern} qui devraient être mis après cette note sont ignorés, sauf si vous mettez \type{#t} comme paramètre \type{include-ending-rest?}\\
-3 raccourcis ont été définis (leur nom fait reférence à \type+\changePitch+) :
+Returns: \type+\changePitch \pattern \music+\\
+with \type+\music+ being the music referenced by \type{obj}.\\
+If \type{obj} is a list, the function returns a list.\\
+Once the last note of \type{obj} is reached, any rests of \type{pattern} that should be put after that note are ignored, unless you set \type{#t} as the parameter \type{include-ending-rest?}.\\
+3 shortcuts have been defined (their name refers to \type+\changePitch+) :
 \startmylily
 (cp pattern obj) &$\Longrightarrow$& ((set-pat pattern) obj)
 (cp1 obj)        &$\Longrightarrow$& (cp patI obj)
 (cp2 obj)        &$\Longrightarrow$& (cp patII obj)
 \stopmylily
-Contrairement à \type{set-pat}, le paramètre \type{include-ending-rest?} de ces 3 raccourcis est positionné à \type{#t} par défaut. À nouveau inversable par le code : \type{(cp #f pattern obj)}. \\
-Voir \goto{\type{tweak-notes-seq}}[tweak-notes-seq] (\at{page}[tweak-notes-seq]) pour une utilisation du raccourci \type{cp1}
+Unlike \type{set-pat}, the \type{include-ending-rest?} parameter of these 3 shortcuts is set to \type{#t} by default. Again invertible by the code : \type{(cp #f pattern obj)}. \\
+See \goto{\type{tweak-notes-seq}} [tweak-notes-seq] (\at{page} [tweak-notes-seq]) for a use of the shortcut \type{cp1}
 \blank
-\midaligned{ \tfd ------------}\\
+\midaligned {\ \tfd ------------}\\
+
 
 %%%%%%%%%
 \index{ca}
-\func{set-arti} : pattern {\em d'articulations} (fonction référence \type+\copyArticulations+
-\footnote{Voir \from[copyArticulations-LSR] pour l'utilisation de \type{\copyArticulations}})
+\func{set-arti} : {\em articulations} pattern (reference function is  \type+\copyArticulations+
+\footnote{See \from[copyArticulations-LSR] for the use of \type{\copyArticulations}})
 \syntax{((set-arti pattern) obj)}{}
 
-Renvoie : \type+\copyArticulations \pattern \music+ ,%
-\type+\music+ étant la musique référencée par \type{obj}.
-Si \type{obj} est une liste, la fonction retourne une liste.\\
-Un autre nom de fonction a été défini : \type{ca}. Son utilisation permet une syntaxe alternative :
+Returns: \type+\copyArticulations \pattern \music+\\
+with \type+\music+ as the music referenced by \type{obj}.\\
+If \type{obj} is a list, the function returns a list.\\
+An equivalent function has been defined: \type{ca}. It allows an alternative syntax:
 \startmylily
-(ca pattern obj) &$\Longrightarrow$& ((set-arti pattern) obj))
+(ca pattern obj) &$\Longleftrightarrow$& ((set-arti pattern) obj))
 \stopmylily
 \blank
 \midaligned{ \tfd ------------}\\
 
 %%%%%%%%%
 %%\page
-\func{fill-with} : pattern de {\em musiques}
+\func{fill-with} : {\em musics} pattern
 \syntax {(fill-with pattern from-pos to-pos)}{}
 
-Répète la musique \type{pattern} le nombre de fois nécessaire
-pour remplir exactement l'intervalle \type{[from-pos to-pos]}, coupant
-éventuellement la dernière copie.\\
-Renvoie la musique obtenue, ou une liste des musiques si \type{pattern} est une liste de musiques.
+Repeat the \type{pattern} music the number of times necessary to fill the \type{[from-pos to-pos]} interval exactly, eventually cutting off the last copy.\\
+Returns the resulting music, or a list of these musics if \type{pattern} is a list of musics.
 \blank
 \midaligned{ \tfd ------------}\\
 
 %%%%%%%%%
-\func{fill} : pattern de {\em musiques}
+\func{fill} : {\em musics} pattern
 \syntax {(fill obj pattern from-pos to-pos . args)}{} 
 
-Équivalent de \type{(rm obj from-pos music)} avec
+Équivalent of \type{(rm obj from-pos music)} with
 \startmylily music = (fill-with pattern from-pos to-pos) \stopmylily
-La syntaxe suivante est possible :
+The following syntax is possible:
 \startmylily (fill obj pat1 from1 to1 / [pat2] from2 to2 / [pat3] from3 to3 …) \stopmylily
-Si un paramètre \type{pat} est omis, celui de la section précédente est récupéré.\\
-Voir \goto{exemple 5}[exemple5] \at{page}[exemple5].
+If a \type{pat} parameter is omitted, the one from the previous section is retrieved.\\
+See \goto{example 5}[exemple5] \at{page}[exemple5].
 \blank
 \midaligned{ \tfd ------------}
 \page
 
 %%%%%%%%%
-\func{fill-percent} : pattern de {\em musiques}
+\func{fill-percent} : {\em musics} pattern
 \syntax {(fill-percent obj pattern from-pos to-pos . args)}{} 
 
-Idem que pour la fonction \type{fill} ci-dessus mais produit des \type{\repeat percent …}
+Same as function \type{fill} above, but produces \type{\repeat percent …} musics instead.
 \blank
 \midaligned{ \tfd ------------}\\
 
 %%%%%%%%%
-\func{tweak-notes-seq} : pattern de {\em notes}
+\func{tweak-notes-seq} : {\em notes} pattern
 \syntax {(tweak-notes-seq n-list music)}{} 
 or : (2\high{nd} equivalent form, to be used with \goto{\type{apply-to}}[apply-to])
 \index{set-tweak-notes-seq}
 \syntax {((set-tweak-notes-seq n-list) music)}{}
-\type{music} est une musique contenant des notes.\\
-\type{n-list} est une liste d'entiers. Chaque nombre \type{n} représente la n\high{ième} note pris dans \type{music}.\\
-\type{tweak-notes-seq} retourne une séquence de notes en remplaçant chaque chiffres de \type{n-list}  par la note correspondante. Quand le dernier chiffre est atteint, le processus recommence au début de la liste de nombres, mais en les augmentant du plus grand chiffre de la liste. Le processus s'arrête quand il n'y a plus, dans \type{music}, de notes à faire correspondre.
+\type{music}  is a music with notes in it.\\
+\type{n-list} is an integers list. Each \type{n} number represents the n\high{th} note extracted from \type{music}.\\
+\type{tweak-notes-seq} returns a sequential music by replacing each number of \type{n-list} with the corresponding note. When the last number is reached, the process starts again at the beginning of the list of numbers, but increasing it by the largest number in the list. The process stops when there are no more notes to match in \type{music}.
 \startmylily
 (tweak-notes-seq '(1 2 3 2 1) #{ c d e | d e f | e f g #}) 
 & $\Longrightarrow$ & { c d e d c
       d e f e d
       e f g f e }
 \stopmylily
-On peut remplacer, dans \type{n-list}, un nombre \type{n} par une paire \type{(n . music-function)}.\\\type{music-function} est alors appliqué à la note \type{n}. Elle doit prendre en paramètre une musique et retourner une musique. Classiquement, cette fonction est \goto{\type{set-octave}}[octave].\\
-L'exemple suivant utilise cette fonctionnalité, couplée au raccourci \goto{\type{cp1}}[set-pat] de la fonction \type{set-pat}
+In \type{n-list}, a number \type{n} can be replaced by a pair \type{(n . music-function)}.\\
+\type{music-function} is then applied to the note \type{n}. It must take a music as parameter and return a music. Typically, this function is \goto{\type{set-octave}}[octave].\\
+The following example uses this function, in combination with the \goto{\type{cp1}}[set-pat] shortcut of the \type{set-pat} function.
 
 %\blank[0.7cm]
 \startfiguretext[right][exemple7]{}
@@ -1567,16 +1567,15 @@ patI = { r8 c16 c c8 c c c }
 \midaligned{ \tfd ------------}\\
 
 %%%%%%%%%%
-\func{x-pos} : pattern de {\em numéros de mesure}
+\func{x-pos} : {\em bar numbers} pattern
 \syntax {(x-pos from-measure to-measure}{pos-pat (step 1))} 
 
-\type{from-measure} et \type{to-measure} sont des numéros de mesures (des entiers naturels).\\
-\type{pos-pat} est une liste de {\em position}s%
-\footnote {Les positions sont définies \in{dans le paragraphe «positions musicales»}[positions_musicales], \at{page}[positions_musicales].}, avec une lettre, habituellement n, à la place du numéro de mesure.\\
-\type{x-pos} convertit cette liste, en remplaçant n (la lettre) par le numéro de mesure  \type{from-measure} et en l'augmentant récursivement de \type{step} unités, tant que cette valeur reste strictement inférieure à \type{to-measure}.\\
-Par defaut, \type{pos-pat} = \type{'(n)}, \type{step} = 1
-\page
-Le tableau suivant montre la liste obtenue avec différentes valeurs:
+\type{from-measure} and \type{to-measure} are bar numbers (some {\em integers}).\\
+\type{pos-pat} is a {\em position}s \footnote {positions are defined \in{in the \quotation{music  positions} paragraph}[positions_musicales], \at{page}[positions_musicales].} list, with a letter, generally n, instead of bar numbers.\\
+\type{x-pos} converts this list, replacing n (the letter) by the bar number \type{from-measure} and increasing it recursively by \type{step} units, as long as this value remains strictly inferior to \type{to-measure}.\\
+Default, \type{pos-pat} = \type{'(n)}, \type{step} = 1.
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The following table shows the list obtained with different values:
 \startmylily
 (x-pos 10 14)              & $\Longrightarrow$ & '(10 11 12 13)
 (x-pos 10 14 '(n (n 4)))   & $\Longrightarrow$ & '(10 (10 4) 11 (11 4)) 12 (12 4) 13 (13 4))
@@ -1584,14 +1583,14 @@ Le tableau suivant montre la liste obtenue avec différentes valeurs:
 (x-pos 10 13 '(n (n 4)) 2) & $\Longrightarrow$ & '(10 (10 4) 12 (12 4))
 (x-pos 10 12 '(n (n 4)) 2) & $\Longrightarrow$ & '(10 (10 4))
 \stopmylily
-\type{x-pos} peut être utilisé en utilisant par exemple \type{x-rm}, conjointement avec \type{apply} :
+\type{x-pos} can be used in conjunction with \type{x-rm} for example, and the scheme function \type{apply}:
 %%% Exemple 5
 %\startfiguretext[right][exemple5]{}
 \blank
 \reference[exemple8]{exemple8}
 \starthanging[right]
 {\vbox{\blank[5.2em]\externalfigure[exemple08.pdf][wfactor=305, align=flushright]}}
-\underbar{\sc\Words exemple 8}
+\underbar{\sc\Words example 8}
 \startlily
 global = {s1*12 \bar "|."}
 music = { e'2 f' | g' f' | e'1 }
@@ -1617,20 +1616,19 @@ cls = #'(clI clII)
 
 \type{text} est un {\em markup} \\
 \type{dir} est la {\em direction} de \type{text} : %
-1 (UP), -1 (DOWN), ou par défaut 0 (automatique)\\
-\type{X-align} est la valeur de la propriété {\em self-alignment-X} de \type{text} : %
--1 par défaut\\
-\type{Y-offset} est la valeur de la propriété {\em Y-offset} du text : 0 par défaut\\ 
+\type{1} (ou \type{UP}), \type{-1} (ou \type{DOWN}), ou par défaut \type{0} (automatique).\\
+\type{X-align} est la valeur de la propriété {\em self-alignment-X} de \type{text} : \type{-1} par défaut.\\
 \hbox{{\hspace[lilyindent]}
 \starttable[|c|c|]  
 \NC \type{X-align} \VL alignement du texte \NC\SR
 \HL
-\NC $> 0$ \VL à droite \NC\FR
-\NC $< 0$ \VL à gauche \NC\MR
-\NC $= 0$ \VL centré \NC\LR
+\NC -1 ou \type{LEFT}\VL à gauche \NC\FR
+\NC 1 ou \type{RIGHT}\VL à droite \NC\MR
+\NC 0 ou \type{CENTER} \VL centré \NC\LR
 \stoptable 
 }\\
-
+\type{Y-offset} est la valeur de la propriété {\em Y-offset} du text : 0 par défaut\\
+La fonction retourne un {\em skip}.\\
 \underbar{\sc\Words Exemple} :
 \startmylily (txt "Bonjour" UP 0 -2) \stopmylily
 est équivalent à :
