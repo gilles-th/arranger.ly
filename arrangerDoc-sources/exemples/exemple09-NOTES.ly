@@ -21,10 +21,14 @@ music = \relative c' {
   e'2 d | c b | 
   a4 g f e | d2 g, | c1
 }
+
+#(if (not (defined? 'names))
+  (define names (list "(violon)" "obligé")))
+
 #(begin
 (rm 'vl 1 music)
-(add-voice2 'fl 3 (adef (em vl 3 4) "(violon)" DOWN))
-(rm 'fl 4 (seq (txt "obligé" UP)
+(add-voice2 'fl 3 (adef (em vl 3 4) (first names) DOWN))
+(rm 'fl 4 (seq (txt (second names) UP)
                (rel #{ f'4 g a b | c1 #}))))
 
 %   \new StaffGroup <<

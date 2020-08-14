@@ -1605,7 +1605,7 @@ cls = #'(clI clII)
 \stoptable 
 }\\
 \type{Y-offset} est la valeur de la propriété {\em Y-offset} du text : 0 par défaut\\
-La fonction retourne un {\em skip}.\\
+La fonction retourne un {\em skip} de longueur nulle.\\
 \underbar{\sc\Words Exemple} :
 \startmylily (txt "Bonjour" UP 0 -2) \stopmylily
 est équivalent à :
@@ -1673,10 +1673,10 @@ donnera à la flute~:
 \stopnarrower
 \mypar %%%%%
 \mbox{\hspace[lilyindent]%
-      \externalfigure[exemple09-flute.pdf][wfactor=265, align=flushleft]}
+      \externalfigure[exemple09-flute-fr.pdf][wfactor=265, align=flushleft]}
 \stopmypar
 \blank[big]
-La difference de taille d'un {\em «a defaut»} par rapport à la taille courante est \type+adef-size = -3+. On peut re-définir \type+adef-size+ à souhait. Par exemple :
+La difference de taille d'un {\em \quotation{a defaut}} par rapport à la taille courante est \type+adef-size = -3+. On peut re-définir \type+adef-size+ à souhait. Par exemple :
 \startmylily(define adef-size -2)\stopmylily
 Si on veut avoir, dans l'exemple ci-dessus, le texte "(violon)" à la taille normale, il faut remplacer ce texte par le {\em markup} suivant :
 \startmylily (markup (#:fontsize (- adef-size) "(violon)")) \stopmylily

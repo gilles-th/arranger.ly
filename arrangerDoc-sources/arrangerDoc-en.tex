@@ -1614,41 +1614,40 @@ cls = #'(clI clII)
 \func{txt}
 \syntax {(txt text [dir [X-align [Y-offset]]])}{}
 
-\type{text} est un {\em markup} \\
-\type{dir} est la {\em direction} de \type{text} : %
-\type{1} (ou \type{UP}), \type{-1} (ou \type{DOWN}), ou par défaut \type{0} (automatique).\\
-\type{X-align} est la valeur de la propriété {\em self-alignment-X} de \type{text} : \type{-1} par défaut.\\
+\type{text} is a {\em markup} \\
+\type{dir} is the {\em direction} of \type{text} : %
+\type{1} (or \type{UP}), \type{-1} (or \type{DOWN}), or by default \type{0} (automatic).\\
+\type{X-align} is the {\em self-alignment-X} property value of \type{text} : \type{-1} by default.\\
 \hbox{{\hspace[lilyindent]}
 \starttable[|c|c|]  
-\NC \type{X-align} \VL alignement du texte \NC\SR
+\NC \type{X-align} \VL text alignment \NC\SR
 \HL
-\NC -1 ou \type{LEFT}\VL à gauche \NC\FR
-\NC 1 ou \type{RIGHT}\VL à droite \NC\MR
-\NC 0 ou \type{CENTER} \VL centré \NC\LR
+\NC -1 or \type{LEFT}\VL to left \NC\FR
+\NC 1 or \type{RIGHT}\VL to right \NC\MR
+\NC 0 or \type{CENTER} \VL center \NC\LR
 \stoptable 
 }\\
-\type{Y-offset} est la valeur de la propriété {\em Y-offset} du text : 0 par défaut\\
-La fonction retourne un {\em skip}.\\
+\type{Y-offset} is the {\em Y-offset} property value of \type{text} : 0 by default\\
+The function returns a zero-length {\em skip}.\\
 \underbar{\sc\Words Exemple} :
-\startmylily (txt "Bonjour" UP 0 -2) \stopmylily
-est équivalent à :
+\startmylily (txt "Hello" UP 0 -2) \stopmylily
+is equivalent to :
 \startmylily
 s1*0 -\tweak self-alignment-X #CENTER 
      -\tweak Y-offset #-2 
-     ^"Bonjour"  % &\em{&^ = UP &}&
+     ^"Hello"  % &\em{&^ = UP &}&
 \stopmylily
-Noter que mettre un des paramètres optionnels \type{dir}, \type{X-align} ou \type{Y-offset} à la valeur \type{#f}, a le même effet que d'omettre ce paramètre : sa propriété correspondante n'est pas modifiée.
+Note that setting one of the optional parameters \type{dir}, \type{X-align} or \type{Y-offset} to the value \type{#f}, has the same effect as omitting this parameter: its corresponding property is not modified.
 \blank
 \midaligned{ \tfd ------------}
 \blank[-2em]
 %%%%%%%%%
 \func{adef}
 \syntax {(adef music [text [dir [X-align [Y-offset]]]])}{}
-
-Ajoute \type{music} avec des notes de petite taille, comme pour un {\em «a defaut»}. Un texte peut être ajouter avec les mêmes arguments que pour la fonction \type{txt} précédente.
+Formats \type{music} with cue notes, like in a {\em \quotation {a def}} section . A text can be added   with the same arguments as the previous \type{txt} function.
 \page
-\reference[exemple9]{exemple9}
-\underbar{\sc\Words Exemple 9} :
+\reference[exemple9]{example9}
+\underbar{\sc\Words Example 9} :
 \blank[1em]
 \setupnarrower[left=\lilyindent]
 \defineparagraphs[mypar][n=2,before=,after={\blank[0.1em]},distance=0em]
@@ -1658,7 +1657,7 @@ Ajoute \type{music} avec des notes de petite taille, comme pour un {\em «a defa
 \startmypar
 \startnarrower
 \godown[1.3em]
-Soit le violon suivant :
+Consider the following violin:
 \stopnarrower
 \mypar %%%%%
 \mbox{\hspace[lilyindent] %
@@ -1668,7 +1667,7 @@ Soit le violon suivant :
 \startmypar
 \startnarrower
 \godown[0.7em]
-et une flute commençant à la mesure 4~:
+and a flute beginning bar 4~:
 \stopnarrower 
 \mypar %%%%%
 \godown[1.3em]
@@ -1679,29 +1678,29 @@ et une flute commençant à la mesure 4~:
 \startmypar
 \startnarrower
 \godown[0.7em]
-Le code suivant~:
+The following code~:
 \stopnarrower
 \mypar %%%%%
 \startmylily
-(add-voice2 'fl 3 (adef (em vl 3 4) "(violon)" DOWN))
-(rm 'fl 4 (txt "obligé" UP))       
+(add-voice2 'fl 3 (adef (em vl 3 4) "(violin)" DOWN))
+(rm 'fl 4 (txt "play" UP))       
 \stopmylily
 \stopmypar
-\blank[-2em] %[big]
+\blank[-2em] 
 %%%%
 \startmypar
 \startnarrower
 \godown[2.65em]
-donnera à la flute~:
+will produce the flute~:
 \stopnarrower
 \mypar %%%%%
 \mbox{\hspace[lilyindent]%
-      \externalfigure[exemple09-flute.pdf][wfactor=265, align=flushleft]}
+      \externalfigure[exemple09-flute-en.pdf][wfactor=265, align=flushleft]}
 \stopmypar
 \blank[big]
-La difference de taille d'un {\em «a defaut»} par rapport à la taille courante est \type+adef-size = -3+. On peut re-définir \type+adef-size+ à souhait. Par exemple :
+The difference in size of a {\em \quotation {a def}} section from the current size is \type+adef-size = -3+. You can redefine \type+adef-size+ as you wish. For example, it can be:
 \startmylily(define adef-size -2)\stopmylily
-Si on veut avoir, dans l'exemple ci-dessus, le texte "(violon)" à la taille normale, il faut remplacer ce texte par le {\em markup} suivant :
+If we want to have, in the example above, the text: "(violin)" at the normal size, we must replace this text by the following {\em markup}:
 \startmylily (markup (#:fontsize (- adef-size) "(violon)")) \stopmylily
 \blank
 \midaligned{ \tfd ------------}
