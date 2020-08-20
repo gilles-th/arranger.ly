@@ -1706,44 +1706,43 @@ If we want to have, in the example above, the text: "(violin)" at the normal siz
 \midaligned{ \tfd ------------}
 
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                              
-\subject{Ajouter des nuances}
+\subject{Adding dynamics}
 \blank[-2em]
 %%%%%%%%
 \func{add-dynamics}
 \syntax {(add-dynamics obj pos-dyn-str)}{}
 
-\type{obj} est une {\em musique}, un {\em instrument},
-ou une liste d' {\em instrument}s.\\
-\type{pos-dyn-str} est une chaîne de caractère  "…", composée d'une sequence de position-nuances, separées par une barre oblique~\type{/} (cette barre est ici obligatoire).\\
-La fonction analyse la chaîne \type{pos-dyn-str} et renvoie un code de la forme :
+\type{obj} is a {\em music}, an {\em instrument}, or a list of {\em instrument}s.\\
+\type{pos-dyn-str} is a {\em string}  "…", composed by a sequence of position-dynamics, separated by a slash~\type{/} (the slash is mandatory here).\\
+The function analyzes the string \type{pos-dyn-str} and returns a code of the form:
 \startmylily
 (rm-with obj pos1 #{ <>\dynamics1  #}/ pos2 #{ <>\dynamics2 #} /…)
 \stopmylily
-Pour les positions sous formes de listes, le \type{'} peut être omis : 
+For list positions, the \type{'} character can be omitted: 
 \type{'(11 4 8)} $\Longrightarrow$ \type{(11 4 8)}.\\
-Pour les nuances, les  barres obliques inversées ~\type+\+ {\em doivent} être retirées. Les symboles de direction, par contre, \type+-^_+ sont autorisés. Séparer plusieurs nuances par un espace.\\
-\underbar{\sc\Words Exemple} :\\
-En reprenant le violon de l'\in{exemple 9 précédent}{(page \at{}[adef])}[adef], %
-le code suivant :
+For dynamics, all backslashes~\type+\+ {\em must} be removed. Direction symbols, on the other hand, \type+-^_+ are allowed. Several dynamics are separated with a space.
+\godown[0.7em]
+\underbar{\sc\Words Example}:
+\godown[1em]
+Taking the violin from the \in{previous example 9}{(page \at{}[adef])}[adef], the following code:
 \startlily
 (add-dynamics 'vl "1 mf / 2 > / 3 p cresc / (4 2) ^f")
 \stoplily
-donnera :\\
+will result in:\\
 \mbox{\hspace[lilyindent]\externalfigure[exemple09-violon-nuances.pdf][wfactor=265, align=flushleft]}\\
 
-- Une position suivie d'aucune nuance indique à la fonction de chercher et supprimer une nuance précédente, se produisant au même {\em moment} que la position.\\
+- A position followed by no dynamic tells the function to search and delete the previous dynamic that would occur at the same {\em moment}.\\
 
-- Il est possible de spécifier des ajustements de la position \type{X} et \type{Y} d'une nuance \type{dyn}
-par la syntaxe suivante (qui suffira dans la majorité des cas) : \type{dyn#X#Y}.
-\page
-Avec par exemple : \type{mf#1#-1.5} le code produit sera :
+- It is possible to specify adjustments of the position \type{X} and \type{Y} of a dynamic \type{dyn} by the following basic syntax (it will be adapted in most cases): \type{dyn#X#Y}.
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Something like: \type{mf#1#-1.5} will result to:
 \startlily <>-\tweak self-alignment-X 1 -\tweak extra-offset #'(0 . -1.5) -\mf \stoplily
-Pour remplacer le \type{0} du 1\high{er} element de la paire du \type{extra-offset}, on peut mettre également un 3\high{ème} paramètre {\em entre} les 2 autres. La syntaxe générale devient alors :
+To replace the {\em zero} of the first element of the \type{extra-offset} pair, we can also put a third parameter between the other two. The general syntax then becomes:
 \startlily dyn#val1#val3#val2 \stoplily
-qui produit :
+and it results to:
 \startlily <>-\tweak self-alignment-X val1 -\tweak extra-offset #'(val3 . val2) -\dyn \stoplily 
-Une valeur \type{val} peut-être omise mais le nombre de \type{#} doit correspondre à 
-l'indice 1,2 ou 3~:\\
+A \type{val} value can be omitted but the number of \type{#} characters must match to the 
+index 1,2 or 3~:\\
 \hbox{{\hspace[lilyindent]}
 \starttable[s0|ls2|c|l|]
  \NC \type{#val}   \NC \Longrightarrow \NC\JustLeft\type{val1} : \type{self-alignment-X val}\NC\FR
@@ -1753,110 +1752,94 @@ l'indice 1,2 ou 3~:\\
 \stoptable
 }\\ % end of \hbox
 
-- Indépendemment de ces ajustements de placement induits de la commande \type{\tweak}, la fonction \type{add-dynamics} permet un placement très précis des nuances par un choix judicieux de sa position musicale associée. Cependant, s'il est facile, par exemple, d'insérer une nuance à la position
- \type{'(3 64)}, un problème se pose si une noire commence à la position \type{3} car elle sera coupée à la quadriple croche !\\
-Il sera dès lors judicieux, de créer pour l'instrument \type{instru}, une voix séparée spéciale, \type{instruDyn} par exemple, composée de \type{\skip}s, et qui recevra toutes les nuances de 
-\type{instru}.\\
-Il suffit ensuite de combiner cette voix avec celle des notes et de \type{global}. L'exemple du début de paragraphe deviendra~:
+- Regardless of these placement adjustments induced by the \type{\tweak} command, the \type{add-dynamics} function allows very precise placement of dynamics by judicious choice of its associated musical position. However, if it is easy, for example, to insert a dynamic at the position \type{'(3 64)}, there is a problem if a fourth starts at bar \type{3} because it will be cut at the 64\high{th} beat !\\
+It would therefore be wise to create a special separate voice for the instrument \type{instru}, named \type{instruDyn} for example, made up only of \type{skip}s and which would receive all the \type{instru} dynamics.\\
+Then simply combine that voice with the voice of notes and with \type{global}.The example at the beginning of the paragraph will become~:
 \startlily
+(def! 'vlDyn)  ; & \at{see page}{}[def!]. &
 (add-dynamics 'vlDyn "1 mf / 2 > / 3 p cresc / (4 2) ^f")
 …
 \new Staff { << \global \vlDyn \vl >> }
 \stoplily
-Notez que cette façon de faire est identique à la manière traditionnelle de procéder, sauf qu'ici, pas besoin de faire des calculs pour rendre adéquat la durée des \type{\skip} entre 2 nuances. C'est {\em arranger.ly} qui s'en charge.\\
-Notez également, que {\em arranger.ly} introduit une fonction \goto{\type{sym-append}}[sym-append], particulièrement adaptée à la création de ces voix spéciales. Voir \at{à la page}{}[sym-append], l'exemple donné, justement avec des  voix dédiées aux nuances.\\
+Note that this is identical to the traditional way of proceeding, except that here there is no need to make calculations to find the adequate duration of the \type{skip}s between 2 dynamics. It's {\em arranger.ly} that takes care of it.\\
+Also note that {\em arranger.ly} introduces a \goto{\type{sym-append} function}[sym-append], which is particularly well suited to the creation of these special voices. See the given example \at{at page}{}[sym-append], precisely with voices dedicated to dynamics.
+\godown[0.5em]
 \hairline
-Les fonctions qui suivent, \type{assoc-pos-dyn}, \type{extract-pos-dyn-str}, \type{instru-pos-dyn->music} et \type{add-dyn}, sont des tentatives de simplifier encore plus la gestion des nuances (en évitant notamment la redondance d'informations pour les instruments ayant la même nuance au même endroit), et également de résoudre le problème des nuances en double quand, dans les conducteurs, on met 2 instruments sur une même portée.
+The following functions, \type{assoc-pos-dyn}, \type{extract-pos-dyn-str}, \type{instru-pos-dyn->music} and \type{add-dyn}, are attempts to further simplify the management of dynamics, in particular by avoiding 1) the redundant informations provided for instruments having the same dynamics at the same moments, and 2) to solve the problem of duplicate dynamics when, in orchestral scores, 2 instruments shares the same staff.
 \hairline
-\blank[-1em]
+\godown[1.8em]
 
-% [extrait d'arranger.ly]
-% user can here associate each pos-dyn to a set of instruments
-% ex   vls = #'(vlI vlII) cors = #'(corI … corIV) all = #'(fl htb cl ..)
-%      assocDynList = #(assoc-pos-dyn            
-%        "1 p" 'corI / "5 mf" vls / "25 f / (31 4) <" cors / "33 ff" all …)
-% User can then extract the all dyn-string for a specific instrument or make 
-% directly a skip music with all dynamics associate with an instrument alone.
-%   (instru-pos-dyn->music 'vlI assocDynList)
-%   => { s1*4 <>\mf s1*29 <>\ff s*…}
-% User can also mix several instruments dynamics by using the 3 following boolean
-% operators : or and xor
-%   (instru-pos-dyn->music '(xor corI corII)  assocDynList)
-%   => { <>\p s1*… } 
-%  The rules can be more complex '(or corII (xor corIII corIV))
-%%%%%%%%
 \func{assoc-pos-dyn}
-\syntax {(assoc-pos-dyn pos-dyn-str1 instrus1 / pos-dyn-str2 instrus2 /…)}{}
-La fonction permet d'associer un groupe de nuances et leur position respectives, à un {\em instrument} seul ou à une liste d'{\em instrument}s.\\
-Les \type{pos-dyn-str} sont des chaînes de caractères telles définies dans la fonction \goto{\type{add-dynamics}}[add-dynamics] ci-dessus.\\
-La fonction retourne une associated-list. Les barres obliques~\type{/} sont facultatives.
-\page
-\underbar{\sc exemple} :
+\syntax {(assoc-pos-dyn pos-dyn-str1 instru1 / pos-dyn-str2 instru2 /…)}{}
+The \type{pos-dyn-str}s are strings as defined in the above \goto{\type{add-dynamics}}[add-dynamics] function.\\
+\type{instru} is either a single \type{instrument} or a list of \type{instrument}s.\\
+The function returns an {\em associated-list} consisting of {\em pairs} \type{'(pos-dyn-str . instru)}.\\  
+The slashes~\type{/} are optional.
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\underbar{\sc example} :
 \blank[0.8em]
 \startmylily
 vls = #'(vlI vlII) 
-cors = #'(corI … corIV) 
-all = #'(fl htb cl …)
+horns = #'(hornI … hornIV) 
+all = #'(fl oboe cl …)
 assocDynList = #(assoc-pos-dyn            
-  "1 p" 'corI / "5 mf" vls / 
-  "25 f / (31 4) < " cors / 
+  "1 p" 'hornI / "5 mf" vls / 
+  "25 f / (31 4) < " horns / 
   "33 ff / 35 decresc / 38 mf" all …)
 \stopmylily
-L'extraction des nuances pour un instrument donné pourra alors se faire en mettant \type{assocDynList} en dernier paramètre des fonctions \type{extract-pos-dyn-str} ou \type{instru-pos-dyn->music}.
+Dynamics for a single instrument, can then be extracted by setting \type{assocDynList} as last parameter of the 2 functions \type{extract-pos-dyn-str} or \type{instru-pos-dyn->music}.
 \blank[1.2em]
 \midaligned{ \tfd ------------}
-\blank[-3em]
+\godown[1.2em]
 %%%%%%%%
 \func{extract-pos-dyn-str}
 \syntax {(extract-pos-dyn-str extract-code assoc-pos-dyn-list)}{}
-\type{assoc-pos-dyn-list} est la liste d'association créée avec la fonction \in{\type{assoc-pos-dyn}}[assoc-pos-dyn] ci-dessus.
-La fonction \type{extract-pos-dyn-str} renvoie une chaîne de caractères de type {\em pos-dyn-str} tel défini \in{dans la fonction \type{add-dynamics}}[add-dynamics]. Elle est formée à partir de tous les {\em pos-dyn-str} dont le ou les {\em instrument}s associés répondent "vrai" au prédicat \type{extract-code}.\\
-
-Voici comment fonctionne le prédicat \type{extract-code} :\\
-- \type{extract-code} est soit un {\em instrument} seul, soit une liste d'{\em instrument}s avec comme 1\high{er} élément, un des 3 opérateurs logiques suivants : \type{'or 'and 'xor} (voir tableau ci-après).\\
-- \type{extract-code} renvoie "vrai" pour un {\em instrument} seul, seulement si la liste 
-d'{\em instrument}s associée à un {\em pos-dyn-str} donné, contient cet {\em instrument}.\\
-- Une liste d'{\em instrument}s peut être composée de sous-listes. Si une sous-liste ne commence pas par un opérateur, ses éléments sont copiés dans la liste de niveau supérieur.\\
-- Une opération sur une liste d'{\em instrument}s associée à un \type{pos-dyn-str} renvoie "vrai" dans les conditions suivantes~:\\
+\type{assoc-pos-dyn-list} is the association list created with the \in{\type{assoc-pos-dyn}} [assoc-pos-dyn] function above.\\
+The function \type{extract-pos-dyn-str} returns a {\em pos-dyn-str}, as defined in \in{\type{add-dynamics}}[add-dynamics]. It is the concatanation of all {\em pos-dyn-str}s whose associated {\em instrument}s return \quotation{true} to the \type{extract-code} predicate.
+\blank[1em]
+Here's how the \type{extract-code} predicate works:\\
+- \type{extract-code} is either a single {\em instrument}, or a list of {\em instrument}s with one of the following three logical operators as the first element: \type{'or 'and 'xor}\\
+For a single {\em instrument}, \type{extract-code} returns \quotation{true} when the list of  instruments associated with a particular {\em pos-dyn-str}, contains this instrument.\\
+For 2 instruments, it depends on the operator:\\
 \hbox{{\hspace[lilyindent]}
 \starttable[|c|c|]  
-\NC \type{extract-code} \VL liste associée \NC\SR
+\NC \type{extract-code} \VL associated list \NC\SR
 \HL
-\NC \type{'a} \VL contient 'a \NC\FR
-\NC \type{'(and a b)} \VL contient \type{'a} {\bold \underbar et} \type{'b} \NC\MR
-\NC \type{'(or a b)} \VL contient \type{'a} {\bold \underbar ou} \type{'b} \NC\MR
-\NC \type{'(xor a b)} \VL contient \type{'a} mais {\bold \underbar pas} \type{'b} \NC\LR
+\NC \type{'a} \VL contains \type{'a} \NC\FR
+\NC \type{'(and a b)} \VL contains \type{'a} {\bold \underbar and} \type{'b} \NC\MR
+\NC \type{'(or a b)} \VL contains \type{'a} {\bold \underbar or} \type{'b} \NC\MR
+\NC \type{'(xor a b)} \VL contains \type{'a} but {\bold \underbar not} \type{'b} \NC\LR
 \stoptable  
 }\\
-- On peut mettre plus de 2 éléments à un opérateur. Le 3\high{\itxx ème} élément est combiné avec le résultat de l'opération des 2 premiers.
+\underbar{\sc{Example}} :
+\startmylily
+horns = #'(hornI hornII hornIII)
+assocDynList = #(assoc-pos-dyn            
+    "1 p" 'hornI / "5 mf <" '(hornI hornII) / "6 ff > / 7 !" horns)   
+%% &\em{&Simple extraction&}&
+#(extract-pos-dyn-str 'hornIII assocDynList) 
+   => "6 ff > / 7 !"
+%% &\em{&Extraction with operator&}&
+#(instru-pos-dyn-str '(or hornI hornII) assocDynList)
+   => "1 p / 5 mf < / 6 ff > / 7 !" 
+#(instru-pos-dyn-str '(xor hornI hornII) assocDynList)
+   => "1 p"
+#(instru-pos-dyn-str '(and hornI hornII) assocDynList)
+   => "5 mf < / 6 ff > / 7 !"
+\stopmylily
+\blank[0.5em]
+- More than 2 items to an operator are allowed. The third element is combined with the result of the operation of the first two.
 \startmylily
 '(and a b c) = '(and (and a b) c)
 \stopmylily
-
-\crlf
-\underbar{\sc{Exemple}} :
-\startmylily
-cors = #'(corI corII corIII)
-assocDynList = #(assoc-pos-dyn            
-    "1 p" 'corI / "5 mf <" '(corI corII) / "6 ff > / 7 !" cors)   
-%% &\em{&Extraction simple&}&
-#(extract-pos-dyn-str 'corIII assocDynList) 
-   => "6 ff > / 7 !"
-%% &\em{&Extraction avec opérateur&}&
-#(instru-pos-dyn-str '(or corI corII) assocDynList)
-   => "1 p / 5 mf < / 6 ff > / 7 !" 
-#(instru-pos-dyn-str '(xor corI corII) assocDynList)
-   => "1 p"
-#(instru-pos-dyn-str '(and corI corII) assocDynList)
-   => "5 mf < / 6 ff > / 7 !"
-\stopmylily
-\blank
+\blank[0.2em]
+- A list of {\em instrument}s can be made up of sub-lists. If a sub-list does not begin with an operator, its items are copied to the higher-level list.
+\godown[1em]
 \midaligned{ \tfd ------------}
-\page
-%%%%%%%%
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \func{instru-pos-dyn->music}
 \syntax {(instru-pos-dyn->music extract-code assoc-pos-dyn-list)}{}
-Même chose que \type{extract-pos-dyn-str}, ci-dessus, mais la chaîne de retour est convertie à l'aide de  \type{add-dynamics} en une {\em music} de la forme :
+Same as \type{extract-pos-dyn-str} above, but the return string is converted using \type{add-dynamics},  into a {\em music} in the form:
 \startmylily
 { <>\p s1*4 <>\mf s1*29 <>\ff }
 \stopmylily
@@ -1867,16 +1850,18 @@ Même chose que \type{extract-pos-dyn-str}, ci-dessus, mais la chaîne de retour
 %%%%%%%%
 \func{add-dyn}
 \syntax {(add-dyn extract-code)}{}
-\type{(add-dyn extract-code)} est une macro (raccourci) de la fonction \type{instru-pos-dyn->music} ci-dessus, qui évite de spécifier le dernier paramètre \type{assoc-pos-dyn-list}. Elle est définie de la manière suivante :
+\type{(add-dyn extract-code)} is a macro (shortcut) of the function \type{instru-pos-dyn->music} above, which avoids specifying the last parameter \type{assoc-pos-dyn-list}. It is defined as follows:
 \startmylily
 #(define-macro (add-dyn extract-code)
    `(instru-pos-dyn->music ,extract-code assocDynList))
 \stopmylily
-Cette macro ne marchera donc qu'à condition d'avoir appelé \type{assoc-pos-dyn-list} par le nom~ \type{assocDynList} :
-\startmylily assocDynList = #(assoc-pos-dyn …) \stopmylily
-\blank[0.8em]
-\midaligned{ \tfd ------------}
-\godown[-2em]
+So this macro will only work if you have defined an \type{assocDynList} variable:
+\startmylily assocDynList = #(assoc-pos-dyn...) \stopmylily
+\godown[-0.1em]
+\hairline
+Additional informations on \type{assocDynList} is provided \at{page}{ in the addendum II}[complément-assocDynList].
+\hairline
+\blank[0.1em]
 
 \subject{Gérer les indications de tempo}  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Les 2 fonctions qui suivent sont utilisées dans l'%
@@ -2289,9 +2274,10 @@ Pour un conducteur avec 3 cors par exemple , on peut utiliser \type{instru->musi
 
 À la place de \type{split-instru}, on pourra préférer une fonction \type{part-combine-instru}. Il suffira dans la fonction de remplacer \type{split} par \type{part-combine}.\\
 
-{\tfa\bf→} {\bf Complément pour l'utilisation de \type{assocDynList}}
+\reference[complément-assocDynList]{}
+{\tfa\bf→} {\bf Supplement for the use of \type{assocDynList}.}
 \blank[0.6em]
-{\bf-} Utilisation avec création de nouveaux signes de nuances :
+{\bf-} Customing dynamics:
 \blank[0.3em]
 \startmylily
 pocodim = #(make-dynamic-script (markup #:normal-text #:italic "poco dim"))
