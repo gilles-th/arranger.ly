@@ -1852,17 +1852,17 @@ Cette macro ne marchera donc qu'à condition d'avoir defini la variable \type{as
 
 \subject{Gérer les indications de tempo}  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Les 2 fonctions qui suivent sont utilisées dans l'%
-\in{addendum I concernant \type{global}}[addendum1]\at{page}[addendum1].
+\in{addendum I concernant \type{\global}}[addendum1]\at{page}[addendum1].
 \blank[-2em]
 %%%%%%%%
 \func{metronome}
 \syntax {(metronome mvt note x [txt [open-par [close-par ]]])}{}
-Renvoie un {\em markup} equivalent à celui produit par la fonction \type{\tempo}\\
+Renvoie un {\em markup} equivalent à celui produit par la fonction \type{\tempo}.\\
 - \type{mvt} est un {\em markup} indicatif du mouvement du morceau. Par exemple : "Allegro" \\
 - \type{note} est une {\em chaine de caractères} représentant une valeur de note : "4." par ex pour une noire pointée, "8" pour une croche.\\
-- \type{x} représente soit un tempo métronomique si \type{x} est {\em entier}, soit comme pour l'argument précédent, une {\em chaîne} représentant une valeur de note. Voir exemple ci-dessous (fonction \type{tempos}).\\
-- Optionnellement, la variable \type{txt} permet de rajouter, après l'indication métronomique, un texte tel que "env" ou "ca.".\\
-- Grâce aux variables \type{open-par} et \type{close-par}, on peut changer (ou supprimer, en mettant "") les parenthèses ouvrantes et fermantes entourant l'indication métronomique.
+- \type{x} représente soit un tempo métronomique si \type{x} est {\em entier}, soit comme pour l'argument précédent, une {\em chaîne} représentant une valeur de note. Voir l'exemple de la fonction \type{tempos} ci-dessous.\\
+- Optionnellement, l'argument \type{txt} permet de rajouter, après l'indication métronomique, un texte tel que \quotation{env} ou \quotation{ca.}.\\
+- Grâce aux arguments \type{open-par} et \type{close-par}, on peut changer (ou supprimer, en mettant~\type{""}) les parenthèses ouvrantes et fermantes entourant l'indication métronomique.
 \godown[0.8em]
 \midaligned{ \tfd ------------}
 \godown[0.5em]
@@ -1873,7 +1873,7 @@ Renvoie un {\em markup} equivalent à celui produit par la fonction \type{\tempo
 Insert dans \type+\global+ et à la position \type+pos+, l'indication métronomique %
 \type+\tempo txt+.\\
 Si un nombre \type{space} est spécifié, le {\em markup} \type{txt} est déplacé horizontalement de $+$ ou $-$ \type{space}s unités vers la droite ou la gauche.\\
-Les barres obliques \ sont optionnelles.
+Les barres obliques / sont optionnelles.
 
 \underbar{\sc\Words Exemple} :
 \startmylily

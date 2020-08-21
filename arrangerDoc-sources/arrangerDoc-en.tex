@@ -1863,35 +1863,34 @@ Additional informations on \type{assocDynList} is provided \at{page}{ in the add
 \hairline
 \blank[0.1em]
 
-\subject{Gérer les indications de tempo}  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Les 2 fonctions qui suivent sont utilisées dans l'%
-\in{addendum concernant \type{global}}[addendum1]\at{page}[addendum1].
-\blank[-2em]
+\subject{Managing tempo indications}  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\godown[0.2em]
+The following 2 functions are used in the \in{addendum I about \type{\global},}[addendum1] \at{page}[addendum1].
+\godown[1.5em]
 %%%%%%%%
 \func{metronome}
 \syntax {(metronome mvt note x [txt [open-par [close-par ]]])}{}
-Renvoie un {\em markup} equivalent à celui produit par la fonction \type{\tempo}\\
-- \type{mvt} est un {\em markup} indicatif du mouvement du morceau. Par exemple : "Allegro" \\
-- \type{note} est une {\em chaine de caractères} représentant une valeur de note : "4." par ex pour une noire pointée, "8" pour une croche.\\
-- \type{x} représente soit un tempo métronomique si \type{x} est {\em entier}, soit comme pour l'argument précédent, une {\em chaîne} représentant une valeur de note. Voir exemple ci-dessous (fonction \type{tempos}).\\
-- Optionnellement, la variable \type{txt} permet de rajouter, après l'indication métronomique, un texte tel que "env" ou "ca.".\\
-- Grâce aux variables \type{open-par} et \type{close-par}, on peut changer (ou supprimer, en mettant "") les parenthèses ouvrantes et fermantes entourant l'indication métronomique.
-\blank
+Returns an {\em markup} equivalent to that provided by the \type{\tempo} function.\\
+- \type{mvt} is a {\em markup} indicating the movement of the piece. For example : "Allegro"\\
+- \type{note} is a {\em string} representing a note value: "4." for a dotted fourth, "8" for a eigth…\\
+- \type{x} represents either a metronomic tempo if \type{x} is an {\em integer}, or as for the previous argument, a {\em string} representing a note value. See the example of the  \type{tempos} function below.\\
+- Optionally, the \type{txt} argument allows to add, after the metronomic indication, a text such as \quotation{env} or \quotation{ca.}.\\
+- Using the arguments \type{open-par} and \type{close-par}, one can change (or delete, by putting \type{""}) the opening and closing parentheses surrounding the metronome indication.
+\godown[0.8em]
 \midaligned{ \tfd ------------}
 \godown[0.5em]
 
 %%%%%%%%
 \func{tempos}
 \syntax {(tempos obj pos1 txt1 [space1] / pos2 txt2 [space2] / …)}{}
-Insert dans \type+\global+ et à la position \type+pos+, l'indication métronomique %
-\type+\tempo txt+.\\
-Si un nombre \type{space} est spécifié, le {\em markup} \type{txt} est déplacé horizontalement de $+$ ou $-$ \type{space}s unités vers la droite ou la gauche.\\
-Les barres obliques \ sont optionnelles.
+Insert in \type+\global+ and at the position \type+pos+, the metronome indication \type+\tempo txt+.\\
+If a \type{space} number is specified, the \type{txt} {\em markup} is moved horizontally by $+$ or $-$ units to the right or left.\\
+Slashes / are optional.
 
 \underbar{\sc\Words Exemple} :
 \startmylily
 (tempos 1 "Allegro" / 50 (metronome "Andante" "4" 69) /
-      100 (metronome "Allegro" "4" "8") -2 ; &\tfx\em{&sera déplacé de 2 unités vers la gauche&}&
+      100 (metronome "Allegro" "4" "8") -2 ; &\tfx\em{&will be moved 2 units to the left&}&
       150 (markup #:column ("RONDO" (metronome "Allegro" "4." "4")))
 \stopmylily
 \blank
