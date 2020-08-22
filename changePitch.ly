@@ -1,5 +1,5 @@
 \version "2.20.0"
-%% changePitch.ly version Y/M/D = 2020/07/04
+%% changePitch.ly version Y/M/D = 2020/08/23
 %% for lilypond 2.20 or higher
 %% LSR :
 %%   http://lsr.di.unimi.it/LSR/Item?id=654
@@ -8,6 +8,7 @@
 %% This directory contains also a doc called :
 %%   changePitch-doc.pdf
 %% Last changes (the more recent to the top) :
+%%    - combine copy-duration and copy-arti in 1 function: copy-dur+arti
 %%    - function check-for-ties has been redone.
 %%    - allows \displayLilyMusic to work, using reduce-seq in a music with a \tempo command
 %%    - correction in \samePitch : music can contain q chords => call expand-q
@@ -31,30 +32,28 @@
 #(define (name-of music)
  (ly:music-property music 'name))
 
+#(define (noteEvent? music)
+(eq? (name-of music) 'NoteEvent))
+
 #(define (has-notes? music)
 "Return true if there is at least one note in `music, false otherwise."
  (or (eq? (name-of music) 'NoteEvent)
      (let ((e (ly:music-property music 'element)))
         (and (ly:music? e)
              (has-notes? e)))
-     (let loop ((es (ly:music-property music 'elements)))
-        (and (pair? es)
-             (or (has-notes? (car es))
-                 (loop (cdr es)))))))
+     (any has-notes? (ly:music-property music 'elements))))
 
 %% An EventChord is sometimes used as a wrapper in Lilypond, so we have to check
-%% if a chord is a standard chord with notes. We could have used has-notes? but
-%% this version is probably more efficient.
+%% if a chord is a standard chord with notes. We could have used has-notes?
+%% but this version is probably more efficient.
 %% Optional events name like 'RestEvent can be included.
 #(define (note-or-chord? music . otherEvent)
 "Is music a note or a chord with notes ?"
 (let ((name (name-of music)))
- (or (memq name (cons 'NoteEvent otherEvent))
-     (and (eq? name 'EventChord)  ; have this chord at least one note ?
-          (let loop ((es (ly:music-property music 'elements)))
-             (and (pair? es)
-                  (or (eq? (name-of (car es)) 'NoteEvent)
-                      (loop (cdr es)))))))))
+  (or (memq name (cons 'NoteEvent otherEvent))
+      (and (eq? name 'EventChord)  ; have this chord at least one note ?
+           (any (lambda(evt)(eq? (name-of evt) 'NoteEvent))
+                (ly:music-property music 'elements))))))
 
 #(define (reduce-seq mus)
 "Try to reduce the number of sequential music"
@@ -141,49 +140,38 @@
 (if (or (pair? prev)(integer? prev))(set! res (cons prev res)))
 (reverse res)))
 
-%%%%%%%%%%%%  used inside the inner function change-one-note
-#(define (copy-duration from to)  ; from and to as EventChord or NoteEvent
-(let ((max-dur #f)); in theory, 2 notes in a chord can have a different duration
-  (music-map (lambda (x)            ; get main duration from `from
-              (let ((dur (ly:music-property x 'duration)))
-               (if (and (ly:duration? dur)
-                        (or (not max-dur)
-                            (ly:duration<? max-dur dur))); take the greater
-                 (set! max-dur dur))
-                 x))
-              from)
-  (music-map (lambda (x)            ; set duration to duration of `to
-               (if (ly:duration? (ly:music-property x 'duration))
-                  (ly:music-set-property! x 'duration max-dur))
-               x)
-             to)))
-
-#(define (copy-arti from to) ; from and to as EventChord or NoteEvent
-(let* ((es-from (ly:music-property from 'elements))
-       (es-to (ly:music-property to 'elements))
-       (arti-from (if (null? es-from)
-                    (ly:music-property from 'articulations)
-                    (filter
-                      (lambda(x)
-                        (not (ly:duration? (ly:music-property x 'duration))))
-                      es-from))))
-  (if (null? es-to)                       ; NoteEvent
-    (ly:music-set-property! to 'articulations
-              (append (ly:music-property to 'articulations) arti-from))
-    (ly:music-set-property! to 'elements  ; EventChord
-              (append es-to arti-from)))
-  ; copy also 'tags and 'to-relative-callback
-  (ly:music-set-property! to 'tags
-    (append (ly:music-property from 'tags)(ly:music-property to 'tags)))
-   (if (null? es-to)
-      (ly:music-set-property! to 'to-relative-callback
-          (ly:music-property from 'to-relative-callback))
-      (begin
-        (ly:music-set-property! to 'to-relative-callback
-            ly:music-sequence::event-chord-relative-callback)
-        (ly:music-set-property! (car es-to) 'to-relative-callback
-            (ly:music-property from 'to-relative-callback))))
-    ))
+%%%%%%%%%%%%  used inside change-pitch
+#(use-modules (ice-9 receive)) %% for the use of receive
+#(define (copy-dur+arti from to) ; from and to as EventChord or NoteEvent
+(let((es-from (ly:music-property from 'elements))
+     (es-to (ly:music-property to 'elements)))
+  (receive (notes-from artis-from)
+    (if (null? es-from)
+      (values (list from)(ly:music-property from 'articulations)) ; a NoteEvent
+      (partition noteEvent? es-from))                             ; an EventChord
+    (let* ((durs-from (map (lambda(note)(ly:music-property note 'duration)) notes-from))
+           (dur-from (fold    ; 2 notes in a chord can have different durations !
+                        (lambda(dur1 dur2)(if (ly:duration<? dur1 dur2) dur2 dur1))
+                        (car durs-from) ; initial and default value
+                        (cdr durs-from))))
+      (if (null? es-to)
+        (begin                                       ; a NoteEvent
+          (ly:music-set-property! to 'duration dur-from)
+          (ly:music-set-property! to 'articulations
+            (append (ly:music-property to 'articulations) artis-from))
+          (ly:music-set-property! to 'to-relative-callback
+            (ly:music-property from 'to-relative-callback)))
+        (let((notes-to (filter noteEvent? es-to)))   ; an EventChord
+          (for-each (lambda(evt)(ly:music-set-property! evt 'duration dur-from))
+                    notes-to)
+          (ly:music-set-property! to 'elements (append es-to artis-from))
+          (ly:music-set-property! to 'to-relative-callback
+              ly:music-sequence::event-chord-relative-callback)
+          (if (null? es-from)
+            (ly:music-set-property! (car notes-to) 'to-relative-callback
+              (ly:music-property from 'to-relative-callback))))))
+      (ly:music-set-property! to 'tags
+         (append (ly:music-property from 'tags)(ly:music-property to 'tags))))))
 
 %% del-arti is called for all notes but the first of a \samePitch section.
 #(define (del-note-arti note-or-chord)
@@ -265,7 +253,7 @@ note with the tie symbol)"
   (let loop ((notes-list (cons dummy-note (make-notes-list newnotes))); see make-notes-list
              (pat-list (cons dummy-note (circular-list pattern2)))
              (res '())) ; the list to fill
-    (if (or (null? notes-list)(null? pat-list)) ; pat-list may be a regular list in the loop
+    (if (or (null? notes-list)(null? pat-list)) ; pat-list can be a regular list in the loop
       (reverse res)               ;;;;;; return the list in the right order
       (let ((x (car notes-list))  ;;;;;; go deeper, taking 1st elt of each lists
             (evt (ly:music-deep-copy (car pat-list))))
@@ -282,8 +270,7 @@ note with the tie symbol)"
             ((ly:music? x)  ;;;;;; the elt of notes-list is a note or a chord
                (if same-pitch-section? ; x is used several times. Copy arti of x only to first
                  (set! x (del-note-arti (ly:music-deep-copy x)))) ; note of \samePitch section
-               (copy-duration evt x)  ; evt = from, x = to
-               (copy-arti evt x)
+               (copy-dur+arti evt x)  ; evt = from, x = to
                (let ((tags (ly:music-property x 'tags)))
                  (cond               ; are we in a \samePitch section ?
                    ((memq cPSamePitch tags)    ; yes, first,remove the tag

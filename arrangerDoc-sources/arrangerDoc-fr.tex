@@ -1895,8 +1895,8 @@ Outre les fonctions de base \type{cons} et \type{append} de {\em\sc GUILE}, on p
 \index{flat-lst}
 
 \type{obj1}, \type{obj2…} sont des {\em instrument}s ou des listes d'{\em instrument}s.\\
-Renvoie une liste de tous les {\em instrument}s donnés en paramètres\\
-
+Renvoie une liste de tous les {\em instrument}s donnés en paramètres
+\godown[0.7em]
 \underbar{\sc\Words Exemple} :
 \startmylily
 tpettes = #'(tpI tpII)
@@ -1918,24 +1918,24 @@ le résultat serait
 cuivres = #'(tpI (tpII tpIII) corI corII tbnI tbnII tuba)
 \stopmylily
 Si ce n'est pas le résultat escompté, on peut utiliser la fonction \type{flat-lst} (même syntaxe), qui, elle, renvoie une liste composée uniquement d'{\em instrument}s, quelque soit la profondeur des listes données en paramètres.
-
-\blank
+\godown[0.7em]
 \midaligned{ \tfd ------------}
+\godown[1.2em]
 
 %%%%%%%%%
 \func{lst-diff}
 \syntax {(lst-diff mainlist . tosubstract)}{}
 Enlève de \type{mainlist} les {\em instrument}s spécifiés dans \type{tosubstract}.\\
 \type{tosubstract} est une suite d'{\em instrument}s ou de listes d'{\em instrument}s
-
-\blank
+\godown[1.2em]
 \midaligned{ \tfd ------------}
+\godown[1.2em]
 
 %%%%%%%%%
 \func{zip}
 \syntax {(zip x1 [x2…])}{}
 \type{x1}, \type{x2…} sont des listes standard (non circulaires, prédicat \type{proper-list?}).\\
-La fonction re-définit la fonction \type{zip} de {\sc guile}, en permettant l'ajout de tous les éléments des plus grosses listes. La fonction \type{zip} originale de {\sc guile} a été renommée \type{guile-zip}.
+La fonction re-définit la fonction \type{zip} de {\em\sc guile}, en permettant l'ajout de tous les éléments des plus grosses listes. La fonction \type{zip} originale de {\em\sc guile} a été renommée \type{guile-zip}.
 \startmylily
 (guile-zip '(A1 A2) '(B1 B2 B3)) & $\Rightarrow$ & '((A1 B1) (A2 B2))
       (zip '(A1 A2) '(B1 B2 B3)) & $\Rightarrow$ & '((A1 B1) (A2 B2) (B3))

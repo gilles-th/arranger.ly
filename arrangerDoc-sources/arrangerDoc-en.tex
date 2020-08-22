@@ -1898,72 +1898,72 @@ Slashes / are optional.
 %\page%[preference]
 
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                              
-\subject{Manipuler les listes}
-Outre les fonctions de base \type{cons} et \type{append} de {\em\sc GUILE}, on pourra avoir besoin des 3 ou 4 fonctions suivantes.
+\subject{Manipulating lists}
+In addition to the basic functions \type{cons} and \type{append} of {\em\sc GUILE}, we may need the following three or four functions.
 \blank[-2em]
 %%%%%%%%
-\func{lst} (\type{lst} et également \type{flat-lst}) 
+\func{lst} (\type{lst} and also \type{flat-lst}) 
 \syntax {(lst obj1 [obj2…])}{}
 \index{flat-lst}
 
-\type{obj1}, \type{obj2…} sont des {\em instrument}s ou des listes d'{\em instrument}s.\\
-Renvoie une liste de tous les {\em instrument}s donnés en paramètres\\
-
-\underbar{\sc\Words Exemple} :
+\type{obj1}, \type{obj2…} are {\em instrument}s or list of {\em instrument}s.\\
+Return a list of all {\em instrument}s given in parameters.
+\godown[0.7em]
+\underbar{\sc\Words Example} :
 \startmylily
-tpettes = #'(tpI tpII)
-cors = #'(corI corII) 
-tbnes = #'(tbnI tbnII)
-cuivres = #(lst tpettes cors tbnes 'tuba)
+tps = #'(tpI tpII)
+horns = #'(hornI hornII) 
+tbs = #'(tbI tbII)
+brass = #(lst tps horns tbs 'tuba)
 \stopmylily
-La dernière instruction est équivalente à :
+The last instruction is equivalent to:
 \startmylily
-cuivres = #'(tpI tpII corI corII tbnI tbnII tuba)
+brass = #'(tpI tpII hornI hornII tbI tbII tuba)
 \stopmylily
-\type{lst} garde intacte les sous listes de listes.\\
-Avec :
+\type{lst} keeps the sub lists untouched.\\
+With this instruction:
 \startmylily
-tpettes = #'(tpI (tpII tpIII))
+tps = #'(tpI (tpII tpIII))
 \stopmylily
-le résultat serait
+the result would be:
 \startmylily
-cuivres = #'(tpI (tpII tpIII) corI corII tbnI tbnII tuba)
+brass = #'(tpI (tpII tpIII) hornI hornII tbI tbII tuba)
 \stopmylily
-Si ce n'est pas le résultat escompté, on peut utiliser la fonction \type{flat-lst} (même syntaxe), qui, elle, renvoie une liste composée uniquement d'{\em instrument}s, quelque soit la profondeur des listes données en paramètres.
-
+If this is not the expected result, we can use the function \type{flat-lst} (same syntax), which returns a list composed only of {\em instrument}s, whatever the depth of the lists given in parameters.
 \blank
 \midaligned{ \tfd ------------}
+\godown[1.1em]
 
 %%%%%%%%%
 \func{lst-diff}
 \syntax {(lst-diff mainlist . tosubstract)}{}
-Enlève de \type{mainlist} les {\em instrument}s spécifiés dans \type{tosubstract}.\\
-\type{tosubstract} est une suite d'{\em instrument}s ou de listes d'{\em instrument}s
-
-\blank
+Remove from \type{mainlist} the {\em instrument}s  specified in \type{tosubstract}.\\
+\type{tosubstract} is a sequence of {\em instrument}s or lists of {\em instrument}s
+\godown[1.2em]
 \midaligned{ \tfd ------------}
+\godown[1.2em]
 
 %%%%%%%%%
 \func{zip}
 \syntax {(zip x1 [x2…])}{}
-\type{x1}, \type{x2…} sont des listes standard (non circulaires, prédicat \type{proper-list?}).\\
-La fonction re-définit la fonction \type{zip} de {\sc guile}, en permettant l'ajout de tous les éléments des plus grosses listes. La fonction \type{zip} originale de {\sc guile} a été renommée \type{guile-zip}.
+\type{x1}, \type{x2…} are standard lists (not circular, predicate \type{proper-list?}).
+The function redefines the function \type{zip} of {\em \sc guile}, allowing the addition of all the elements of the biggest lists. The original function \type{zip} of {\em\sc guile} has been renamed \type{guile-zip}.
 \startmylily
 (guile-zip '(A1 A2) '(B1 B2 B3)) & $\Rightarrow$ & '((A1 B1) (A2 B2))
       (zip '(A1 A2) '(B1 B2 B3)) & $\Rightarrow$ & '((A1 B1) (A2 B2) (B3))
 \stopmylily
-Si on a définit les listes et musique suivantes : 
+If the following lists and music have been defined: 
 \startmylily
-tpettes = #'(tpI tpII tpIII)
+tps = #'(tpI tpII tpIII)
 clars = #'(clI clII clIII) 
 saxAltos = #'(altI altII)
 music = \relative c' { <c e g> <d f b> }
 \stopmylily
-Le code suivant :
+The following code:
 \startmylily
-(dispatch-chords (zip tpettes clars saxAltos) 6 music)
+(dispatch-chords (zip tps clars saxAltos) 6 music)
 \stopmylily
-donnera à la mesure 6 :
+ will produce bar 6 :
 \startmylily
 '(tpI clI altI)    & $\leftarrow$ & { g b }
 '(tpII clII altII) & $\leftarrow$ & { e f }
