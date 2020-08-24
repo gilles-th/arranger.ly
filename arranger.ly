@@ -1,5 +1,5 @@
 \version "2.20.0"
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2020/08/04 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2020/08/24 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%% For Lilypond 2.20 or higher %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The main goal of arranger.ly is to provide a set of functions to make arrangements
 % (for ex : a symphonic piece for a concert band (wood-winds and percussions only))
@@ -974,7 +974,7 @@ obj-start-pos can be set in last arguments of args"
     (apply-to obj (apply set-notes+ musics) ;; func
                   where-pos 'end (and (pos? obj-start-pos) obj-start-pos)))))
 
-% voices->chords behaves as \partcombine with \partcombineChords option
+% voices->chords behaves as \partCombine with \partcombineChords option
 % To use with apply-to
 #(define (voices->chords music)
 "Transformes 2 simultaneous voices { a b } { c d } in { <a c> <b d> }"
@@ -1514,14 +1514,14 @@ in `music."
 
 #(define (tempos obj where-pos txt . args)
 "Syntax : tempos obj where-pos1 txt1 [space1] / where-pos2 txt2 [space2] / ...
-Add a command : \tempo txt, at where-pos in global. If space is specified,
-move horizontaly by space units, the tempo markup"
+Adds a command : \tempo txt, at where-pos in global.
+If a space is specified, move horizontaly the tempo markup by space units."
 (let loop ((res '()) ; a list of list
-           (elt '()) ; a sub list of res
-           (l (reverse              ; all arguments reversed
+           (elt '()) ; a res elt
+           (l (reverse              ; all arguments are reversed, so
                 (cons where-pos     ; l will end by a pos preceeded by...
                       (cons txt     ; a markup
-                            (filter not-procedure? args)))))) ; skip /
+                            (filter not-procedure? args)))))) ; skips /
   (if (pair? l)
     (let ((arg (car l))
           (next (cdr l)))
@@ -1798,7 +1798,7 @@ letter is added to the left"
            default)))
 (let ((index->string (pred->arg procedure? index->string-letters))
       (start-index (pred->arg index? 0))
-      (show-infos (pred->arg boolean? #f)))
+      (show-infos (pred->arg boolean? #t)))
   ; (for-each (lambda(x) (format #t "~a " (index->string x))) (iota 652)) ; uncomment to test
   (for-each
     (lambda (x y) ;; associate symbol 'A 'B 'C... to an elt of the list

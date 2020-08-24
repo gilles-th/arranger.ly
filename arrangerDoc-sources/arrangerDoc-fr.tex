@@ -1920,16 +1920,16 @@ cuivres = #'(tpI (tpII tpIII) corI corII tbnI tbnII tuba)
 Si ce n'est pas le résultat escompté, on peut utiliser la fonction \type{flat-lst} (même syntaxe), qui, elle, renvoie une liste composée uniquement d'{\em instrument}s, quelque soit la profondeur des listes données en paramètres.
 \godown[0.7em]
 \midaligned{ \tfd ------------}
-\godown[1.2em]
+\godown[1.1em]
 
 %%%%%%%%%
 \func{lst-diff}
 \syntax {(lst-diff mainlist . tosubstract)}{}
 Enlève de \type{mainlist} les {\em instrument}s spécifiés dans \type{tosubstract}.\\
 \type{tosubstract} est une suite d'{\em instrument}s ou de listes d'{\em instrument}s
-\godown[1.2em]
+\godown[1.1em]
 \midaligned{ \tfd ------------}
-\godown[1.2em]
+\godown[1.1em]
 
 %%%%%%%%%
 \func{zip}
@@ -1957,9 +1957,9 @@ donnera à la mesure 6 :
 '(tpII clII altII) & $\leftarrow$ & { e f }
 '(tpIII clIII)     & $\leftarrow$ & { c d }
 \stopmylily
-
-\blank
+\blank[0.8em]
 \midaligned{ \tfd ------------}
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                                                                  
@@ -1968,15 +1968,16 @@ donnera à la mesure 6 :
                                    
 %%%%%%%%
 \func{sym-append}
-\syntax {(sym-append 'sym}{to-begin?)}
-Ajoute à la fin d'un nom de symbole le suffixe \type{sym}. Si \type{to-begin?} est à \type{#t}, \type{sym} devient un préfixe (collé au début).\\
-Cette fonction s'applique à un {\em symbole} ou à une liste de {\em symbole}s.\\
-En l'associant à la fonction \in{\type{def!}}[def!]\at{de la page}{}[def!], on peut créer automatiquement des musiques de la {forme \type+{s1*…}+}, de la même longeur que le morceau, et pouvant être associées à chacun des instruments (pour mettre par exemple les nuances dans des voix séparées).
+\syntax {((sym-append sym [to-begin?]) instru[s]}{}
+Crée un nom de symbole en ajoutant à la fin d'un nom d'instrument le symbole \type{sym} (suffix).\\
+Si \type{to-begin?} est à \type{#t}, \type{sym} devient un préfixe (collé au début).\\
+Cette fonction s'applique à un {\em instrument} ou à une liste d'{\em instrument}s.\\
+En l'associant à la fonction \in{\type{def!}}[def!]\at{de la page}{}[def!], on peut créer automatiquement des musiques de la forme \type+{s1*…}+, de la même longeur que le morceau.\\
+Elle peut s'utiliser par exemple, pour mettre les nuances d'un instrument dans une voix séparée~:
 \blank[0.5em]
 \startmylily
-all = #'(oboeI oboeII clarinet violinI violinII viola cello)
-#(define dyn-append (sym-append 'Dyn))        % &\tfx\em{& 'instru => 'instruDyn&}&
-#(begin
+all = #'(oboeI oboeII clarinet violinI violinII viola cello)      
+#(let ((dyn-append (sym-append 'Dyn)))    ; &\tfx\em{& 'instru => 'instruDyn&}&
    (def! (dyn-append all))   ;; &\tfx\em{&déclaration et initialisation de oboeIDyn, oboeIIDyn …&}&
    (add-dynamics 'clarinetDyn "1 p / 4 f …")  ;; &\tfx\em{& ajout des nuances&}&
    (add-dynamics '(oboeIDyn oboeIIDyn) "2 p < / 4 f …")
@@ -1991,7 +1992,8 @@ Dans les parties séparées ou le conducteur, on mettra~:
 \new Staff << \global \clarinet \clarinetDyn >> …
 \stopmylily
 \blank[0.5em]
-On pourra alors, vouloir alléger l'écriture des \type{\new Staff}. C'est ce qui est proposé dans \goto{l'addendum II}[addendum2], de la \at{page}[addendum2], avec la fonction \type{part->music}.
+Pour alléger l'écriture des \type{\new Staff}, on peut pousser l'automatisation encore plus loin. Ceci est montrée en exemple par la fonction \goto{\type{instru->music}}[instru->music] de \at{l'addendum 2, page}[instru->music].
+% \type{part->music} de \goto{l'addendum II}[addendum2] \at{page}[addendum2]. 
 \blank[0.8em]
 \midaligned{ \tfd ------------}
 \godown[0.8em]
@@ -1999,8 +2001,8 @@ On pourra alors, vouloir alléger l'écriture des \type{\new Staff}. C'est ce qu
 %%%%%%%%
 \func{set-del-events}
 \syntax {(set-del-events event-sym . args)}{}
-Supprime tous les évenements de nom\footnote {Un nom d'événement commence par une majuscule, et se termine par "Event". Exemple : {\em 'SlurEvent}} \type{event-sym} \\
-Plusieurs événements peuvent être spécifiés à la suite, et même sous forme d'une liste.\\
+Supprime tous les évenements de nom\footnote {Un nom d'événement commence par une majuscule, et se termine par \quotation{Event}. Exemple : {\em 'SlurEvent}} \type{event-sym} \\
+Plusieurs événements peuvent être spécifiés, à la suite ou sous forme d'une liste.\\
 Ainsi, la liste nommée \type{dyn-list}, définie dans {\em "chordsAndVoices.ly"} de la manière suivante :
 \blank[0.5em]
 \startmylily
@@ -2027,7 +2029,7 @@ ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[
 Copie \type{n} fois \type{music}.
 \blank[0.3em]
 \midaligned{ \tfd ------------}
-\page
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%
 \index{index->string-letters}
@@ -2036,7 +2038,7 @@ Copie \type{n} fois \type{music}.
 La fonction associe des lettres aux mesures contenues dans la liste : \type{measures}. Elle convient particulièrement quand \type{Score.markFormatter} est de la forme \type{#format-mark-[…]-letters}.\\
 Les 3 paramètres suivant \type{measures} sont optionnels et se distinguent uniquement par leur type.\\
 \type{index->string} est une fonction de rappel renvoyant une {\em chaîne de caractères}, et prenant en paramètre un {\em index} (un entier positif). L'index est incrémenté de 1 à chaque appel, en commençant par la valeur du paramètre \type{start-index} (\type{0} si \type{start-index} non spécifié).\\
-Par défaut, \type{index->string} est la fonction interne \type{index->string-letters} qui renvoie la ou les lettre(s) capitale(s) correspondante(s) à leur index dans l'alphabet, mais en sautant la lettre~"\type{I}"~:
+Par défaut, \type{index->string} est la fonction interne \type{index->string-letters} qui renvoie la ou les lettre(s) capitale(s) correspondante(s) à leur index dans l'alphabet, mais en sautant la lettre~\quotation{\type{I}}~:
 \blank[0.3em]
 \hbox{\hspace[lilyindent]"\type{A}"…"\type{H}" puis "\type{J}"…"\type{Z}" puis "\type{AA}"…"\type{AH}" 
 puis "\type{AJ}"…"\type{AZ}" etc…}
@@ -2058,11 +2060,11 @@ L'instruction : \type {#(def-letters '(9 25 56 75 88 106))} donne les correspond
 \stoptable
 \hspace[lilyindent]
 }} % end of \hbox
-Si une lettre était déja définie avant l'appel de \type{def-letters}, la fonction fait précéder la lettre par le caractère "\type{_}". Ceci est surtout nécessaire pour les lettres \type{X} et \type{Y}, qui ont déjà une valeur associée dans {\em Lilypond} (\type{0} et \type{1}). Ces  2 lettres deviendront donc {\em toujours} \type{_X} et \type{_Y}. Un message prévient l'utilisateur du changement, sauf si on inclut \type{#f} dans les options (paramètre \type{show-infos?}) :
+Si une lettre était déjà définie avant l'appel de \type{def-letters}, la fonction fait précéder la lettre par le caractère \quotation{\type{_}}. Ceci est surtout nécessaire pour les lettres \type{X} et \type{Y}, qui ont \type{0} et \type{1} comme valeur associée dans {\em Lilypond}. Ces  2 lettres deviendront donc {\em toujours} \type{_X} et \type{_Y}. Un message prévient l'utilisateur du changement, sauf si on inclut \type{#f} dans les options (paramètre \type{show-infos?}) :
 \startmylily #(def-letters '(9 25 …) #f) \stopmylily
-\blank[0.8em]
+\blank[0.6em]
 \midaligned{ \tfd ------------}
-\godown[-1.2em]
+\godown[-1.0em]
 
 %% set-frag is not ready enough (bugs remains). Perhaps in a future version of arranger.ly
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                                                 
@@ -2089,31 +2091,32 @@ Si une lettre était déja définie avant l'appel de \type{def-letters}, la fonc
 
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                                                 
 \subject{Compiler une portion de score}
-\godown[1.2em]
+\godown[1.1em]
 %%%%%%%%
 \func{show-score}
 \syntax {(show-score from-pos to-pos)}{}
 
-Insert dans \type+\global+, des \type+\set Score.skipTypesetting = ##t+ ou \type+##f+,  de manière à ne compiler (et ne montrer) que la musique de la partition se trouvant entre les positions \type+from-pos+ et \type+to-pos+ (utile pour les gros "scores").
+Insert dans \type+\global+, des \type+\set Score.skipTypesetting = ##t+ ou \type+##f+,  de manière à ne compiler (et ne montrer) que la musique de la partition se trouvant entre les positions \type+from-pos+ et \type+to-pos+ (utile pour les gros \quotation{scores}).
 \blank[0.8em]
 \midaligned{ \tfd ------------}
-\godown[-1.2em]                     
+\godown[-1.8em]                     
 
                      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                              
 \subject{Exporter ses instruments}
-\godown[1.2em]                                        
+\godown[1.0em]                                        
 %%%%%%%%
 \func{export-instruments}
 \syntax {(export-instruments instruments filename}{overwrite?)}
 
 \type{instruments} est la liste d'{\em instrument}s à exporter.\\
-\type{filename} est le nom du fichier dans lequel sera effectué l'export, dans le répertoire courant .\\
+\type{filename} est le nom du fichier du répertoire courant, dans lequel sera effectué l'export.\\
 On obtient un fichier~{\em ly} classique avec des déclarations de la forme 
 \startmylily
 instrument-name = { music … }
 \stopmylily
 (Les notes seront écrites en mode absolu).\\
-Si \type{filename} existe déjà, les definitions des instruments seront ajoutées à la fin du fichier, sauf si \type{overwrite?} est mis à  \type+#t+ : l'ancienne version est alors effacée !\\
+Si \type{filename} existe déjà, les definitions des instruments seront ajoutées à la fin du fichier, sauf si \type{overwrite?} est mis à  \type+#t+ : l'ancienne version est alors effacée !
+\blank[0.6em]
 \hairline
 Cette fonction est encore au stade expérimental ! Agir avec prudence.
 \hairline
@@ -2210,6 +2213,7 @@ Dans le code suivant, le texte sera aligné à gauche dans le conducteur et à d
 {\tfa\bf→} {\bf Parties séparées : allègement de code - fonction \type{instru->music}}
 \index{obj->music}
 \index{instru->music}
+\reference[instru->music]
 \\
 Préalable : avoir défini \type{assocDynList} (dans le fichier {\em dynamics.ily})\\
 \type{instru->music} utilise \type{obj->music}, une fonction qui renvoie la musique associée à un instrument \footnote{\type{(obj->music 'clar)} renvoie \type{clar}}, et la fonction \type{make-clef-set} (définie dans le répertoire {\em Lilypond}, fichier \type{scm/parser-clef.scm}), qui est l'équivalent scheme de \type{\clef}.

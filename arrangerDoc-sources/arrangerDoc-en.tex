@@ -1938,7 +1938,7 @@ If this is not the expected result, we can use the function \type{flat-lst} (sam
 \func{lst-diff}
 \syntax {(lst-diff mainlist . tosubstract)}{}
 Remove from \type{mainlist} the {\em instrument}s  specified in \type{tosubstract}.\\
-\type{tosubstract} is a sequence of {\em instrument}s or lists of {\em instrument}s
+\type{tosubstract} is a sequence of {\em instrument}s or lists of {\em instrument}s.
 \godown[1.2em]
 \midaligned{ \tfd ------------}
 \godown[1.2em]
@@ -1947,7 +1947,7 @@ Remove from \type{mainlist} the {\em instrument}s  specified in \type{tosubstrac
 \func{zip}
 \syntax {(zip x1 [x2…])}{}
 \type{x1}, \type{x2…} are standard lists (not circular, predicate \type{proper-list?}).
-The function redefines the function \type{zip} of {\em \sc guile}, allowing the addition of all the elements of the biggest lists. The original function \type{zip} of {\em\sc guile} has been renamed \type{guile-zip}.
+The function redefines the function \type{zip} of {\em\sc guile}, allowing the addition of all the elements of the biggest lists. The original function \type{zip} of {\em\sc guile} has been renamed \type{guile-zip}.
 \startmylily
 (guile-zip '(A1 A2) '(B1 B2 B3)) & $\Rightarrow$ & '((A1 B1) (A2 B2))
       (zip '(A1 A2) '(B1 B2 B3)) & $\Rightarrow$ & '((A1 B1) (A2 B2) (B3))
@@ -1972,30 +1972,32 @@ The following code:
 
 \blank
 \midaligned{ \tfd ------------}
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                                                                  
-\subject{Fonctions diverses}
+\subject{Various functions}
 \blank[-2em]   
                                    
 %%%%%%%%
 \func{sym-append}
-\syntax {(sym-append 'sym}{to-begin?)}
-Ajoute à la fin d'un nom de symbole le suffixe \type{sym}. Si \type{to-begin?} est à \type{#t}, \type{sym} devient un préfixe (collé au début).\\
-Cette fonction s'applique à un {\em symbole} ou à une liste de {\em symbole}s.\\
-En l'associant à la fonction \in{\type{def!}}[def!]\at{de la page}{}[def!], on peut créer automatiquement des musiques de la {forme \type+{s1*…}+}, de la même longeur que le morceau, et pouvant être associées à chacun des instruments (pour mettre par exemple les nuances dans des voix séparées).
+\syntax {((sym-append sym [to-begin?]) instru[s]}{}
+Make a symbol name by adding the symbol \type{sym} to the end of an instrument name (suffix).\\
+If \type{to-begin?} is set to \type{#t}, \type{sym} becomes a prefix (pasted at the beginning). \\
+This function has to be applied to an {\em instrument} or a list of {\em instrument}s.\\
+By associating it to the function \in{\type{def!}}[def!]\at{at page}{}[def!], one can automatically create musics of the form \type+{s1*…}+, with same length as the piece.\\
+A typical use is putting all dynamics of an instrument in a separate voice:
 \blank[0.5em]
 \startmylily
-all = #'(oboeI oboeII clarinet violinI violinII viola cello)
-#(define dyn-append (sym-append 'Dyn))        % &\tfx\em{& 'instru => 'instruDyn&}&
-#(begin
-   (def! (dyn-append all))   ;; &\tfx\em{&déclaration et initialisation de oboeIDyn, oboeIIDyn …&}&
-   (add-dynamics 'clarinetDyn "1 p / 4 f …")  ;; &\tfx\em{& ajout des nuances&}&
+all = #'(oboeI oboeII clarinet violinI violinII viola cello)       
+#(let ((dyn-append (sym-append 'Dyn)))   ; &\tfx\em{& 'instru => 'instruDyn&}&
+   (def! (dyn-append all))   ;; &\tfx\em{&declaration and initialization of oboeIDyn, oboeIIDyn …&}&
+   (add-dynamics 'clarinetDyn "1 p / 4 f …")  ;; &\tfx\em{& adds dynamics&}&
    (add-dynamics '(oboeIDyn oboeIIDyn) "2 p < / 4 f …")
   …)
 \stopmylily
 \blank[0.5em]
-Dans les parties séparées ou le conducteur, on mettra~:
+In the separate parts or the score, we'll put~:
 \blank[0.5em]
 \startmylily
 \new Staff << \global \oboeI \oboeIDyn >>
@@ -2003,7 +2005,8 @@ Dans les parties séparées ou le conducteur, on mettra~:
 \new Staff << \global \clarinet \clarinetDyn >> …
 \stopmylily
 \blank[0.5em]
-On pourra alors, vouloir alléger l'écriture des \type{\new Staff}. C'est ce qui est proposé dans \goto{l'addendum II}[addendum2], de la \at{page}[addendum2], avec la fonction \type{part->music}.
+To lighten the \type{\new Staff} handwriting, one may want to push automation much further.
+This is done as an example by the \goto{\type{instru->music}}[instru->music] function in \at{addendum 2, page}[instru->music].
 \blank[0.8em]
 \midaligned{ \tfd ------------}
 \godown[0.8em]
@@ -2011,20 +2014,20 @@ On pourra alors, vouloir alléger l'écriture des \type{\new Staff}. C'est ce qu
 %%%%%%%%
 \func{set-del-events}
 \syntax {(set-del-events event-sym . args)}{}
-Supprime tous les évenements de nom\footnote {Un nom d'événement commence par une majuscule, et se termine par "Event". Exemple : {\em 'SlurEvent}} \type{event-sym} \\
-Plusieurs événements peuvent être spécifiés à la suite, et même sous forme d'une liste.\\
-Ainsi, la liste nommée \type{dyn-list}, définie dans {\em "chordsAndVoices.ly"} de la manière suivante :
+Deletes all events with the name\footnote {An event name begins with a capital letter and ends with \quotation{Event}. Example: {\em 'SlurEvent}} \type{event-sym} \\
+Several events can be specified, consecutively or as a list.\\
+Thus, the list named \type{dyn-list}, defined in {\em "chordsAndVoices.ly"} as follows:
 \blank[0.5em]
 \startmylily
 #(define dyn-list '(AbsoluteDynamicEvent CrescendoEvent DecrescendoEvent))
 \stopmylily
 \blank[0.5em]
-permet, utilisée avec la fonction \type{set-del-events}, d'effacer toutes les nuances d'une portion de musique et éventuellement de les remplacer par d'autre :
+makes it possible, used with the \type{set-del-events} function, to erase all the dynamics of a portion of music and possibly to replace them by another:
 \blank[0.5em]
 \startmylily
 #(let((del-dyn (set-del-events dyn-list))
-   (apply-to 'trompette del-dyn 8 12)
-   (add-dynamics 'trompette "8 p / 10 mp < / 11 mf"))
+   (apply-to 'trumpet del-dyn 8 12)
+   (add-dynamics 'trumpet "8 p / 10 mp < / 11 mf"))
 \stopmylily
 \blank[0.8em]
 \midaligned{ \tfd ------------}
@@ -2036,7 +2039,7 @@ permet, utilisée avec la fonction \type{set-del-events}, d'effacer toutes les n
 \index{set-ncopy}
 or : (2\high{nd} equivalent form, to be used with \goto{\type{apply-to}}[apply-to])
 \syntax {((set-ncopy n) music)}{}
-Copie \type{n} fois \type{music}.
+Copy \type{music} \type{n} times.
 \blank[0.3em]
 \midaligned{ \tfd ------------}
 \page
@@ -2045,32 +2048,32 @@ Copie \type{n} fois \type{music}.
 \index{index->string-letters}
 \func{def-letters}
 \syntax {(def-letters measures [index->string][start-index][show-infos?])}{}
-La fonction associe des lettres aux mesures contenues dans la liste : \type{measures}. Elle convient particulièrement quand \type{Score.markFormatter} est de la forme \type{#format-mark-[…]-letters}.\\
-Les 3 paramètres suivant \type{measures} sont optionnels et se distinguent uniquement par leur type.\\
-\type{index->string} est une fonction de rappel renvoyant une {\em chaîne de caractères}, et prenant en paramètre un {\em index} (un entier positif). L'index est incrémenté de 1 à chaque appel, en commençant par la valeur du paramètre \type{start-index} (\type{0} si \type{start-index} non spécifié).\\
-Par défaut, \type{index->string} est la fonction interne \type{index->string-letters} qui renvoie la ou les lettre(s) capitale(s) correspondante(s) à leur index dans l'alphabet, mais en sautant la lettre~"\type{I}"~:
+The function associates letters with the bar numbers of the \type{measures} list. It is particularly suitable when \type{Score.markFormatter} is of the form \type{#format-mark-[…]-letters}.\\
+The following 3 parameters for \type{measures} are optional and differ only in their type.\\
+\type{index->string} is a callback function returning a {\em string}, and taking an {\em index} as parameter (a positive integer). The index is incremented by 1 with each call, starting with the value of the \type{start-index} parameter (\type{0} if \type{start-index} is not specified).\\
+By default, \type{index->string} is the internal function \type{index->string-letters} that returns the corresponding capital letter(s) to their index in the alphabet, but skips the letter~\quotation{\type{I}}~:
 \blank[0.3em]
-\hbox{\hspace[lilyindent]"\type{A}"…"\type{H}" puis "\type{J}"…"\type{Z}" puis "\type{AA}"…"\type{AH}" 
-puis "\type{AJ}"…"\type{AZ}" etc…}
+\hbox{\hspace[lilyindent]"\type{A}"…"\type{H}" then "\type{J}"…"\type{Z}" then "\type{AA}"…"\type{AH}" 
+then "\type{AJ}"…"\type{AZ}" etc…}
 \blank[0.3em]
-L'instruction : \type {#(def-letters '(9 25 56 75 88 106))} donne les correspondances suivantes :\\
+The instruction: \type {#(def-letters '(9 25 56 75 88 106))} gives the following matches:\\
 \midaligned{\hbox{\hspace[lilyindent]
 \starttable[s0|cs1|c|ls2|]
- \NC \type{A} \NC $\Longrightarrow$ \NC mesure \type{9} \NC\FR
- \NC \type{B} \NC $\Longrightarrow$ \NC mesure \type{25} \NC\MR
- \NC \type{F} \NC $\Longrightarrow$ \NC mesure \type{106} \NC\MR
- \NC \type{G} \NC $\Longrightarrow$ \NC <erreur> \NC\LR
+ \NC \type{A} \NC $\Longrightarrow$ \NC measure \type{9} \NC\FR
+ \NC \type{B} \NC $\Longrightarrow$ \NC measure \type{25} \NC\MR
+ \NC \type{F} \NC $\Longrightarrow$ \NC measure \type{106} \NC\MR
+ \NC \type{G} \NC $\Longrightarrow$ \NC <error> \NC\LR
 \stoptable
 \hspace[threelilyindent]
 \starttable[|cs1|c|ls2|]
- \NC \type{(+ A 2)} \NC $\Longrightarrow$ \NC mesure \type{11} \NC\FR
- \NC \type{'(A 4 8)} \NC $\Longrightarrow$ \NC <erreur> \NC\MR
+ \NC \type{(+ A 2)} \NC $\Longrightarrow$ \NC measure \type{11} \NC\FR
+ \NC \type{'(A 4 8)} \NC $\Longrightarrow$ \NC <error> \NC\MR
  \NC \type{`(,A 4 8)} \NC $\Longrightarrow$ \NC position \type{'(9 4 8)} \NC\MR
  \NC \type{(list (+ A 2) 4 8)} \NC $\Longrightarrow$ \NC position \type{'(11 4 8)} \NC\LR
 \stoptable
 \hspace[lilyindent]
 }} % end of \hbox
-Si une lettre était déja définie avant l'appel de \type{def-letters}, la fonction fait précéder la lettre par le caractère "\type{_}". Ceci est surtout nécessaire pour les lettres \type{X} et \type{Y}, qui ont déjà une valeur associée dans {\em Lilypond} (\type{0} et \type{1}). Ces  2 lettres deviendront donc {\em toujours} \type{_X} et \type{_Y}. Un message prévient l'utilisateur du changement, sauf si on inclut \type{#f} dans les options (paramètre \type{show-infos?}) :
+If a letter was already defined before calling \type{def-letters}, the function prepends the character \quotation{\type{_}} to the letter. This is especially necessary for letters \type{X} and \type{Y}, which have \type{0} and \type{1} as associated value in {\em Lilypond}. These 2 letters will thus become {\em always} \type{_X} and \type{_Y}. A message will warn the user of the change, except if we include \type{#f} in the options (parameter \type{show-infos?}) :
 \startmylily #(def-letters '(9 25 …) #f) \stopmylily
 \blank[0.8em]
 \midaligned{ \tfd ------------}
@@ -2100,36 +2103,36 @@ Si une lettre était déja définie avant l'appel de \type{def-letters}, la fonc
 %\syntax {((set-frag music) sym)}{}
 
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                                                 
-\subject{Compiler une portion de score}
+\subject{Compiling a score section}
 \godown[1.2em]
 %%%%%%%%
 \func{show-score}
 \syntax {(show-score from-pos to-pos)}{}
-
-Insert dans \type+\global+, des \type+\set Score.skipTypesetting = ##t+ ou \type+##f+,  de manière à ne compiler (et ne montrer) que la musique de la partition se trouvant entre les positions \type+from-pos+ et \type+to-pos+ (utile pour les gros "scores").
-\blank[0.8em]
+Insert in \type+\global+, \type+\set Score.skipTypesetting = ##t+ or \type+##f+, in order to compile (and show) the music of the score, only between the positions \type+from-pos+ and \type+to-pos+ (useful for large scores).
+\blank
 \midaligned{ \tfd ------------}
-\godown[-1.2em]                     
+\godown[-1.3em]                     
 
                      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                              
-\subject{Exporter ses instruments}
-\godown[1.2em]                                        
+\subject{Exporting your instruments}
+\godown[1.1em]                                        
 %%%%%%%%
 \func{export-instruments}
 \syntax {(export-instruments instruments filename}{overwrite?)}
 
-\type{instruments} est la liste d'{\em instrument}s à exporter.\\
-\type{filename} est le nom du fichier dans lequel sera effectué l'export, dans le répertoire courant .\\
-On obtient un fichier~{\em ly} classique avec des déclarations de la forme 
+\type{instruments} is the {\em instrument}s list to export.\\
+\type{filename} is the filename of the current path, in which the export will be carried out.\\
+The function produces a classic {\em ly} file with statements of the form:
 \startmylily
 instrument-name = { music … }
 \stopmylily
-(Les notes seront écrites en mode absolu).\\
-Si \type{filename} existe déjà, les definitions des instruments seront ajoutées à la fin du fichier, sauf si \type{overwrite?} est mis à  \type+#t+ : l'ancienne version est alors effacée !\\
+(Notes will be written in absolute mode).\\
+If \type{filename} already exists, the instrument definitions will be added at the end of the file, unless \type{overwrite?} is set to \type+#t+: the old version is then deleted!
+\godown[0.8em]
 \hairline
-Cette fonction est encore au stade expérimental ! Agir avec prudence.
+This function is still in an experimental state! Proceed with caution.
 \hairline
-\page
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2223,6 +2226,7 @@ Dans le code suivant, le texte sera aligné à gauche dans le conducteur et à d
 {\tfa\bf→} {\bf Parties séparées : allègement de code - fonction \type{instru->music}}
 \index{obj->music}
 \index{instru->music}
+\reference[instru->music]
 \\
 Préalable : avoir défini \type{assocDynList} (dans le fichier {\em dynamics.ily})\\
 \type{instru->music} utilise \type{obj->music}, une fonction qui renvoie la musique associée à un instrument \footnote{\type{(obj->music 'clar)} renvoie \type{clar}}, et la fonction \type{make-clef-set} (définie dans le répertoire {\em Lilypond}, fichier \type{scm/parser-clef.scm}), qui est l'équivalent scheme de \type{\clef}.
