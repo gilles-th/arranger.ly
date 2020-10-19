@@ -1,5 +1,5 @@
 \version "2.20.0"
-%% version Y/M/D = 2020/07/04: for lilypond 2.20
+%% version Y/M/D = 2020/10/19 for lilypond 2.20
 %% LSR = http://lsr.di.unimi.it/LSR/Item?id=542
 % Last modif. (the last at the end) :
 % - change append! by cons in (make-signature-list)
@@ -222,11 +222,10 @@ Note that, if moment=5/8, for example, no duration of this form is possible."
 % WARNING : to use only within extractMusic functions. (See the \mmR definition at the bottom of this file)
 % A music just like { \compressFullBarRests #infinite-mmR } take 5 mn to compile on my machine
 
-#(define (mom->integer mom) (quotient (ly:moment-main-numerator mom)
-                                      (ly:moment-main-denominator mom)))
+#(define (mom->integer mom) (quotient (ly:moment-main-numerator mom)(ly:moment-main-denominator mom)))
 #(define (mom-add mom . rest) (fold ly:moment-add mom rest))     % multiple args
-%#(define (mom-sub mom . rest) (fold ly:moment-sub mom rest))    % <- no : parameters in proc are in wrong order
-%#(define (mom-sub mom . rest) (fold (lambda(current prev)(ly:moment-sub prev current)) mom res)) % parameters in right  order
+%#(define (mom-sub mom . rest) (fold ly:moment-sub mom rest))    % <- no : parameters in fold proc are in wrong order
+%#(define (mom-sub mom . rest) (fold (lambda(current prev)(ly:moment-sub prev current)) mom res)) % OK : right order
 #(define mom-sub ly:moment-sub) % i don't really need a multiple args version here, but a short-cut is fine
 #(define mom-div ly:moment-div) % an other short-cut
 #(define (mom-imul mom n) (ly:moment-mul mom (ly:make-moment n))) % multiplication by integer
@@ -573,7 +572,10 @@ replaceVoltaMusic = #(define-music-function (musicWithVoltas where replacementMu
        (cond
          ((eq? name 'SequentialMusic)
             (let ((elts (ly:music-property m 'elements)))
-              (cond ((null? elts) l)  ;; skip m : well not sure it is absoluty safe...
+              (cond ((null? elts)
+                       (if (ly:music-property m 'to-relative-callback #f)
+                         (cons m l) ;; \resetRelativeOctave
+                         l))  ;; skip m : well not sure it is absoluty safe...
                     ; the \tempo command makes a sequential music of 2 events (the first is a 'TempoChangeEvent). It seems
                     ; that \displayLilyMusic need this sequential music to work ! Is there others Lilypond commands like that ?
                     ((or (eq? 'TempoChangeEvent (name-of (car elts)))
@@ -587,7 +589,6 @@ replaceVoltaMusic = #(define-music-function (musicWithVoltas where replacementMu
                (map reduce-seq (ly:music-property m 'elements)))
              (cons m l))
          (else (cons m l)))))
-
 (let ((name (ly:music-property mus 'name)))
   (cond
     ((eq? name 'SequentialMusic)
@@ -757,7 +758,9 @@ multiReplaceMusic =#(define-music-function (music seq-music) (ly:music? ly:music
 % WARNING : to use only with extractMusic functions.
 % Just a music like { \compressFullBarRests #infinite-mmR } take 5 mn to compile on my machine
                     %%% mmRest %%%
-mmR = { #infinite-mmR \tag #'mmWarning R1 } % The \tag is a way to be recognized
+mmR = { #infinite-mmR \tag #'mmWarning R1 }
+                % The \tag is a way to be recognized
+
                     %%% mmSkip %%%
 mmS = { #(skip-of-length infinite-mmR) \tag #'mmWarning s1 }
  %%%%%%%%

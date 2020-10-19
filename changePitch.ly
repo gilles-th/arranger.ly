@@ -1,17 +1,16 @@
 \version "2.20.0"
-%% changePitch.ly version Y/M/D = 2020/08/23
+%% changePitch.ly version Y/M/D = 2020/10/19
 %% for lilypond 2.20 or higher
 %% LSR :
 %%   http://lsr.di.unimi.it/LSR/Item?id=654
 %% Last release here :
 %%   http://gillesth.free.fr/Lilypond/changePitch/
-%% This directory contains also a doc called :
-%%   changePitch-doc.pdf
+%% This directory contains also a doc called: changePitch-doc.pdf
 %% Last changes (the more recent to the top) :
-%%    - combine copy-duration and copy-arti in 1 function: copy-dur+arti
+%%    - combine copy-duration and copy-arti into 1 function: copy-dur+arti
 %%    - function check-for-ties has been redone.
 %%    - allows \displayLilyMusic to work, using reduce-seq in a music with a \tempo command
-%%    - correction in \samePitch : music can contain q chords => call expand-q
+%%    - correction in \samePitch : music can contain no-pitch notes => call expand-notes-and-chords
 %%    - new changPitch-doc.pdf (made with Context => http://wiki.contextgarden.net/ )
 %%    - changePitch checks now, in his pattern arguments, if there is notes with ties,
 %%      and automatically groups them with the tieded note in a \samePitch section.
@@ -52,8 +51,7 @@
 (let ((name (name-of music)))
   (or (memq name (cons 'NoteEvent otherEvent))
       (and (eq? name 'EventChord)  ; have this chord at least one note ?
-           (any (lambda(evt)(eq? (name-of evt) 'NoteEvent))
-                (ly:music-property music 'elements))))))
+           (any noteEvent? (ly:music-property music 'elements))))))
 
 #(define (reduce-seq mus)
 "Try to reduce the number of sequential music"
@@ -62,7 +60,10 @@
        (cond
          ((eq? name 'SequentialMusic)
             (let ((elts (ly:music-property m 'elements)))
-              (cond ((null? elts) l)  ;; skip m : well not sure it is absoluty safe...
+              (cond ((null? elts)
+                       (if (ly:music-property m 'to-relative-callback #f)
+                         (cons m l) ;; adds \resetRelativeOctave
+                         l))  ;; skip m : well not sure it is absoluty safe...
                     ; the \tempo command makes a sequential music of 2 events (the first is a 'TempoChangeEvent). It seems
                     ; that \displayLilyMusic need this sequential music to work ! Is there others Lilypond commands like that ?
                     ((or (eq? 'TempoChangeEvent (name-of (car elts)))
@@ -79,23 +80,21 @@
 (let ((name (ly:music-property mus 'name)))
   (cond
     ((eq? name 'SequentialMusic)
-       (let ((elts (ly:music-property mus 'elements)));(elts-if-reducible mus)))
+      (let ((elts (ly:music-property mus 'elements)))
          (ly:music-set-property! mus 'elements
              (fold-right merge-in-list '() elts))))
     ((eq? name 'SimultaneousMusic)
        (ly:music-set-property! mus 'elements
               (map reduce-seq (ly:music-property mus 'elements))))
-             ; (fold-right merge-in-list '() (ly:music-property mus 'elements)))); (map reduce-seq (ly:music-property mus 'elements))))
     ((memq name (list 'RelativeOctaveMusic 'UnrelativableMusic 'TransposedMusic))
        (ly:music-set-property! mus 'element
               (reduce-seq (ly:music-property mus 'element)))))
   mus))
 
-
-#(define (expand-q music) ; for q chords : see chord-repetition-init.ly
-   (expand-repeat-chords! (cons 'rhythmic-event
-                                (ly:parser-lookup '$chord-repeat-events))
-			              music))
+#(define (expand-notes-and-chords music) ; resolves { c2.~ 4 <c e>2. 4 <c e>2.~ q4 }
+"Makes sure that all notes have a pitch !"
+(expand-repeat-notes! (expand-repeat-chords! (list 'rhythmic-event) music)))
+% (list 'rhythmic-event) can be replaced by (cons 'rhythmic-event (ly:parser-lookup '$chord-repeat-events))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% changePitch %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #(define cPInsertInPattern (gensym))
@@ -352,7 +351,7 @@ note with the tie symbol)"
 changePitch = #(define-music-function (pattern newnotes) (ly:music? ly:music?)
 "Change each notes in `pattern by the notes (or rests) given in `newnotes.
 If count of events doesn't match, pattern is duplicated repeatedly or truncated."
- (change-pitch (expand-q pattern) (expand-q newnotes)))
+ (change-pitch (expand-notes-and-chords pattern) (expand-notes-and-chords newnotes)))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% enhancement functions, working with \changePitch pattern newnotes
@@ -368,6 +367,9 @@ by this function will have the same pitch, according to the current note of
     (for-each set-tags-prop (cdr rev-notes)               ; others notes =>
                             (circular-list cPSamePitch))) ; tag cPSamePitch
   music))
+
+% for arranger.ly users
+#(define (same-pitch music)(samePitch (ly:music-deep-copy music)))
 
 absolute = #(define-music-function (music) (ly:music?)
 "Make `music unrelativable. To use inside a \\samePitch function in relative mode."

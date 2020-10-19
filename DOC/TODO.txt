@@ -1,2 +1,0 @@
-- doc for copyArticulations.ly 
-- Continue translating from French to English.

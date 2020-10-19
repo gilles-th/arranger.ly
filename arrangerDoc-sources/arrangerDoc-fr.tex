@@ -1,4 +1,4 @@
-%%%%%% Documentation de arranger.ly. Version YYYY/MM/DD = 2020/05/22 %%%%%%
+%%%%%% Documentation de arranger.ly. Version YYYY/MM/DD = 2020/10/05 %%%%%%
 %% À compiler avec : ConTeXt (LuaTex)
 %% https://wiki.contextgarden.net/Main_Page
 
@@ -8,7 +8,7 @@
 %\showlayout
 %\showsetups
 
-\language[fr]
+\language[fr] % français
 \definebodyfontenvironment[default][em=italic]
 \setupbodyfont[11pt]
 
@@ -46,9 +46,9 @@
 \useURL[chord][http://gillesth.free.fr/Lilypond/chordsAndVoices/]
 \useURL[changePitch][http://gillesth.free.fr/Lilypond/changePitch/]
 \useURL[copyArticulations][http://gillesth.free.fr/Lilypond/copyArticulations/]
-\useURL[addAt][http://gillesth.free.fr/Lilypond/addAt/]
+\useURL[addAt][http://gillesth.free.fr/Lilypond/extractMusic/]
 \useURL[extractMusic][http://gillesth.free.fr/Lilypond/extractMusic/]
-\useURL[checkPitch][http://gillesth.free.fr/Lilypond/checkPitch/]
+\useURL[checkPitch][http://gillesth.free.fr/Lilypond/chordsAndVoices/]
 \useURL[copyArticulations-LSR][http://lsr.di.unimi.it/LSR/Item?id=769]
 \setupinteraction[state=start,color=black,contrastcolor=black, style=\tf]
 
@@ -72,6 +72,7 @@
 \define[1]\func
 { % Affiche => La fonction #1
  %% \index{#1}   % <- #1 peut se terminer par le caractère + qui ne sera alors pas affiché :-(
+ %% On essaie de remedier au problème :
  \ctxlua{context.index((string.gsub("#1","+", "†")))}  %%  remplace dans l'index tout caractère + par †
               %% Noter les doubles parenthèses pour forcer une seule valeur de retour de gsub
               %% https://wiki.contextgarden.net/Programming_in_LuaTeX
@@ -85,27 +86,23 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Début du document %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \starttext
 
-%%%%%% Page de te titre
+%%%%%% Page de titre
 \startstandardmakeup
 \midaligned{\tfd\sc Arranger.ly}
 \blank[2cm]
 \midaligned{\tfd ---}
 \stopstandardmakeup
 
-%\centeraligned{\bf-- SOMMAIRE --}
-%\blank[1cm]
+%%%%%% Sommaire
 \midaligned{\bf \underbar Sommaire}
 \placecontent[criterium=all]
-%\completecontent[criterium=all]
-%%%%%%
-%%\page\centeraligned\framed {\bf arranger.ly}
-%%\title[generalites]{ \vbox {\mbox{\centeraligned{\bf -- arranger.ly --}}\mbox{\centeraligned{ GÉNÉRALITÉS}}}}
+
+%%%%%% Chapitre 1 ...
 \title[generalites]{GÉNÉRALITÉS}
-%\title[generalites]{\framed {\tfb\bf arranger.ly }}
 \subject[objectifs]{Objectif de arranger.ly :}
 {\em fournir un environnement facilitant l'arrangement musical\footnote{On entend par arrangement musical la ré-orchestration d'une instrumentation originale}}. Un ensemble de fonctions devront permettre une ré-orchestration rapide, à partir d'un encodage de musique minimal et réutilisable.
 \blank[0.7em]
-Un des aspects principaux de {\em arranger.ly} concerne le repérage d'une position musicale, qui sera basé désormais sur les {\em numéros de mesures}\footnote {Lilypond utilise un système basé sur les {\em moment}s : \type{(ly:make-moment 5/4)} par exemple.}. Les méthodes de travail de l'arrangeur s'en trouveront assouplies car il sera désormais possible de travailler non pas de manière linéaire (mesure par mesure et instrument par instrument) mais plus au fils de ses idées : on s'occupe des instruments qui font le theme, puis ceux qui font l'accompagnement, les basses etc…
+Un des aspects principaux de {\em arranger.ly} concerne le repérage d'une position musicale, qui sera basé désormais sur les {\em numéros de mesures}\footnote {Lilypond utilise un système basé sur les {\em moment}s : \type{(ly:make-moment 5/4)} par exemple.}. Les méthodes de travail de l'arrangeur s'en trouveront assouplies car il sera désormais possible de travailler non pas de manière linéaire (mesure par mesure et instrument par instrument) mais plus au fils de ses idées : on s'occupe des instruments qui font le thème, puis ceux qui font l'accompagnement, les basses etc…
 \blank[0.7em]
 Typiquement, au départ, l'utilisateur déclare une liste d'instruments, et {\em arranger.ly} se charge lui-même d'initialiser les instruments de cette liste par des mesures à compter.
 
@@ -127,7 +124,7 @@ etc…
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subject {Pré-requis logiciels :}
 \startitemize[2,joinedup,intro]
-\item Lilypond 2.19 ou supérieur
+\item Lilypond 2.20 ou supérieur
 \item Le fichier {\em arranger.ly} nécessite les fichiers \type{include} suivants :
   \starttabulate[|l|l|,before={\blank[1mm]},after={\blank[1mm]}, indenting=yes]
     \NC {\textbullet \hspace[1] \em chordsAndVoices.ly} \NC\small {(\from[chord])} \NC
@@ -199,7 +196,7 @@ où bien avec un «quasiquote»
 \reference[init]{}
 \index[init-info]{init}                   
 \subject{Initialisation}
-- La fonction \type{init} ci-dessous doit être appellée \emph{après} la declaration de \type{\global} et \emph{avant} tout appel aux autres fonctions. Elle prend, comme arguments, une liste d'\emph{instrument}s, et optionnellement un entier :
+- La fonction \type{init} ci-dessous doit être appellée \emph{après} la déclaration de \type{\global} et \emph{avant} tout appel aux autres fonctions. Elle prend, comme arguments, une liste d'\emph{instrument}s, et optionnellement un entier :
 \syntax {(init instru-list}{measure1-number)}
 Chaque instrument de la liste est déclaré à Lilypond et initialisé par des silences multi-mesures.\\
 Si on a défini \type{global} par :
@@ -267,7 +264,7 @@ permet de décaler automatiquement toutes les positions de mesures déjà entré
 \set Score.currentBarNumber = #-2
 \stopmylily
 et laisser le paramètre \type{measure1-number} à 1.
-Puis, une fois le morceaux totalemement terminé, supprimer la ligne du \type{currentBarNumber} ci-dessus (les numéros de mesures recommenceront à~1 à la première mesure) et finir en mettant  \type{measure1-number} à -2.
+Puis, une fois le morceaux totalement terminé, supprimer la ligne du \type{currentBarNumber} ci-dessus (les numéros de mesures recommenceront à~1 à la première mesure) et finir en mettant  \type{measure1-number} à -2.
 
 D'une manière générale, les réglages suivants peuvent être utiles pendant le travail :
 \blank[1em]
@@ -413,6 +410,7 @@ mesure où placer le mib\crlf
 repla-extra-pos,\crlf
 position de début de music
 \stopmypar
+\godown[-0.2em]
 \hairline
 Notez bien la différence entre : \type{(rm music…)} et \type{(rm 'music…)} Dans le premier cas, \type{music} reste inchangé ; on ne récupère que la valeur de retour. Dans le second cas, cette valeur de retour est affectée à un symbole.(Celui-ci représenterait un instrument dont le nom serait \type{'music}).
 \hairline
@@ -437,22 +435,22 @@ l'assignement à la mesure 5 se fait comme suit : \crlf
     \NR
   \stoptable}
 }
-
+\godown[-0.1em]
 
                      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subject[positions_musicales]{Les positions musicales et numéros de mesures, en détails}
 - On indique une position par son numéro de mesure, mais quid si une position musicale ne commence pas juste au début d'une mesure ? La syntaxe à employer dans ce cas là, se présentera sous la forme d'une {\em liste d'entiers} : 
 \startmylily '(n i j k …) \stopmylily
-où \type{n} est le numéro de la mesure, et \type{i j k} …, des puissances de deux ( 1, 2, 4, 8, 16 etc…) représentant la distance par rapport au début de la mesure \type{n} 
+où \type{n} est le numéro de la mesure, et \type{i j k} …, des puissances de deux (1, 2, 4, 8, 16 etc…) représentant les valeurs de notes à ajouter après le début de la mesure \type{n}.\footnote{La fonction \goto{\type{add-dynamics}}[add-dynamics] \at{page}[add-dynamics], montre des cas pariculiers où les \type{i j k} … sont des entiers non puissance de 2.}
 
 Par exemple \type{'(5 2 4) }indique la position de la musique se trouvant à la mesure 5, après une blanche (\type{2}), puis après une noire (\type{4}) soit, dans une mesure à \type{4/4} :  mesure 5, 4ème temps.\\
 
 - Tout \type{n} inférieur à 1 (ou au nombre transmis en paramètre dans \type{init}, -3 par exemple) sera transformé en 1 (resp. en -3). L'erreur ne sera pas signalée, mais la position \type{'(0 2 4)} pointe vers le même endroit que \type{'(1 2 4)}…\\
 
-- Les {\em valeurs négatives} pour \type{i j k …} sont admises. Le code \type{'(5 2 4)} peut aussi s'écrire en \type{4/4}~: \type{'(6 -4)} soit \quotation{mesure 6, moins la valeur d'une noire}. Les valeurs négatives sont le seul moyen d'accéder à une levée en début de morceau~:~position \type{'(1 -4)} pour \type{\partial 4 …}
+- Les {\em valeurs négatives} pour \type{i j  …} sont admises. Le code \type{'(5 2 4)} peut aussi s'écrire en \type{4/4}~: \type{'(6 -4)} soit \quotation{mesure 6, moins la valeur d'une noire}. Les valeurs négatives sont le seul moyen d'accéder à une levée en début de morceau~:~position \type{'(1 -4)} pour \type{\partial 4 …}
 \blank[0.5em]
 
-- Avec la fonction \type{rm}, une note qui commence avant la position passée en paramètre mais qui se poursuit après, sera raccourcie en conséquense.
+- Avec la fonction \type{rm}, une note qui commence avant la position passée en paramètre mais qui se poursuit après, sera raccourcie en conséquence.
 
 Dans l'\in{exemple}{ précédent (}[exemple3]\at{page}{)}[exemple3], le code : 
 \startmylily (rm 'cl '(5 2 4) #{ r4 #})\stopmylily
@@ -509,7 +507,7 @@ Si on veut insérer un mi avant la mesure 3, on pourra utiliser des nombres nég
 \startmylily `(n ,moment)    ;&\it\rm{& ou : (list n moment)&}& \stopmylily
 Son utilisation ici, pour insérer le mi donnerait :
 \startmylily (rm 'clar `(2 ,(ly:music-length cadenza)) #{ e'2. #}) \stopmylily
-Noter enfin que la syntaxe \type{`(n ,(ly:make-moment p/q))} peut s'alléger en
+Notez enfin que la syntaxe \type{`(n ,(ly:make-moment p/q))} peut s'alléger en
 \type{'(n p/q)}, à condition que le quotient \type{p/q} ne soit pas réductible à 1 entier.
 \startmylily 
 (rm 'clar '(2 5/4) #{ e'2. #})  ;&\it\rm{& ok avec 5/4 : même résultat que le code précédent&}&  \stopmylily
@@ -522,6 +520,7 @@ Dans toutes les fonctions qui vont suivre, tout argument se terminant par \type 
 \hairline
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%% Chapitre 2 ...
 \title[ListageFonctions]{LISTAGE des FONCTIONS}
 
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                  
@@ -574,8 +573,7 @@ Enfin, on peut remplacer \type{copy-to} par la fonction \type{(copy-to-with-func
 \func{copy-out}
 \index{copy-out-with-func}
 \syntax {(copy-out obj from-pos to-pos where-pos . other-where-pos)}{}
-Recopie la section \type{[from-pos to-pos[} d'un instrument
-ou groupe d'instruments \type{obj}, vers la position \type{where-pos},
+Recopie la section \type{[from-pos to-pos[} d'un instrument ou groupe d'instruments \type{obj}, vers la position \type{where-pos},
 puis éventuellement vers d'autres positions. 
 \startmylily
 (copy-out obj from-pos to-pos where-pos1 where-pos2 where-pos3 etc…)
@@ -600,7 +598,7 @@ Simple raccourci pour :
 \stopmylily
 \blank[0.3em]
 \midaligned{ \tfd ------------}
-\page
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%
 \func{rm-with} 
@@ -640,7 +638,7 @@ Le paramètre \type{obj-start-pos} permet de spécifier la position du début de
 \type{set-transp}, \type{set-pat}, \type{set-ncopy}, \type{set-note}, \type{set-pitch}, \type{set-notes+}, \type{set-arti}, \type{set-reverse}, \type{set-del-events}, \type{set-chords->nmusics}
 (ces fonctions sont décrites plus loin dans ce document).
 \blank[0.6em]
-{\tfa -} On peut, cependant, facilement créer soi-même des fonctions compatibles \type{apply-to}, avec l'aide d'une fonction "enveloppe" appellée \type{to-set-func}, particulièrement adaptée au changement de propriétés musicales. \type{to-set-func} prend elle-même en paramètre une {\em fonction}, à paramètre 
+{\tfa -} On peut, cependant, facilement créer soi-même des fonctions compatibles \type{apply-to}, avec l'aide d'une fonction "enveloppe" appelée \type{to-set-func}, particulièrement adaptée au changement de propriétés musicales. \type{to-set-func} prend elle-même en paramètre une {\em fonction}, à paramètre 
 musical.\\
 Dans l'exemple suivant, on definit une fonction \type{func} qui, utilisée avec \type{apply-to}, transformera tous les \type{c'} en \type{d'}~:
 \blank[0.3em]
@@ -663,7 +661,8 @@ ce qui donnera, appliquée à un paramètre \type{music} :
 \blank[0.3em] 
 \startmylily ((set-func args) music) \stopmylily
 \blank[0.3em]
-Pendant l'appel de \type{apply-to}, tous les arguments \type{args} de la sous-fonction \type{set-func} restent identiques et fixés pour tous les instruments contenus dans \type{obj}. Or, il est dans certain cas souhaitable que ces arguments soient au contraire, personnalisables à chaque instrument.\\ Cela sera possible, à la condition d'adopter une nouvelle syntaxe pour l'argument \type{func} de \type{apply-to}, qui sera alors défini comme une paire, avec en 1\high{er} élement, le nom de la sous-fonction, et en 2\high{nd}, une liste, composée des arguments correspondant à chaque instrument.
+Pendant l'appel de \type{apply-to}, tous les arguments \type{args} de la sous-fonction \type{set-func} restent identiques et fixés pour tous les instruments contenus dans \type{obj}. Or, il est dans certain cas souhaitable que ces arguments soient au contraire, personnalisables à chaque instrument.\\ Cela sera possible, à la condition d'adopter une nouvelle syntaxe pour l'argument \type{func} de \type{apply-to}, qui sera alors défini comme une paire, avec en 1\high{er} élément, le nom de la sous-fonction, et en 2\high{nd}, une liste, composée des arguments correspondant à chaque instrument.
+
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \type{func} devient : \inframed{\type{(cons set-func (list args-instrument1 args-instrument2 …))}}
 \blank[0.4em]{args-instrument} est soit un élément unique soit une liste, en fonction du nombre de paramètres requis par \type{set-func}.
@@ -715,7 +714,7 @@ Simple raccourci pour :
 etc…
 \stopmylily
 La barre oblique \type{/} est optionnelle.\\
-Une clef : \type{obj-start-pos} peut optionellement spécifier un point de départ diffèrent du début du morceau~:
+Une clef : \type{obj-start-pos} peut optionnellement spécifier un point de départ diffèrent du début du morceau~:
 \startmylily
 (x-apply-to obj func pos1 pos2 #:obj-start-pos pos3 …)
 \stopmylily
@@ -742,9 +741,9 @@ d'instruments.
 
 %%%%%%%%%
 \func{em} : «e» de \underbar{e}xtract, «m» de \underbar{m}usic, fonction de référence : \type+\extractMusic+%
-\footnote{Voir {\em extractMusic-doc.pdf} à \from[extractMusic]}
+\footnote{Voir {\em DOCS/extractMusic-doc.pdf} à \from[extractMusic]}
 \syntax {(em obj from-pos to-pos}{obj-start-pos)}
-Extrait la musique dans l'intervalle de mesures \type{[from-pos to-pos[}. Un évenement musical sera déclaré éligible s'il commence entre ces 2 bornes, et sa durée sera coupée s'il se prolonge après \type{to-pos}.\\
+Extrait la musique dans l'intervalle de mesures \type{[from-pos to-pos[}. Un événement musical sera déclaré éligible s'il commence entre ces 2 bornes, et sa durée sera coupée s'il se prolonge après \type{to-pos}.\\
 \type{obj} est typiquement un {\em instrument}, ou une
 liste d'{\em instrument}s\\
 Si \type{obj} est une {\em musique} ou une
@@ -856,7 +855,7 @@ est equivalent à :
 \startmylily \repeat volta 2 s1*9 \alternate { s1*3 s4*5 } \stopmylily  \\
 Les arguments peuvent être aussi alternativement, de type \type{moment}, ce qui permet d'utiliser la fonction interne \type{pos-sub} qui renvoie un \type{moment} égal à la différence de 2 positions.\\
 Par exemple, \type{(pos-sub 24 13)} renvoie la longueur de la musique entre la mesure 13 et la mesure 24 : facile à calculer en 4/4 mais plus difficile si la section comporte de nombreux changements de mesures (genre \type{\time 7/8} puis \type{\time 3/4} etc …).\\
-On peut utiliser la fonction \type{def!} décrite auparavent, pour créer une variable qui contiendra les différentes reprises du morceau :\\
+On peut utiliser la fonction \type{def!} décrite auparavant, pour créer une variable qui contiendra les différentes reprises du morceau :\\
 \underbar{\sc\Words Exemple 5} :
 \blank[0.5em]
 \startmylily 
@@ -1112,7 +1111,7 @@ Par défaut, \type{strict-comp?} est à \type{#f} pour \type{set-reverse} et à 
 \syntax{(braketify-chords obj)}{}
 
 Ajoute des crochets aux accords, contenant au moins 2 notes, et non liés à l'accord précédent par un tilde  \type{~} \\
-Cette fonction étend la fonction \type{\braketifyChords} definie dans {\em copyArticulations.ly} en acceptant aussi en paramètre, une liste de {\em musique}s, un {\em instrument}, ou une liste d'{\em instrument}s.
+Cette fonction étend la fonction \type{\braketifyChords} définie dans {\em copyArticulations.ly} en acceptant aussi en paramètre, une liste de {\em musique}s, un {\em instrument}, ou une liste d'{\em instrument}s.
 \blank[1.5em]
 \midaligned{ \tfd ------------}
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1245,8 +1244,7 @@ Applique la fonction scheme Lilypond \type{ly:pitch-transpose} à chaque hauteur
 \blank
 %%Le 3\high{\itxx ième} paramètre (altérations) est un multiple de $\pm1/2$ \\
 
-Les paramètres \type{obj} sont des {\em musique}s, des {\em instrument}s ou une liste d'un de ces 2
-types.\\
+Les paramètres \type{obj} sont des {\em musique}s, des {\em instrument}s ou une liste d'un de ces 2 types.\\
 La fonction renvoie la {\em musique} transposée, ou une liste de {\em musique}s transposées.\\
 \type{set-transp} est compatible avec \in{\type{apply-to}}[apply-to]
 et peut s'utiliser de la manière suivante :
@@ -1267,7 +1265,7 @@ Les 3 instruments sont au départ identiques, puis \type{'II} et \type{'III} son
 \stopfiguretext
 \setupinterlinespace[small]
 \godown[-0.55em]
-La fonction \type{maj->min} est definie de la manière suivante :
+La fonction \type{maj->min} est définie de la manière suivante :
 \page
 \startmylily
 #(define (maj->min from-pitch to-pitch)  ;&\em{\small& renvoie la fonction lambda &}&
@@ -1279,7 +1277,7 @@ La fonction \type{maj->min} est definie de la manière suivante :
        (ly:pitch-steps delta) 
        (+ (ly:pitch-alteration delta)  ;&\em{\small& l'intervalle varie en fonction de p &}&   
           (if (find (same-pitch-as p 'any-octave) special-pitches)
-            -1/2  0))))))      ;&\em{\small& same-pitch-as est defini dans checkPitch.ly &}&
+            -1/2  0))))))      ;&\em{\small& same-pitch-as est défini dans checkPitch.ly &}&
 \stopmylily
 Il ne reste plus qu'à choisir le paramètre \type{to-pitch} à appliquer à \type{'II} et \type{'III} :
 \startmylily 
@@ -1289,12 +1287,15 @@ Il ne reste plus qu'à choisir le paramètre \type{to-pitch} à appliquer à \ty
 
 \blank[0.8em]
 \midaligned{ \tfd ------------}
-\godown[0.6em]
+\godown[0.4em]
 
 %%%%%%%%%
 \func{octave}
+\godown[-0.2em]
 \syntax {(octave n obj)}{}
+\godown[-0.2em]
 ou : (2\high{ème} forme équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
+\godown[-0.3em]
 \index{set-octave}
 \syntax {((set-octave n) obj)}{}
 
@@ -1302,15 +1303,16 @@ Basiquement, \type{octave} est un simple raccourci de la fonction \type{(set-tra
 \type{n} pouvant être positif (transposition vers le haut) ou négatif (transposition vers le bas).\\
 Cependant, au même titre que \type{rel} et \type{octave+}, elle bénéficie d'une syntaxe étendue.\\
 En voici quelques possibilités.
+\godown[0.5em]
 
-\underbar{1\high{er} cas} : mettre un theme à l'octave à des instruments de tessitures différentes.
+\underbar{1\high{er} cas} : mettre un thème à l'octave à des instruments de tessitures différentes.
 \blank[1mm]
 \startmylily
 (rm '(vlI vlII alto (vlc ctb)) 18 (octave 2 1 0 -1 theme))
 \stopmylily 
 \blank[1mm]
 La fonction renvoie la liste \type{((octave 2 theme)(octave 1 theme)} etc …\type{)}\\
-Noter que le violoncelle et la contrebasse reçoivent la même musique : \type{(octave -1 theme)}\\
+Notez que le violoncelle et la contrebasse reçoivent la même musique : \type{(octave -1 theme)}\godown[0.5em]
 
 \underbar{2\high{ème} cas} : mettre à l'octave plusieurs musiques à la fois.
 \blank[1mm]
@@ -1318,7 +1320,8 @@ Noter que le violoncelle et la contrebasse reçoivent la même musique : \type{(
 (rm '(instruI instruII instruIII instruIV) 18 (octave 1 m1 m2 m3 m4))
 \stopmylily 
 \blank[1mm]
-Toutes les musiques \type{m1 m2 m3 m4} sont transposées à l'octave.\\
+Toutes les musiques \type{m1 m2 m3 m4} sont transposées à l'octave.
+\godown[0.5em]
 
 \underbar{3\high{ème} cas} : grand mélange !
 \blank[1mm]
@@ -1328,28 +1331,35 @@ Toutes les musiques \type{m1 m2 m3 m4} sont transposées à l'octave.\\
 \blank[1mm]
 \type{m1} est transposée de 2 octaves au dessus, \type{m2} et \type{m3} : 1 octave et \type{m4} :~1 octave en dessous.
 
-\blank
+\godown[0.9em]
 \midaligned{ \tfd ------------}
-\godown[0.6em]
+\godown[0.5em]
 
 %%%%%%%%%
-\func{octavize} 
+\func{octavize}
+\godown[-0.1em] 
 \syntax {(octavize n obj from-pos1 to-pos1 [/ from-pos2 to-pos2 /…])}{} 
 
 \type{octavize} transpose de \type{n} octaves l'{\em instrumen}t (ou la liste d'{\em instrument}s)\type{ obj} entre les positions \type{[from-pos1 to-pos1]}, \type{[from-pos2 to-pos2]}, etc…
 
-\blank
-\midaligned{ \tfd ------------}
 \godown[0.6em]
+\midaligned{ \tfd ------------}
+\godown[0.3em]
 
 %%%%%%%%%
 \func{octave+}
+\godown[-0.2em]
 \syntax {(octave+ n music)}{}
-
+\godown[-0.3em]
+ou : (2\high{ème} forme équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
+\godown[-0.3em]
+\index{set-octave†}
+\syntax {((set-octave+ n) obj)}{}
+\godown[-0.1em]
 Raccourci de \type!(notes+ music (octave n music))! (voir \in{\type{notes+}}[notes+]\at{page}{}[notes+]) mais sans doubler les articulations des notes octaviées.\\
 \type{octave+} bénéficie de la même extension de syntaxe que \type{octave} (voir ci-dessus) et \type{rel}.
 
-\blank
+\godown[0.9em]
 \midaligned{ \tfd ------------}
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1386,9 +1396,10 @@ La fonction équivalente : \type{((set-fix-pitch …) music)} reprend ces mêmes
 \func{pitches->percu} 
 \syntax {(pitches->percu music percu-sym-def . args)}{}
 Convertit les notes en des notes de type percussion.\\
-L'argument \type{args} est une suite : d'une hauteur (pitch), d'un symbole de percussion, et  optionnellement, d'une barre oblique \type{/}, de séparation avec le groupe suivant.\\
-Pour chaque note de \type{music}, la fonction recherche le symbole de percussion correspondant. À défaut d'en trouver, le symbole  \type{percu-sym-def} est donné.\\
-L'instrument de percussion est assigné à la propriété \type{'drum-style} de la note.\\
+\type{args} est une suite de hauteurs de note (pitch) suivie d'un symbole de percussion.\\
+Pour chaque note de \type{music}, la fonction recherche le symbole de percussion correspondant à la hauteur de cette note. À défaut d'en trouver, c'est le symbole \type{percu-sym-def} qui est pris.\\
+Cet instrument de percussion est ensuite assigné à la propriété \type{'drum-style} de la note.\\
+On peut optionnellement séparer chaque groupe d'arguments avec une barre oblique \type{/}\\
 Noter enfin que tout nombre \type{n} sera transformé en \type{(ly:make-pitch -1 n 0)} par la fonction.
 \blank[0.2em]
 \underbar{\sc\Words exemple 6}
@@ -1438,46 +1449,45 @@ Déplace visuellement les notes de \type{amount} positions vers le haut ou le ba
 \blank[-1em] 
 
 %%%%%%%%%
-\func{set-pat}  : pattern de {\em rythme} (fonction référence \type+\changePitch+%
+\func{cp} : pattern de {\em rythme} (fonction référence \type+\changePitch+%
 \footnote{Voir {\em changePitch-doc.pdf} à \from[changePitch]})
-\index{cp}
 \index{cp1}
 \index{cp2}
-\syntax {((set-pat pattern [include-ending-rest?]) obj)}{}
+\syntax {(cp [keep-last-rests?] pattern[s] music[s])}{}
+ou : (2\high{ème} forme équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
+\index{set-pat}
+\syntax {((set-pat pattern [keep-last-rests?]) obj)}{}
 
-Renvoie : \type+\changePitch \pattern \music+ ,%
-\type+\music+ étant la musique référencée par \type{obj}.\\
-Si \type{obj} est une liste, la fonction retourne une liste.\\
-Une fois la dernière note de \type{obj} atteinte, les éventuels silences de \type{pattern} qui devraient être mis après cette note sont ignorés, sauf si vous mettez \type{#t} comme paramètre \type{include-ending-rest?}\\
-3 raccourcis ont été définis (leur nom fait reférence à \type+\changePitch+) :
+\type{cp} est basiquement équivalent à \type+\changePitch \pattern \music+\\
+Elle renvoie une {\em musique} quand \type{pattern} et \type{music} sont des {\em musique}s, et  une liste de {\em musique}s, si un de ces 2 paramètres est une liste de {\em musique}s ou d'{\em instrument}s.\\
+Si \type{pattern} finit par des silences, le paramètre optionnel \type{keep-last-rests?} indique s'ils doivent être également inclus après la toute dernière note.\\
+\type{keep-last-rests?} est par défaut, à \type{#t} pour \type{cp} et à \type{#f} pour \type{set-pat}.\\
+2 raccourcis de \type{cp} ont été définis :
 \startmylily
-(cp pattern obj) &$\Longrightarrow$& ((set-pat pattern) obj)
-(cp1 obj)        &$\Longrightarrow$& (cp patI obj)
-(cp2 obj)        &$\Longrightarrow$& (cp patII obj)
+(cp1 obj)   &$\Longrightarrow$&   (cp patI obj)
+(cp2 obj)   &$\Longrightarrow$&   (cp patII obj)
 \stopmylily
-Contrairement à \type{set-pat}, le paramètre \type{include-ending-rest?} de ces 3 raccourcis est positionné à \type{#t} par défaut. À nouveau inversable par le code : \type{(cp #f pattern obj)}. \\
 Voir \goto{\type{tweak-notes-seq}}[tweak-notes-seq] (\at{page}[tweak-notes-seq]) pour une utilisation du raccourci \type{cp1}
-\blank
-\midaligned{ \tfd ------------}\\
+\blank[0.8em]
+\midaligned{ \tfd ------------}
+\godown[0.8em]
 
 %%%%%%%%%
-\index{ca}
-\func{set-arti} : pattern {\em d'articulations} (fonction référence \type+\copyArticulations+
+\func{ca} : pattern {\em d'articulations} (fonction référence \type+\copyArticulations+
 \footnote{Voir \from[copyArticulations-LSR] pour l'utilisation de \type{\copyArticulations}})
+\syntax{(ca pattern[s] music[s])}{}
+ou : (2\high{ème} forme équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
+\index{set-arti}
 \syntax{((set-arti pattern) obj)}{}
 
-Renvoie : \type+\copyArticulations \pattern \music+ ,%
-\type+\music+ étant la musique référencée par \type{obj}.
-Si \type{obj} est une liste, la fonction retourne une liste.\\
-Une fonction équivalente a été définie : \type{ca}. Son utilisation permet une syntaxe alternative :
-\startmylily
-(ca pattern obj) &$\Longleftrightarrow$& ((set-arti pattern) obj))
-\stopmylily
-\blank
-\midaligned{ \tfd ------------}\\
+Copie les articulations de \type{pattern} dans \type{music}, et retourne \type{music}.\\
+Si au moins 1 des 2 paramètres est une liste (une liste de musiques ou une liste d'instruments),
+la fonction retourne une liste de musiques.
+\blank[0.8em]
+\midaligned{ \tfd ------------}
+\godown[0.8em]
 
 %%%%%%%%%
-%%\page
 \func{fill-with} : pattern de {\em musiques}
 \syntax {(fill-with pattern from-pos to-pos)}{}
 
@@ -1485,8 +1495,9 @@ Répète la musique \type{pattern} le nombre de fois nécessaire
 pour remplir exactement l'intervalle \type{[from-pos to-pos]}, coupant
 éventuellement la dernière copie.\\
 Renvoie la musique obtenue, ou une liste des musiques si \type{pattern} est une liste de musiques.
-\blank
-\midaligned{ \tfd ------------}\\
+\blank[0.8em]
+\midaligned{ \tfd ------------}
+\godown[0.8em]
 
 %%%%%%%%%
 \func{fill} : pattern de {\em musiques}
@@ -1498,9 +1509,9 @@ La syntaxe suivante est possible :
 \startmylily (fill obj pat1 from1 to1 / [pat2] from2 to2 / [pat3] from3 to3 …) \stopmylily
 Si un paramètre \type{pat} est omis, celui de la section précédente est récupéré.\\
 Voir \goto{exemple 5}[exemple5] \at{page}[exemple5].
-\blank
+\blank[0.4em]
 \midaligned{ \tfd ------------}
-\page
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%
 \func{fill-percent} : pattern de {\em musiques}
@@ -1614,7 +1625,7 @@ s1*0 -\tweak self-alignment-X #CENTER
      -\tweak Y-offset #-2 
      ^"Bonjour"  % &\em{&^ = UP &}&
 \stopmylily
-Noter que mettre un des paramètres optionnels \type{dir}, \type{X-align} ou \type{Y-offset} à la valeur \type{#f}, a le même effet que d'omettre ce paramètre : sa propriété correspondante n'est pas modifiée.
+Notez que mettre un des paramètres optionnels \type{dir}, \type{X-align} ou \type{Y-offset} à la valeur \type{#f}, a le même effet que d'omettre ce paramètre : sa propriété correspondante n'est pas modifiée.
 \blank
 \midaligned{ \tfd ------------}
 \blank[-2em]
@@ -1623,10 +1634,10 @@ Noter que mettre un des paramètres optionnels \type{dir}, \type{X-align} ou \ty
 \syntax {(adef music [text [dir [X-align [Y-offset]]]])}{}
 
 Ajoute \type{music} avec des notes de petite taille, comme pour un {\em «a defaut»}. Un texte peut être ajouter avec les mêmes arguments que pour la fonction \type{txt} précédente.
-\page
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \reference[exemple9]{exemple9}
 \underbar{\sc\Words Exemple 9} :
-\blank[1em]
+\blank[0.5em]
 \setupnarrower[left=\lilyindent]
 \defineparagraphs[mypar][n=2,before=,after={\blank[0.1em]},distance=0em]
 \setupparagraphs[mypar][1][width=0.3\textwidth]
@@ -1634,17 +1645,18 @@ Ajoute \type{music} avec des notes de petite taille, comme pour un {\em «a defa
 %%%%
 \startmypar
 \startnarrower
-\godown[1.3em]
+\godown[1.2em]
 Soit le violon suivant :
 \stopnarrower
 \mypar %%%%%
 \mbox{\hspace[lilyindent] %
       \externalfigure[exemple09-violon.pdf][wfactor=265, align=flushleft]}
 \stopmypar
+\godown[-0.2em]
 %%%%
 \startmypar
 \startnarrower
-\godown[0.7em]
+\godown[0.5em]
 et une flute commençant à la mesure 4~:
 \stopnarrower 
 \mypar %%%%%
@@ -1675,54 +1687,58 @@ donnera à la flute~:
 \mbox{\hspace[lilyindent]%
       \externalfigure[exemple09-flute-fr.pdf][wfactor=265, align=flushleft]}
 \stopmypar
-\blank[big]
+\godown[0.5em]
 La difference de taille d'un {\em \quotation{a defaut}} par rapport à la taille courante est \type+adef-size = -3+. On peut re-définir \type+adef-size+ à souhait. Par exemple :
 \startmylily(define adef-size -2)\stopmylily
 Si on veut avoir, dans l'exemple ci-dessus, le texte "(violon)" à la taille normale, il faut remplacer ce texte par le {\em markup} suivant :
 \startmylily (markup (#:fontsize (- adef-size) "(violon)")) \stopmylily
 \blank
 \midaligned{ \tfd ------------}
-
+\godown[-1.6em]
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                              
 \subject{Ajouter des nuances}
-\blank[-2em]
-%%%%%%%%
+\godown[1em]
 \func{add-dynamics}
 \syntax {(add-dynamics obj pos-dyn-str)}{}
 
 \type{obj} est une {\em musique}, un {\em instrument}, ou une liste d' {\em instrument}s.\\
-\type{pos-dyn-str} est une chaîne de caractère "…", composée d'une sequence de position-nuances, separées par une barre oblique~\type{/} (cette barre est ici obligatoire).\\
+\type{pos-dyn-str} est une chaîne de caractère "…", composée d'une séquence de position-nuances, separées par une barre oblique~\type{/} (cette barre est ici obligatoire).\\
 La fonction analyse la chaîne \type{pos-dyn-str} et renvoie un code de la forme :
 \startmylily
-(rm-with obj pos1 #{ <>\dynamics1  #}/ pos2 #{ <>\dynamics2 #} /…)
+(rm-with obj pos1 #{ <>\dynamics1 #} / pos2 #{ <>\dynamics2 #} /…)
 \stopmylily
-Pour les positions sous formes de listes, le caractère \type{'} peut être omis : 
-\type{'(11 4 8)} $\Longrightarrow$ \type{(11 4 8)}.\\
+Pour les positions sous formes de listes, le caractère \type{'} peut être omis :\\
+\hbox{\hspace[lilyindent]\type{'(11 4 8)} $\Longrightarrow$ \type{(11 4 8)}.}\\
 Pour les nuances, les  barres obliques inversées~\type+\+ {\em doivent} être retirées. Les symboles de direction, par contre, \type+-^_+ sont autorisés. Séparer plusieurs nuances par un espace.
 \godown[0.6em]
 \underbar{\sc\Words Exemple} :
 \godown[0.6em]
-En reprenant le violon de l'\in{exemple 9 précédent}{(page \at{}[adef])}[adef], %
-le code suivant :
+En reprenant le violon de l'exemple 9 précédent, le code suivant :
+\godown[-0.4em]
 \startlily
 (add-dynamics 'vl "1 mf / 2 > / 3 p cresc / (4 2) ^f")
 \stoplily
-\godown[0.1em]
+\godown[-0.4em]
 donnera :
 \godown[0.1em]
 \mbox{\hspace[lilyindent]\externalfigure[exemple09-violon-nuances.pdf][wfactor=265, align=flushleft]}
-\godown[0.6em]
+%\godown[-0.4em]
 
 - Une position suivie d'aucune nuance indique à la fonction de chercher et de supprimer la nuance précédente qui se produirait au même {\em moment}.\\
 
-- Il est possible de spécifier des ajustements de la position \type{X} et \type{Y} d'une nuance \type{dyn} par la syntaxe de base suivante (elle suffira dans la majorité des cas) : \type{dyn#X#Y}.
-\page
+- Il est possible de spécifier des ajustements de la position \type{X} et \type{Y} d'une nuance \type{dyn} par la syntaxe de base suivante (elle suffira dans la majorité des cas) : \type{dyn#X#Y}.\\
 Avec par exemple : \type{mf#1#-1.5} le code produit sera :
-\startlily <>-\tweak self-alignment-X 1 -\tweak extra-offset #'(0 . -1.5) -\mf \stoplily
+\godown[-0.4em]
+\startlily <>-\tweak self-alignment-X #1 -\tweak extra-offset #'(0 . -1.5) -\mf \stoplily
+\godown[-0.4em]
 Pour remplacer le {\em zero} du 1\high{er} element de la paire du \type{extra-offset}, on peut mettre également un 3\high{ème} paramètre {\em entre} les 2 autres. La syntaxe générale devient alors :
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \startlily dyn#val1#val3#val2 \stoplily
+\godown[-0.4em]
 qui produit :
-\startlily <>-\tweak self-alignment-X val1 -\tweak extra-offset #'(val3 . val2) -\dyn \stoplily 
+\godown[-0.4em]
+\startlily <>-\tweak self-alignment-X #val1 -\tweak extra-offset #'(val3 . val2) -\dyn \stoplily 
+\godown[-0.4em]
 Une valeur \type{val} peut-être omise mais le nombre de \type{#} doit correspondre à 
 l'indice 1,2 ou 3~:\\
 \hbox{{\hspace[lilyindent]}
@@ -1734,53 +1750,61 @@ l'indice 1,2 ou 3~:\\
 \stoptable
 }\\ % end of \hbox
 
-- Indépendemment de ces ajustements de placement induits de la commande \type{\tweak}, la fonction \type{add-dynamics} permet un placement très précis des nuances par un choix judicieux de sa position musicale associée. Cependant, s'il est facile, par exemple, d'insérer une nuance à la position
- \type{'(3 64)}, un problème se pose si une noire commence à la position \type{3} car elle sera coupée à la quadriple croche !\\
+\godown[-0.4em]
+- Indépendemment de ces ajustements de placement induits de la commande \type{\tweak}, la fonction \type{add-dynamics} permet un placement très précis des nuances par un choix judicieux de sa position musicale associée. Cependant, s'il est facile, par exemple, d'insérer une nuance à la position \type{'(3 64)}, un problème se pose si une noire commence à la mesure \type{3} car elle sera coupée à la quadruple croche !\\
 Il sera dès lors judicieux, de créer pour l'instrument \type{instru}, une voix séparée spéciale, \type{instruDyn} par exemple, composée de \type{skip}s, et qui recevra toutes les nuances de 
 \type{instru}.\\
 Il suffit ensuite de combiner cette voix avec celle des notes et avec \type{global}. L'exemple du début de paragraphe deviendra~:
+\godown[-0.4em]
 \startlily
 (def! 'vlDyn)  ; & \at{voir page}{}[def!]. &
 (add-dynamics 'vlDyn "1 mf / 2 > / 3 p cresc / (4 2) ^f")
 …
 \new Staff { << \global \vlDyn \vl >> }
 \stoplily
+\godown[-0.4em]
 Notez que cette façon de faire est identique à la manière traditionnelle de procéder, sauf qu'ici, pas besoin de faire des calculs pour trouver la durée adéquate des \type{skip} entre 2 nuances. C'est {\em arranger.ly} qui s'en charge.\\
-Notez également, que {\em arranger.ly} introduit une fonction \goto{\type{sym-append}}[sym-append], particulièrement adaptée à la création de ces voix spéciales. Voir \at{à la page}{}[sym-append], l'exemple, donné justement avec des voix dédiées aux nuances.
-\godown[0.6em]
+Notez également, que {\em arranger.ly} introduit une fonction \goto{\type{sym-append}}[sym-append], particulièrement adaptée à la création de ces voix spéciales. Voir \at{à la page}{}[sym-append], l'exemple, donné justement avec des voix dédiées aux nuances.\\
+Notez enfin que cette méthode rend possible l'insertion de nuances dans des \type{tuplet}s. Un {\em forte} pour la 2\high{ème} croche d'un triolet d'une mesure 5, peut s'obtenir par \type{"(5 12) f"} \footnote{Il y a 12 croches de triolets dans une ronde}. La 3\high{ème} croche par \type{"(5 12 12) f"} ou \type{"(5 6) f"}. La syntaxe avec fractions, elle, n'est utilisable  dans \type{add-dynamics}, que par le biais de variables à inclure dans la chaîne de caractères :
+\startlily
+#(define frac 1/12)
+#(add-dynamics 'vlDyn "(5 frac) f / (5 (* 2 frac) p") ;&\tfx\em{& '(5 1/12) et '(5 2/12)&}&
+\stoplily
+\godown[-0.3em]
 \hairline
-Les fonctions qui suivent, \type{assoc-pos-dyn}, \type{extract-pos-dyn-str}, \type{instru-pos-dyn->music} et \type{add-dyn}, sont des tentatives de simplifier encore plus la gestion des nuances, en évitant notamment, 1) la redondance d'informations fournies pour les instruments ayant les mêmes nuances aux mêmes endroits, et 2) de résoudre le problème de nuances en double quand, dans les conducteurs, 2 instruments partagent la même portée.
+Les fonctions qui suivent, \type{assoc-pos-dyn}, \type{extract-pos-dyn-str}, \type{instru-pos-dyn->music} et \type{add-dyn}, sont des tentatives de simplifier encore plus la gestion des nuances, en évitant notamment, 1) la redondance d'informations à fournir pour les instruments ayant les mêmes nuances aux mêmes endroits, et 2) de résoudre le problème de nuances en double quand, dans les conducteurs, 2 instruments partagent la même portée.
 \hairline
 \godown[2em]
 
 \func{assoc-pos-dyn}
 \syntax {(assoc-pos-dyn pos-dyn-str1 instru1 / pos-dyn-str2 instru2 /…)}{}
-Les \type{pos-dyn-str} sont les chaînes de caractères définies dans la fonction \goto{\type{add-dynamics}}[add-dynamics] ci-dessus.\\
+Les \type{pos-dyn-str}s sont de base des chaînes de caractères telles définies dans la fonction \goto{\type{add-dynamics}}[add-dynamics] ci-dessus.\\
 Chaque \type{instru} est soit un {\em instrument} seul soit une liste d'{\em instrument}s.\\
 La fonction retourne une {\em associated-list} formées de {\em paires} \type{'(pos-dyn-str . instru)}.\\ 
 Les barres obliques~\type{/} sont facultatives.
+
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \underbar{\sc exemple} :
-\blank[0.8em]
+\blank[0.4em]
 \startmylily
 vls = #'(vlI vlII) 
 cors = #'(corI … corIV) 
 all = #'(fl htb cl …)
 assocDynList = #(assoc-pos-dyn            
-  "1 p" 'corI / "5 mf" vls / 
-  "25 f / (31 4) < " cors / 
+  "1 p" 'corI / "5 mf" vls / "25 f / (31 4) <" cors / 
   "33 ff / 35 decresc / 38 mf" all …)
 \stopmylily
-L'extraction des nuances pour un instrument donné pourra ensuite se faire en mettant \type{assocDynList} en dernier paramètre des fonctions \type{extract-pos-dyn-str} ou \type{instru-pos-dyn->music}.
-\godown[1.1em]
+L'extraction des nuances pour un instrument donné pourra ensuite se faire en mettant \type{assocDynList} en dernier paramètre des fonctions \type{extract-pos-dyn-str} ou \type{instru-pos-dyn->music}.\\
+Notez enfin qu'une chaîne de caractères \type{"1 f / 3 mf / 5 p"} pourra aussi être entrée sous forme d'une liste : \type{'("1 f" "3 mf" "5 p")}. L'\at{addendum 2 page}[set-dyn] montre une  utilisation de ce formatage automatique.
+\godown[0em]
 \midaligned{ \tfd ------------}
-\godown[1.1em]
+\godown[0.7em]
 %%%%%%%%
 \func{extract-pos-dyn-str}
 \syntax {(extract-pos-dyn-str extract-code assoc-pos-dyn-list)}{}
 \type{assoc-pos-dyn-list} est la liste d'association créée avec la fonction \in{\type{assoc-pos-dyn}}[assoc-pos-dyn] ci-dessus.
 La fonction \type{extract-pos-dyn-str} renvoie une chaîne de caractères, du type {\em pos-dyn-str} défini \in{dans la fonction \type{add-dynamics}}[add-dynamics]. Elle est formée à partir de tous les {\em pos-dyn-str} dont le ou les {\em instrument}s associés répondent \quotation{vrai} au prédicat \type{extract-code}.
-\blank[1em]
+\blank[0.7em]
 Voici comment fonctionne le prédicat \type{extract-code} :\\
 - \type{extract-code} est soit un {\em instrument} seul, soit une liste d'{\em instrument}s avec comme 1\high{er} élément, un des 3 opérateurs logiques suivants : \type{'or 'and 'xor}\\
 Pour un instrument seul, \type{extract-code} renvoie \quotation{vrai} quand la liste 
@@ -1817,7 +1841,7 @@ assocDynList = #(assoc-pos-dyn
 \startmylily
 '(and a b c) = '(and (and a b) c)
 \stopmylily
-\blank[0.2em]
+\godown[0.2em]
 - Une liste d'{\em instrument}s peut être composée de sous-listes. Si une sous-liste ne commence pas par un opérateur, ses éléments sont copiés dans la liste de niveau supérieur.
 \godown[1em]
 \midaligned{ \tfd ------------}
@@ -1846,7 +1870,7 @@ Cette macro ne marchera donc qu'à condition d'avoir defini la variable \type{as
 \startmylily assocDynList = #(assoc-pos-dyn …) \stopmylily
 \godown[-0.1em]
 \hairline
-\type{assocDynList} bénéficie d'un \goto{complément d'information}[complément-assocDynList] \at{dans l'addendum II page}[complément-assocDynList].
+\type{assocDynList} bénéficie d'un \goto{complément d'information}[addendum3] \at{dans l'addendum 3 page}[addendum3].
 \hairline
 \blank[0.1em]
 
@@ -1857,9 +1881,9 @@ Les 2 fonctions qui suivent sont utilisées dans l'%
 %%%%%%%%
 \func{metronome}
 \syntax {(metronome mvt note x [txt [open-par [close-par ]]])}{}
-Renvoie un {\em markup} equivalent à celui produit par la fonction \type{\tempo}.\\
+Renvoie un {\em markup} équivalent à celui produit par la fonction \type{\tempo}.\\
 - \type{mvt} est un {\em markup} indicatif du mouvement du morceau. Par exemple : "Allegro" \\
-- \type{note} est une {\em chaine de caractères} représentant une valeur de note : "4." par ex pour une noire pointée, "8" pour une croche.\\
+- \type{note} est une {\em chaîne de caractères} représentant une valeur de note : "4." par ex pour une noire pointée, "8" pour une croche.\\
 - \type{x} représente soit un tempo métronomique si \type{x} est {\em entier}, soit comme pour l'argument précédent, une {\em chaîne} représentant une valeur de note. Voir l'exemple de la fonction \type{tempos} ci-dessous.\\
 - Optionnellement, l'argument \type{txt} permet de rajouter, après l'indication métronomique, un texte tel que \quotation{env} ou \quotation{ca.}.\\
 - Grâce aux arguments \type{open-par} et \type{close-par}, on peut changer (ou supprimer, en mettant~\type{""}) les parenthèses ouvrantes et fermantes entourant l'indication métronomique.
@@ -1972,7 +1996,7 @@ donnera à la mesure 6 :
 Crée un nom de symbole en ajoutant à la fin d'un nom d'instrument le symbole \type{sym} (suffix).\\
 Si \type{to-begin?} est à \type{#t}, \type{sym} devient un préfixe (collé au début).\\
 Cette fonction s'applique à un {\em instrument} ou à une liste d'{\em instrument}s.\\
-En l'associant à la fonction \in{\type{def!}}[def!]\at{de la page}{}[def!], on peut créer automatiquement des musiques de la forme \type+{s1*…}+, de la même longeur que le morceau.\\
+En l'associant à la fonction \in{\type{def!}}[def!]\at{de la page}{}[def!], on peut créer automatiquement des musiques de la forme \type+{s1*…}+, de la même longueur que le morceau.\\
 Elle peut s'utiliser par exemple, pour mettre les nuances d'un instrument dans une voix séparée~:
 \blank[0.5em]
 \startmylily
@@ -2001,7 +2025,7 @@ Pour alléger l'écriture des \type{\new Staff}, on peut pousser l'automatisatio
 %%%%%%%%
 \func{set-del-events}
 \syntax {(set-del-events event-sym . args)}{}
-Supprime tous les évenements de nom\footnote {Un nom d'événement commence par une majuscule, et se termine par \quotation{Event}. Exemple : {\em 'SlurEvent}} \type{event-sym} \\
+Supprime tous les événements de nom\footnote {Un nom d'événement commence par une majuscule, et se termine par \quotation{Event}. Exemple : {\em 'SlurEvent}} \type{event-sym} \\
 Plusieurs événements peuvent être spécifiés, à la suite ou sous forme d'une liste.\\
 Ainsi, la liste nommée \type{dyn-list}, définie dans {\em "chordsAndVoices.ly"} de la manière suivante :
 \blank[0.5em]
@@ -2115,7 +2139,7 @@ On obtient un fichier~{\em ly} classique avec des déclarations de la forme
 instrument-name = { music … }
 \stopmylily
 (Les notes seront écrites en mode absolu).\\
-Si \type{filename} existe déjà, les definitions des instruments seront ajoutées à la fin du fichier, sauf si \type{overwrite?} est mis à  \type+#t+ : l'ancienne version est alors effacée !
+Si \type{filename} existe déjà, les définitions des instruments seront ajoutées à la fin du fichier, sauf si \type{overwrite?} est mis à  \type+#t+ : l'ancienne version est alors effacée !
 \blank[0.6em]
 \hairline
 Cette fonction est encore au stade expérimental ! Agir avec prudence.
@@ -2132,11 +2156,11 @@ Cette fonction est encore au stade expérimental ! Agir avec prudence.
 %[addendum1]{ADDENDUM\\CONSTRUIRE \type+\global+ AVEC «arranger.ly»}
 
 \type+\global+ est généralement assez fastidieux à entrer car on doit calculer «à la main» la durée séparant 2 événements (entre 2 \type+\mark\default+ par exemple) . \\        
-Voici comment «{\em arranger.ly }» peut  faciliter la vie du codeur, sur un morceau de 70 mesures, contenant  changements de mesures, changements d'armures, de tempos etc…
+Voici comment «{\em arranger.ly }» peut faciliter la vie du codeur, sur un morceau de 70 mesures, contenant changements de mesures, changements d'armures, de tempos etc…
 \startlily
 global = { s1*1000 }                  %%&\em\tfx{& On prévoit une grande longueur&}&
 #(init '())                           %%&\em\tfx{& Liste d'instruments d'abord vide =>&}&
-     %%&\em\tfx{& les positions tiennent compte des insertions précédentes.  &}&
+     %%&\em\tfx{& les positions tiennent compte des insertions précédentes de timing.  &}&
      %%&\em\tfx{& ( \global est ré-analysé à chaque fois. ) &}&
 #(begin                               ;;&\em\tfx{& Construction de \global&}&
 (rm-with 'global 1 #{ \time 3/4 #} /  ;;&\em\tfx{& D'abord les signatures&}&
@@ -2160,7 +2184,7 @@ global = { s1*1000 }                  %%&\em\tfx{& On prévoit une grande longue
 (rm 'global 70 #{ \bar "|." #})           ;;&\em\tfx{& La touche finale&}&
 )                                         %%&\em\tfx{& Fin \global&}&
             %%&\em\tfx{& On peut maintenant initialiser la liste d'instruments&}&
-#(init '(test))   %%&\em\tfx{& Liste non vide = métrique fixée : tout ajout sera ignoré&}&              
+#(init '(test))   %%&\em\tfx{& Liste non vide = métrique fixée : tout nouveau timing sera ignoré&}&              
 \new Staff { << \global \test >> }
 \stoplily
 
@@ -2176,7 +2200,7 @@ global = { s1*1000 }                  %%&\em\tfx{& On prévoit une grande longue
   list={ADDENDUM II : S'ORGANISER}
   ]
 
-Voici quelques idées d'organisation pour la création d'un arrangement pour une grosse formation. Quelques fonctions sont ici proposées, mais notez bien qu'elles ne font {\em pas} parties de {\em arranger.ly}. Il faudra recopier leurs definitions si on desire les utiliser.\\
+Voici quelques idées d'organisation pour la création d'un arrangement pour une grosse formation. Quelques fonctions sont ici proposées, mais notez bien qu'elles ne font {\em pas} parties de {\em arranger.ly}. Il faudra recopier leurs définitions si on désire les utiliser.\\
 
 {\tfa\bf→} {\bf Structure des fichiers.}
 
@@ -2195,8 +2219,8 @@ Voici quelques idées d'organisation pour la création d'un arrangement pour une
 {\tfa\bf→} {\bf Instrument dans partie séparée vs instrument dans conducteur.}\\
 On peut vouloir que certains réglages d'un instrument varient quand il est édité en partie séparée, ou bien  dans un conducteur. Voici comment avoir un code source conditionnel.\\
 
-Placer, en tête de chacune des parties séparés,  l'instruction :
-\startmylily #(define part 'instru) ;;&\em\tfx{& 'instru instrument définit dans (init…)&}&\stopmylily
+Placer, en tête de chacune des parties séparés, l'instruction :
+\startmylily #(define part 'instru) ;;&\em\tfx{& le nom de l'instrument (un symbol)&}&\stopmylily
 et en tête du conducteur, l'instruction :
 \startmylily #(define part 'score) \stopmylily
 On ajoutera, dans le fichier {\em init.ily} par exemple, la fonction \type{part?} suivante :
@@ -2207,35 +2231,37 @@ On ajoutera, dans le fichier {\em init.ily} par exemple, la fonction \type{part?
 \stopmylily
 On pourra alors utiliser dans le code, l'instruction \type{(if (part? 'instru) val1 val2)}, ou bien 
 \type{(if (part? '(instruI instruII)) val1 val2)}.\\
-Dans le code suivant, le texte sera aligné à gauche dans le conducteur et à droite dans la partie d'euphonium :\type{ (rm 'euph 5 (txt "en dehors" UP (if (part? 'score) LEFT RIGHT))) }\\
+Dans l'exemple suivant, le texte sera aligné à gauche dans le conducteur et à droite dans la partie d'euphonium :\type{ (rm 'euph 5 (txt "en dehors" UP (if (part? 'score) LEFT RIGHT))) }\\
 
-
-{\tfa\bf→} {\bf Parties séparées : allègement de code - fonction \type{instru->music}}
 \index{obj->music}
 \index{instru->music}
 \reference[instru->music]
-\\
+
+{\tfa\bf→} {\bf Parties séparées - une fonction \type{instru->music}}\\
 Préalable : avoir défini \type{assocDynList} (dans le fichier {\em dynamics.ily})\\
 \type{instru->music} utilise \type{obj->music}, une fonction qui renvoie la musique associée à un instrument \footnote{\type{(obj->music 'clar)} renvoie \type{clar}}, et la fonction \type{make-clef-set} (définie dans le répertoire {\em Lilypond}, fichier \type{scm/parser-clef.scm}), qui est l'équivalent scheme de \type{\clef}.
 \startmylily
 #(define* (instru->music instru #:optional (clef "treble"))
-    (sim (make-clef-set clef) global (obj->music instru) (add-dyn instru)))
+    (sim (make-clef-set clef)    ;; &\tfx\em{&<< … >>&}&
+         global
+         (obj->music instru)     ;; &\tfx\em{&notes&}&
+         (add-dyn instru)))      &\tfx\em{&%%  nuances&}&
 \stopmylily
 Les parties séparées en clef de sol, pourront être éditées simplement avec :
 \startmylily \new Staff { $(instru->music 'vlI) } \stopmylily
 Les autres parties devront spécifier la clef :
 \startmylily
 \new Staff { $(instru->music 'viola "alto") } ;; &\tfx\em{&clef d'ut 3&}&
-\new Staff { $(instru->music 'vlc "bass") } ;; &\tfx\em{&clef de fa&}&
+\new Staff { $(instru->music 'vlc "bass") }   ;; &\tfx\em{&clef de fa&}&
 \stopmylily
 Notez que si vous avez mis en tête de fichier \type{#(define part 'instru)}, comme expliqué dans le paragraphe précédent, on peut remplacer le nom de l'instrument par le mot \type{part} :
 \startmylily \new Staff { $(instru->music part [clef]) } \stopmylily
-\godown[1em]
+\page %%%%%%%%%%%%%%%%%%%%%%%%%
 
 \index{split-instru}
-{\tfa\bf→} {\bf Conducteur : gérer 2 instruments sur une même portée - fonction \type{split-instru}}\\
+\index{part-combine-instru}
+{\tfa\bf→} {\bf Conducteur : gérer 2 instruments sur une même portée}\\
 La fonction ci-dessous permet d'éviter les nuances en double. Elle met en un exemplaire les nuances communes en bas de la portée; seules les nuances n'appartenant qu'à la voix du haut se trouveront au dessus de la portée.
-\page
 \startmylily
 #(define* (split-instru instru1 instru2 #:optional (clef "treble"))
    (split                    ; &\tfx\em{& << … \\ … >>&}&
@@ -2248,7 +2274,6 @@ La fonction ci-dessous permet d'éviter les nuances en double. Elle met en un ex
       (sim 
          (add-dyn instru2)
          (obj->music instru2))))
-%% &\tfx\em{& Dans le conducteur &}&  %%
 \new Staff { $(split-instru 'clarI 'clarII) }
 \stopmylily
 \blank[0.8em]
@@ -2261,14 +2286,48 @@ Pour un conducteur avec 3 cors par exemple , on peut utiliser \type{instru->musi
                             \markup \vcenter {"cor " \column { 2 3 }}}
                  $(split-instru 'corII 'corIII) >>
 \stopmylily
-
-À la place de \type{split-instru}, on pourra préférer une fonction \type{part-combine-instru}. Il suffira dans la fonction de remplacer \type{split} par \type{part-combine}.\\
-
-\reference[complément-assocDynList]{}
-{\tfa\bf→} {\bf Complément pour l'utilisation de \type{assocDynList}}
+\blank
+À la place de \type{split-instru}, on pourra préférer une fonction \type{part-combine-instru}.
+\startmylily
+#(define* (part-combine-instru instru1 instru2 #:optional (clef "treble"))
+   (sim
+     (make-clef-set clef)
+     global
+     (part-combine                ; &\tfx\em{&\partCombine&}&
+       (sim                       ; &\tfx\em{&voix du haut&}&
+         partCombineAutomatic     ; &\tfx\em{&mode par défaut&}&
+         dynamicUp                ; &\tfx\em{&nuance en haut&}&
+         (add-dyn (list 'xor instru1 instru2))
+         (obj->music instru1))
+       (obj->music instru2))      ; &\tfx\em{&voix du bas&}&
+     (add-dyn instru2)))
+\stopmylily
+Une portée construite avec cette fonction sera facilement paramétable.
+Supposons par exemple que cette portée est partagée par les clarinettes 2 et 3, on peut ajouter, dans {\em SCORE.ly} (et non dans {\em NOTES.ily}), le code suivant:
+\startmylily
+#(begin ;; &\tfx\em{&réglages de partCombine pour la portée cl2-cl3 &}&
+   (x-rm 'cl2 partCombineApart 60 '(82 3/8) 129)
+   (x-rm 'cl2 partCombineChords 85)
+   (x-rm 'cl2 partCombineAutomatic 61 86 138)
+   …)
+\stopmylily
+\hairline
+Attention : \type{partCombineApart, partCombineChords, partCombineAutomatic…} sont les nouveaux noms utilisés par les dernières versions de Lilypond.\\
+Pour la version Lilypond 2.20, il faudra utiliser à la place les noms :\\
+\type{partcombineApart, partcombineChords, partcombineAutomatic…}
+\hairline
+\page %%%%%%%%%%%%%%%%%%%
+%%%%%%%
+\starttitle[
+  reference=addendum3,
+  title={-ADDENDUM III-\\UTILISATION de {\sca assocDynList}},
+  list={ADDENDUM III : UTILISATION de {\sca assocDynList}}
+  ]
+%\reference[complément-assocDynList]{}
+%{\tfa\bf→} {\bf Complément pour l'utilisation de \type{assocDynList}}
 \blank[0.6em]
 {\bf-} Utilisation avec des nuances personalisées :
-\blank[0.3em]
+\blank[0.5em]
 \startmylily
 pocodim = #(make-dynamic-script (markup #:normal-text #:italic "poco dim"))
 piuf = #(make-dynamic-script (markup #:normal-text #:italic "più"
@@ -2276,28 +2335,29 @@ piuf = #(make-dynamic-script (markup #:normal-text #:italic "più"
 assocDynList = #(assoc-pos-dyn
   "1 f / 5 pocodim / 8 mf / (10 4) piuf / 12 fff" all)  % &\tfx\em{&(tous les instuments) &}& 
 \stopmylily
-\blank[0.7em]
+\blank
 
 {\bf-} Enlever une nuance et la remplacer par une autre :\\
-Pour mettre, par exemple, \type{ff} mesure 12 à la trompette à la place de \type{fff}, il faut d'abord annuler la précédente avec une nuance "vide", sinon Lilypond nous signale une nuance en double.
-\blank[0.3em]
+Pour mettre, dans ce même exemple, \type{ff} mesure 12 à la trompette, à la place de \type{fff}, il faut d'abord annuler la précédente avec une nuance "vide", sinon Lilypond nous signale une erreur~:~2~nuances au même endroit.
+\blank[0.5em]
 \startmylily
 assocDynList = #(assoc-pos-dyn
   "1 f / 5 pocodim / 8 mf / 10 piuf / 12 fff" all      ;&\tfx\em{& tous (dont trompette)&}& 
   "12 / 12 ff" 'tp )			              %&\tfx\em{& trompette mes 12 : fff -> ff&}&  
 \stopmylily
-\blank[0.7em]
+\blank
 
-{\bf-} Pour alléger le nombre de nuances d'un conducteur dans, par exemple un grand {\em crescendo} orchestral contenant "\type{cresc - - -}" à chaque instruments, on peut utiliser la fonction \type{part?} décrite ci-dessus, afin que la suppression ne soit effective que dans le conducteur.
-\blank[0.3em]
+{\bf-} Pour alléger le nombre de nuances d'un conducteur (par exemple quand un grand {\em crescendo} orchestral induit un "\type{cresc - - -}" à chaque instruments), on peut utiliser la fonction \type{part?} décrite dans l'addendum II ci-dessus, afin que la suppression ne soit effective que dans le conducteur et non dans les parties séparées.
+\blank[0.5em]
 \startmylily
-#(if (part? 'score) ;&\tfx\em{& on allège le conducteur&}&
- (set! assocDynList (append assocDynList (assoc-pos-dyn
-   "15 / 18" '(&\tfx\em{& [list des instruments dont on supprime les nuances mes 15 et 18]&}& )))))
+#(if (part? 'score) ;&\tfx\em{& on allège le conducteur mesure 15 et 18&}&
+   (set! assocDynList (append assocDynList (assoc-pos-dyn
+     "15 / 18" '(&\tfx\em{& [liste des instruments dont on décide de supprimer les nuances]&}& )))))
 \stopmylily
-\blank[0.7em]
+\blank
 
 {\bf-} On peut définir les positions par des variables (voir fonction \goto{\type{def-letters}}[def-letters]\at{ page}[def-letters]) et les utiliser dans \type{assocDynList} sans se soucier des caractères {\tfb '} {\tfb `} ou {\tfb ,} à mettre habituellement devant les listes et les symboles.
+\blank[0.5em]
 \startmylily 
 A = #9           %&\tfx\em{& un numéro de mesure&}& 
 B = #'(2 8 16)   %&\tfx\em{& des temps à l'intérieur d'une mesure&}& 
@@ -2306,6 +2366,95 @@ assocDynList = #(assoc-pos-dyn
   ; => "9 p / (9 2 8) mp / 12 mf      / (12 2 8) f"
        "(cons 18 B) < / (cons 21 B) !" 'instruII
   ; => "(18 2 8 16) < / (21 2 8 16) !"
+\stopmylily
+
+\blank[1.2em]
+\index{set-dyn}
+\reference[set-dyn]
+
+{\bf-} On peut automatiser l'ajout de nuances par la création d'une fonction \type{set-dyn}\footnote{Attention, malgré son nom, cette fonction n'est {\em pas} compatible \type{apply-to}} :
+\startlily 
+#(define ((set-dyn fmt) arg0 . args) (apply format #f fmt arg0 args))
+\stoplily
+Le paramètre \type{fmt} est une chaîne de caractères qui pourra se servir des même séquences d'échappement que la fonction scheme \type{format}. Ainsi, par exemple, chaque apparition de \type{~a} dans \type{fmt}, sera remplacée successivement par le paramètre \type{arg0, arg1, arg2 …}, préalablement converti en chaîne de caractères.\\ 
+En voici quelques utilisations possibles.
+\blank
+→ Copier une même nuance à plusieurs endroits
+\godown[0.4em]
+\startmylily 
+(map (set-dyn "(~a 4 8) f") '(13 28 42 55))
+\stopmylily
+\godown[0.4em]
+Cette instruction retourne une liste de chaînes de caractères, donc en principe, pour pouvoir l'inclure comme argument dans \type{assoc-pos-dyn}, il faudrait regrouper en une seule chaîne de caractères, chaque élément de la liste obtenue, avec une barre oblique \type{/} en guise de séparateur. Dans la pratique, \type{assoc-pos-dyn} nous évite ce travail en effectuant elle-même ce formatage quand un argument est une liste.
+\page %%%%%%%%%%%%%%%%%%%%%
+L'instruction :
+\startmylily
+assocDynList = #(assoc-pos-dyn
+  (map (set-dyn "(~a 4 8) f") '(13 28 42 55)) instrus
+  …)
+\stopmylily
+est donc équivalente à :
+\startmylily
+assocDynList = #(assoc-pos-dyn
+  "(13 4 8) f / (28 4 8) f / (42 4 8) f / (55 4 8) f" instrus
+  …)
+\stopmylily
+\blank
+→ Copier un groupe de nuances restant au sein d'une même mesure\\
+On utilise ici une séquence d'échappement supplémentaire \type{~:*} qui permet de revenir au paramètre précédent.
+\blank[0.5em]
+\startmylily
+#(define dyn<> (set-dyn "(~a 8) < / (~:*~a 4 16) > / (~:*~a 2 16) !"))
+assocDynList = #(assoc-pos-dyn
+  (dyn<> 45) '(instru1 instru2)
+  (map dyn<> '(47 49)) 'instru3
+  …)
+\stopmylily
+qui produit :
+\startmylily
+assocDynList = #(assoc-pos-dyn
+  "(45 8) < / (45 4 16) > / (45 2 16) !" '(instru1 instru2)
+  "(47 8) < / (47 4 16) > / (47 2 16) ! / 
+   (49 8) < / (49 4 16) > / (49 2 16) !" 'instru3
+  …)
+\stopmylily
+\blank
+→ Copier un groupe de nuances s'étendant sur plusieurs mesures\\
+On utilise la séquence \type{~{ … ~}} qui permet de répéter l'intérieur de la séquence jusqu'à épuisement des éléments de la liste fournie en argument. La séquence \type{~^} elle, n'écrit pas ce qui suit quand le dernier argument est atteint (Dans le cas présent, on évite la dernière barre oblique~\type{/}).
+\blank[0.5em]
+\startmylily
+#(define dyn<> (set-dyn "~{~a < / ~a > / ~a !~^ / ~}"))
+assocDynList = #(assoc-pos-dyn
+  (dyn<> '(1 7 10 (11 4) (13 8 16) (17 8))) 'instru
+  …)
+\stopmylily
+Le code produit :
+\startmylily
+assocDynList = #(assoc-pos-dyn
+  "1 < / 7 > / 10 ! / (11 4) < / (13 8 16) > / (17 8) !" 'instru
+  …)
+\stopmylily
+\index{list-offset}
+Si une séquence est répétée avec des nuances séparées à chaque fois, d'un nombre de mesures identique (par exemple, un crescendo~\type{<} suivi, 2 mesures après, d'un decrescendo \type{>} se terminant à la 3\high{ème} mesure), l'utilisation de la fonction suivante peut s'avérer judicieuse :
+\startmylily
+#(define (list-offset l n)
+   "Ajoute n à chaque éléments de la liste de nombres l"
+   (map (lambda(x)(if (pair? x) (list-offset x n) (+ x n)))
+        l))
+\stopmylily
+Une fonction \type{dyn<>} pourra alors être définie par :
+\startmylily
+#(define (dyn<> n)
+   (apply (set-dyn "~a < / (~a 8) > / (~a 4 16) !")
+          (list-offset '(0 2 3) n)))
+\stopmylily
+À l'intérieur d'un code \type{assocDynList}, la simple ligne : 
+\startmylily "(map dyn<> '(5 11 20))" 'instru \stopmylily
+sera équivalent à tout le code suivant :
+\startmylily 
+"5  < / (7  8) > / (8  4 16) ! /
+ 11 < / (13 8) > / (14 4 16) ! /
+ 20 < / (22 8) > / (23 4 16) !" 'instru
 \stopmylily
 
 \stoptitle

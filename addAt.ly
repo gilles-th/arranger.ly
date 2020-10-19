@@ -1,5 +1,5 @@
 \version "2.20.0"
-%% version Y/M/D = 2020/07/04
+%% version Y/M/D = 2020/10/19
 %% For Lilypond 2.20 or higher
 %% Is a work-around for that :
 %% http://code.google.com/p/lilypond/issues/detail?id=824

@@ -1,5 +1,5 @@
 \version "2.20.0"
-%% version Y/M/D = 2020/07/04
+%% version Y/M/D = 2020/10/19
 %% LSR = http://lsr.di.unimi.it/LSR/Item?u=1&id=761
 %% LSR = http://lsr.di.unimi.it/LSR/Item?u=1&id=545
 %% for Lilypond 2.20 or higher.
@@ -33,10 +33,9 @@
 (ly:music-set-property! note 'duration dur)
 note)
 
-
-#(define (expand-q-chords music); for q chords : see chord-repetition-init.ly
-(expand-repeat-chords! (list 'rhythmic-event)  music))
-
+#(define (expand-notes-and-chords music) ; resolves { c2.~ 4 <c e>2.~ q4 }
+"Makes sure that all notes have a pitch"
+(expand-repeat-notes! (expand-repeat-chords! (list 'rhythmic-event)  music)))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%  extractNote  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #(define tagNotExtractNote (gensym))
@@ -85,7 +84,7 @@ matching notes. If no note matches, returns the last note of the chord."
               evt))
         ((eq? 'TimeScaledMusic name) #f) ;; \tuplet have now a 'duration property !
         (else (and (get-dur evt) evt))))) ; stop if note rests skip
-   (expand-q-chords music)))
+   (expand-notes-and-chords music)))
 
 extractNote = #(define-music-function (n music)(number? ly:music?)
  (extract-note music n))
@@ -141,7 +140,7 @@ If you set strict-comp? to #f, the loop is also stopped when the 2 pitches are e
             (ly:music-set-property! mus 'elements (append notes others))))
           mus) ; return #t -> don't go deeper for EventChord
         #f))   ; go deeper for others mus
-   (expand-q-chords
+   (expand-notes-and-chords
      (ly:music-deep-copy music))))) % I want to use reverse-chords in scheme context => ly:music-deep-copy
 
 
@@ -254,9 +253,10 @@ extractPartLower = #(define-music-function (music )(ly:music?)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                            Miscellaneous functions
 %%%%%%%%%%%%%%%%%%%%% addNote
-
-#(define (add-note music notes-to-add)
-"music and notes-to-add as music"
+% addNote calls add-note which calls add-note-basic
+#(define (add-note-basic music notes-to-add)
+"music and notes-to-add as music. 
+These 2 arguments must have been expanded with expand-notes-and-chords "
   (define (note->chords-arti note)   ; note as a NoteEvent
     (receive (note-arti chord-arti)
       (partition      ; separates arti for NoteEvent from arti for EventChord
@@ -266,21 +266,20 @@ extractPartLower = #(define-music-function (music )(ly:music?)
       (ly:music-set-property! note 'articulations note-arti)
       chord-arti))
 (let* ((alist      ; a list of pairs of 2 lists : '(notes . articulations)
-       (reverse (let loop ((m (expand-q-chords notes-to-add)) ; q to chords
-                           (p '())) ; m = music, p previous value of the list
-         (case (name-of m)
-           ((or SkipEvent SkipMusic) ; a skip in notes-to-add means : add nothing
-              (cons #f p))           ; add #f to the list
-           ((NoteEvent)
-              (acons (list m) (note->chords-arti m) p))
-           ((EventChord)
-              (receive (notes arti) ; separates notes from scripts, dynamics etc
-                (partition noteEvent? (ly:music-property m 'elements))
-                (if (pair? notes)(acons notes arti p) p)))
-           (else (let ((e (ly:music-property m 'element)))
-              (fold loop
-                    (if (ly:music? e)(loop e p) p)
-                    (ly:music-property m 'elements))))))))
+         (reverse (let loop ((m notes-to-add)
+                             (p '())) ; m = music, p previous value of the list
+           (case (name-of m)
+             ((or SkipEvent SkipMusic) ; a skip in notes-to-add means : add nothing
+                (cons #f p))           ; add #f to the list
+             ((NoteEvent)
+                (acons (list m) (note->chords-arti m) p))
+             ((EventChord)
+                (receive (notes arti) ; separates notes from scripts, dynamics etc
+                  (partition noteEvent? (ly:music-property m 'elements))
+                  (if (pair? notes)(acons notes arti p) p)))
+             (else (let ((e (ly:music-property m 'element)))
+                (fold loop (if (ly:music? e)(loop e p) p)
+                           (ly:music-property m 'elements))))))))
        (entry #f)  ; will be (car alist)
        (entry? (lambda() (and
                  (pair? alist)
@@ -288,7 +287,7 @@ extractPartLower = #(define-music-function (music )(ly:music?)
                         (set! alist (cdr alist))
                         entry))))
        (do-add (lambda (notes arti)
-                 (let* ((dur (get-dur (car notes))) ; not #f with expand-q-chords
+                 (let* ((dur (get-dur (car notes))) ; not #f with expand-notes-and-chords
                         (new-notes (map             ; fix all durations to dur
                           (lambda(evt)(set-dur evt dur))
                           (car entry)))            ; the list of new notes
@@ -307,7 +306,11 @@ extractPartLower = #(define-music-function (music )(ly:music?)
              (if (pair? notes)(ly:music-set-property! x 'elements (do-add notes arti)))))
            x)
         (else (and (get-dur x) x)))) ; #f means : go deeper
-    (expand-q-chords music))))
+    music)))
+
+#(define (add-note . args)
+"Expands the 2 music arguments before the call of add-note-basic"
+(apply add-note-basic (map expand-notes-and-chords args)))
 
 
 addNote = #(define-music-function (music notes)(ly:music? ly:music?)

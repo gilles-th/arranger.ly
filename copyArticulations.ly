@@ -1,5 +1,5 @@
 \version "2.20.0"
-%% version Y/M/D = 2020/07/04 for lilypond 2.20.0 or higher
+%% version Y/M/D = 2020/10/19 for lilypond 2.20.0 or higher
 %% LSR = http://lsr.di.unimi.it/LSR/Item?id=769
 %% last changes :
 %%   - tuplets have now a duration . fix line 92-93 and 179
@@ -154,7 +154,7 @@ copied."
 
 %% \copyArticulations { c\arpeggio } { \arpeggioBracket \music } works well,
 %% but we want brackets only to chords with at least 2 notes (not to notes alone), and not to tied
-%% chords. So we need special functions.
+%% chords. So we need a special function.
 
 #(define (add-arp mus)
 (map-some-music

@@ -1,6 +1,6 @@
 \version "2.20.0"
 %% LSR = http://lsr.di.unimi.it/LSR/Item?id=773
-%% version Y/M/D = 2020/08/04
+%% version Y/M/D = 2020/10/19
 %% Last modification :
 %%   - add same-pitch-as
 %%   - optimization of correct-out-of-range
@@ -105,14 +105,14 @@ of 2 notes specifying low and high pitches range."
         (ly:music-deep-copy music))))))
 
 % defines a callback function for arranger.ly users.
-% If you don't need any argument in args, use perhaps instead (not sure) :
+% If you don't need any argument in args, use perhaps instead (shorter but not necessarily faster) :
 % #(define ((same-pitch-as p1) p2)
 %    (equal? p1 p2))
 #(define ((same-pitch-as p1 . args) p2)
 "Tests octave, notename and alteration equality of pitches p1 and p2.
 Ignores octaves if 'any-octave is in args.
 For alterations, an other comparison predicate than = can be specified in args.
-It can be > < >= <= or even + - * to ignore alterations"
+It can be > < >= <= or even + - * to ignore alterations" ; or better for guile > 2.0: (const #t)
    (define alteration-comp (or (find procedure? args) =)) ; the alteration predicate
    (define any-octave? (memq 'any-octave args))           ; ignore octave ?
  (and (= (ly:pitch-notename p1) (ly:pitch-notename p2))

@@ -1,5 +1,5 @@
 \version "2.20.0"
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2020/08/24 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2020/10/19 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%% For Lilypond 2.20 or higher %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The main goal of arranger.ly is to provide a set of functions to make arrangements
 % (for ex : a symphonic piece for a concert band (wood-winds and percussions only))
@@ -50,7 +50,7 @@
 %% extract adds an optional parameter compared to extract-range.
 #(define* (extract music from to #:optional (start ZERO-MOMENT))
 (parameterize ((*current-moment* start))
- (extract-range (expand-q-chords (ly:music-deep-copy music)) from to)))
+ (extract-range (expand-notes-and-chords (ly:music-deep-copy music)) from to)))
 
 %% x-extract is an extended version : used by em-with-func and rm
 #(define (x-extract music-or-musics . args)
@@ -214,7 +214,7 @@ Any moment remains unchanged"
          (ly:music-deep-copy (obj->music obj)))))
    func)
 
-%% To allow a user to add a slash / to separate args (see x-rm for ex)
+%% To allow separation slashes / in . args (see x-rm for ex)
 #(define (not-procedure? x)(not (procedure? x)))
 
 %%%%  Utilities for making lists. %%%%
@@ -521,7 +521,7 @@ containing itself either instruments or musics, or also lists of either instrume
 musics. Musics in source are assumed to begin at measure defined in init (parameter
 mes1num, 1 by def).
 You can specify several sections to copy by the following way :
- (copy-to destination sourceA posA1 posA2 / sourceB posB1 posB2 / etc...)
+ ((copy-to-with-func func) destination sourceA posA1 posA2 / sourceB posB1 posB2 / etc...)
 If sourceX is omitted, the prev source is assumed"
 (let ((music? (music-obj? destination)))
           (define (source->dest-copy from-pos to-pos)
@@ -624,9 +624,9 @@ Shortcut for : (apply-to obj func from1 to1)(apply-to obj func from2 to2) etc ..
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% shortcuts %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% function rel : shortcut for \relative. Well, it is now not a simple shortcut as we create
-% first a generic function to extend syntax for functions in the form : (func n music)
-% functions concerned : rel, octave and octave+
+% function rel is basically a shortcut for \relative. But an extension of syntax are provided
+% for functions in the form : (func n music), ie for rel, octave and octave+.
+% A generic function is first created,
 
 #(define ((int-music-generic func) n . args) ; for func with (func n m) form
    (define (not-integer? m)(not (integer? m)))
@@ -646,7 +646,7 @@ Shortcut for : (apply-to obj func from1 to1)(apply-to obj func from2 to2) etc ..
              (loop (add-entry) '() (cdr args)))))))
 (set! args (reverse
   (let ((args (apply lst args)))
-    (if (integer? n) (cons n args)
+    (if (integer? n) (cons n args)  ; n is optional, default it to 0
                      (cons 0 (cons n args))))))
 (let((n-list (pred->list integer?))
      (m-list (pred->list not-integer?))) ; music, music-list, symbols, sym list, sub-music list
@@ -998,8 +998,8 @@ obj-start-pos can be set in last arguments of args"
 (cond ((= n 0) music)
       ((pair? music)(map (lambda(m)(octave+ n m)) music))
       (else    ; ↱ force resolution pitch of { c4 2 8 } for ex
-(let((music (expand-repeat-notes! (obj->music music))))
-  (add-note   ; see chordsAndVoices.ly
+(let((music (expand-notes-and-chords (obj->music music))))
+  (add-note-basic ; see chordsAndVoices.ly : like add-note but without calling expand-notes-and-chords
     music
     (map-some-music
       (lambda(x)
@@ -1039,11 +1039,11 @@ note of each chord in `music-with-chords, the second one to the second to last
 note, and so on."
 (let ((i (length instruments))
       (music (obj->music music-with-chords)))
-  (for-each
+  (map
     (lambda (instru i)
        (apply rm instru where-pos (note i music) args))
     instruments
-    (iota i i -1) ; ioata count start step : '(i i-1 ... 1)
+    (iota i i -1) ; (iota count start step) : '(i i-1 ... 1)
     )))
 
 %% redefine braketify-chords to accept object argument instead of music
@@ -1226,13 +1226,24 @@ in the same moment."
 %   => { <>\p s1*... }
 %  The rules can be more complex '(or corII (xor corIII corIV))
 
-#(define (assoc-pos-dyn . str-obj) ;; string1 obj1 / string2 obj2 ....
+#(define (assoc-pos-dyn . str-obj)
+"syntax : (assoc-pos-dyn pos-dyn-str[s]A objA / pos-dyn-str[s]B objB ...)
+Returns a list of pairs (pos-dyn-str . obj).
+Each pos-dyn-str is a string as defined in add-dynamics function.
+If a list of pos-dyn string is provided instead, assoc-pos-dyn converts
+pos-dyn-strs in a compatible string \"pos-dyn-str1 / pos-dyn-str2 / ...\".
+obj is an instrument or a list of instruments."
+   (define (str . args) ; arguments are a pos-dyn string or a list of pos-dyn strings
+     "Returns an pos-dyn string from args."
+     (reduce-right (lambda(x prev) (format #f "~a / ~a" x prev))
+                    ""
+                    (flat-lst args)))
 (let loop ((l (filter not-procedure? str-obj)) ;; skip /
            (res '()))
   (if (or (null? l)(null? (cdr l)))
     (reverse res)
     (loop (cddr l)                           ;; next str obj
-          (acons (car l)                     ;; str
+          (acons (str (car l))                    ;; str
                  (flat-lst (obj->instru-list (cadr l))) ;; obj (a list of instruments)
                  res)))))				     %% res = '(str . obj) + res
 
@@ -1371,7 +1382,6 @@ to (ly:make-pitch arg1 arg2) or to (ly:make-pitch arg1 arg2 arg3)"
        (if (noteEvent? evt)(ly:music-set-property! evt 'pitch fix-pitch))
        evt)
      (note 1 music)))) % copies music and keeps only the first note in chords
-
 
 #(define ((set-fix-pitch . args) music)
 (apply fix-pitch music args))
@@ -1543,13 +1553,15 @@ If a space is specified, move horizontaly the tempo markup by space units."
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% working with patterns %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% rhythm patterns : see changePitch.ly
+
+%{
 #(define ((set-pat pattern . args) obj)
 "Apply `change-pitch `pattern to `obj. Return a list if `obj is a list, or a
 music otherwise. If `pattern ends with rests, you can add #t as last args
 parameter to keep these rests at the end."
 (let ((func (lambda(x)
-        (let* ((pat (expand-q-chords (ly:music-deep-copy pattern)))
-               (music (expand-q-chords (ly:music-deep-copy (obj->music x))))
+        (let* ((pat (expand-notes-and-chords (ly:music-deep-copy pattern)))
+               (music (expand-notes-and-chords (ly:music-deep-copy (obj->music x))))
                (notes (if (and (pair? args)(car args))  ; if args is #t
                  (seq music (moment->skip ZERO-MOMENT)) ; adds a \skip
                  music)))
@@ -1557,11 +1569,11 @@ parameter to keep these rests at the end."
   (if (list? obj)(map func obj)(func obj))))
 
 #(define ((set-pitch from-notes) obj)
-"Change pitches of obj notes by pitches of `from-notes notes. 
+"Change pitches of obj notes by pitches of `from-notes notes.
 Rhythm is untouched, articulations mixed."
 (let ((func (lambda(x)
-        (let ((pat (expand-q-chords (ly:music-deep-copy (obj->music x))))
-              (notes (expand-q-chords (ly:music-deep-copy from-notes))))
+        (let ((pat (expand-notes-and-chords (ly:music-deep-copy (obj->music x))))
+              (notes (expand-notes-and-chords (ly:music-deep-copy from-notes))))
           (change-pitch pat notes)))))
   (if (list? obj)(map func obj)(func obj))))
 
@@ -1571,6 +1583,35 @@ Rhythm is untouched, articulations mixed."
   ((3) ((set-pat (second args)(first args)) (third args)))
   ((2) ((set-pat (first args) #t) (second args)))
   (else (ly:error "bad syntax : (cp [keep-last-rests?] pattern music) !"))))
+
+%}
+
+%%{
+
+#(define (cp . args) ; see change-pitch in changePitch.ly
+"syntax : (cp [keep-last-rests?] pattern[s] music[s])
+Applies change-pitch pattern to music. 
+Returns a music, or a list of musics if one of these arguments are a list of musics.
+By default, if pattern ends with rests, they will be also added after the very last note.
+If you set keep-last-rests? to #f, they will not, and the music will end with a note."
+(receive (booleans params)
+  (partition boolean? args)
+  (if (= (length params) 2)
+    (let ((change-pitch (if (or (null? booleans)(car booleans)) ; keep-last-rests? : #t by def
+            (lambda(pat mus)(ly:music-deep-copy
+                        (change-pitch pat (seq mus (moment->skip ZERO-MOMENT))))) ; adds s1*0
+            (lambda(pat mus)(ly:music-deep-copy (change-pitch pat mus)))))
+          (func (lambda(x)(expand-notes-and-chords (obj->music x))))) ; a pitch for all notes
+       (if (null? (filter pair? params)) ; if no lists (only musics)
+         (apply change-pitch (map func params))
+         (apply map change-pitch
+                    (map (lambda(x) (if (pair? x)(map func x)(circular-list (func x))))
+                         params))))
+    (ly:error "bad syntax : (cp [keep-last-rests?] pattern music) !"))))
+
+% shortcuts : by def, keep-last-rests? is #f for set-pat, always #t for set-pitch
+#(define ((set-pat pattern . args) obj) (cp pattern obj (and (pair? args)(car args))))
+#(define ((set-pitch from-notes) obj) (cp obj from-notes))
 
 #(define-macro (cp1 obj) `(cp patI ,obj))
 #(define-macro (cp2 obj) `(cp patII ,obj))
@@ -1584,6 +1625,7 @@ Rhythm is untouched, articulations mixed."
    (apply-to obj (set-pitch new-notes) pos 'end)
    (if (>= (length args) 2)(loop (first args)(second args)(list-tail args 2)))))
 
+%}
 
 %% (tweak-notes-seq `(1 2 3 2 1 (3 . ,(set-transp -1 0 0)))
 %%                  #{ d f a c e g #})
@@ -1624,36 +1666,37 @@ music-function is then applied to the nth note"
   (tweak-notes-seq n-list mus))
 
 %%% articulation patterns
-#(define ((set-arti pattern) obj)  ; see copyArticulations.ly
-   (define (music-func mus) (copy-articulations pattern mus))
-((music-func->obj-func music-func) obj))
+% #(define ((set-arti pattern) obj)  ; see copyArticulations.ly
+%    (define (func mus) (copy-articulations pattern mus))
+% ((music-func->obj-func func) obj))
+%
+% #(define (ca pattern obj)
+% ((set-arti pattern) obj))
 
-#(define (ca pattern obj)
-((set-arti pattern) obj))
-
-% #(define ((set-del-events event-sym . args) obj)
-% "Delete all events named `event-sym. Several events can be specified,
-% or even a list of event."
-% (let ((events-list (flat-lst event-sym args)))
-%   (define (func obj)
-%      (if (list? obj)
-%        (map func obj)
-%        (music-filter
-%          (lambda (evt)
-%             (not (memq (ly:music-property evt 'name) events-list)))
-%          (ly:music-deep-copy (obj->music obj)))))
-%   (func obj)))
+#(define (ca . args)  ; see copyArticulations.ly
+"syntax : (ca pattern[s] music[s])
+Copies articulations from pattern to music, and returns music.
+If at least one argument is a list (a list of musics or a list of instruments),
+the function returns a list of musics."
+    (define (func p m) (ly:music-deep-copy (copy-articulations p m)))
+(if (null? (filter pair? args)) ; if no list (only music)
+  (apply func (map obj->music args))
+  (apply map func
+             (map (lambda(x)(if (pair? x)(map obj->music x)(circular-list (obj->music x))))
+                  args))))
+#(define ((set-arti pattern) obj)
+(ca pattern obj))
 
 #(define ((set-del-events event-sym . args) obj)
 "Delete all events named `event-sym. Several events can be specified,
 or even a list of event."
 (let ((events-list (flat-lst event-sym args)))
-  (define (music-func mus)
+  (define (func mus)
      (music-filter
        (lambda (evt)
          (not (memq (ly:music-property evt 'name) events-list)))
-     mus))
-  ((music-func->obj-func music-func) obj)))
+       mus))
+  ((music-func->obj-func func) obj)))
 
 %%% music patterns
 #(define (fill-with pat from-pos to-pos)
@@ -1671,6 +1714,7 @@ to-pos], cutting if necessary the last repeat to fit exactly the range."
           (else (seq (n-copy n pat)(extract pat ZERO-MOMENT remain)))))))
 
 #(define (fill-generic obj pat-or-pats from-pos to-pos func . args)
+"Internal function used by fill and fill-percent"
 (let loop ((from-pos from-pos)
            (to-pos to-pos)
            (args (filter not-procedure? args)))  ;; del all /
@@ -1704,13 +1748,14 @@ If patX is omitted, the prev pat is assumed."
 (apply fill-generic obj pat-or-pats from-pos to-pos
         (lambda(pat pos1 pos2)
           (let ((delta (pos-sub pos2 pos1)))
-            (make-music 'PercentRepeatedMusic
+            (make-music 'PercentRepeatedMusic ; see extractMusic.ly for mom->integer and mom-div
              'repeat-count (mom->integer (mom-div delta (ly:music-length pat)))
              'element pat)))
         args))
 
 #(define ((set-ncopy n) music)
    (n-copy n music))
+
 %%%%%%%%%%%%%%%%%%%%%%%% Working with ossia %%%%%%%%%%%%%%%%%%%%%%
 addStaffSet = {
   %%s1*0^"Ossia"
