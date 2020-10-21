@@ -160,6 +160,21 @@ chord-str is a chord enclosed by 2 quotation marks"
     indent = 0\cm
   }
 } #}))
+ 
+ 
+%%%% scheme->lilypond-names
+% 'cl1 'cl2 'cl3 will be converted in 'clI 'clII 'clIII
+% Caution : digits must be only at the end of the name : 'ab12cd returns an error
+#(define (scheme->lilypond-names sym)
+"Digits at the end of a symbol name are converted in a roman numeral.
+Returns the symbol converted"
+(let* ((s (symbol->string sym))
+       (i (string-rindex s char-set:digit)))
+  ;; (format #t "~a : ~a\n" s i)
+  (if i (string->symbol 
+           (string-append (string-take s i)
+                          (format #f "~@r" (string->number (string-drop s i)))))
+         sym)))
 
 
 %%%%%%%%%%%%%%%%%%%%% layout settings %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

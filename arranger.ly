@@ -1,5 +1,5 @@
 \version "2.20.0"
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2020/10/19 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2020/10/21 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%% For Lilypond 2.20 or higher %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The main goal of arranger.ly is to provide a set of functions to make arrangements
 % (for ex : a symphonic piece for a concert band (wood-winds and percussions only))
@@ -1657,9 +1657,9 @@ music-function is then applied to the nth note"
            (let((n (car (car l2)))
                 (func (cdr (car l2))))
              (if (<= n len)
-               (loop2 (cdr l2)(cons (if func (func (list-ref l1 (1- n)))
-                                             (list-ref l1 (1- n)))
-                                    res2))
+               (loop2 (cdr l2)
+                      (let((m (ly:music-deep-copy (list-ref l1 (1- n)))))
+                        (cons (if func (func m) m) res2)))
                (make-sequential-music (reverse res2))))))))))
 
 #(define ((set-tweak-notes-seq n-list) mus)

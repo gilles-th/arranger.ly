@@ -1,4 +1,4 @@
-\version "2.19.80"
+\version "2.20.0"
 #(ly:set-option 'relative-includes #t)
 
 \include "init.ily"
@@ -295,6 +295,8 @@ patII = { c8 r c r c r r4 }
          f e d des c | e' d cis c c | bes' a g f f #})) ; violin 1
        (m2 (rel 1 #{
          bes a g f f | g' f e d c | e' d cis c c #})))  ; violin 2
+   (rm 'cl1 '(42 2) (cp1 (descent1 m1)))
+   (rm 'cl1 '(45 2) #{ r2 #})
    ;; 16th
    (rm '(cl1 fl2) '(42 2) (cp1 (descent1 m1)))  ; violin 1
      (rm 'fl2 42 #{ R1 r2 #})         ; very low for a flute
@@ -560,13 +562,23 @@ assocDynList = #(fold cons          ; = add each pair to assocDynList.
 %% You'll get probably some error messages, the same you get using { \set Score.skipTypesetting = ##t }
 %% but the right section is displayed.
 
-% #(show-score 10 15)
+% #(show-score 10 15)       % re-comment again this line after the test.
 
                        %%%%% Instruments EXPORT %%%%%%
-%% Uncomment the following line "export-instruments" and you'll get an new file
-%% "export.ly", in the same directoy as this current file.
+%% After uncommenting the last lines, you'll get a new file called "export.ly",
+%% in the same directoy as this current file.
 %% All instruments will be defined in the traditional way : instru = { ...}
-%% Use Frescobaldi functions to for example, convert notes from absolute pitch to
+%% Use Frescobaldi functions to, for example, convert notes from absolute pitch to
 %% relative pitch, or to change the language
 
-% #(export-instruments all "export.ly" #t) %% Attention : #t => overwrite the previous export.ly
+%% There is just a problem here because variable names as 'fl1 fl2 cl1 etc... are not
+%% compatible with the naming convention of Lilypond. In init.ily we have defined a
+%% function : scheme->lilypond-names that converts symbol names like 'cl1 'cl2 'cl3 to
+%% 'clI 'clII 'clIII
+
+% Please comment line below :
+%{
+allWithLilyNames = #(map scheme->lilypond-names all) % the new instrus list with Lily compatible names.
+#(def! allWithLilyNames (map obj->music all)) % declares to the parser and associates each instru with a music.
+#(export-instruments allWithLilyNames "export.ly" #t) %% Attention : #t = overwrite the previous export.ly
+%}
