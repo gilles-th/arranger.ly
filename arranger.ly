@@ -1,5 +1,5 @@
 \version "2.20.0"
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2020/10/21 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2021/01/20 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%% For Lilypond 2.20 or higher %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The main goal of arranger.ly is to provide a set of functions to make arrangements
 % (for ex : a symphonic piece for a concert band (wood-winds and percussions only))
@@ -17,6 +17,7 @@
 % multi-measure rests (same length than \global). Even a starting rest is added if a
 % \partial is found in \global).
 % last changes :
+%   make function metronome compatible with lilypond 2.22
 %   new : em-with-func, copy-to-with-func, copy-out-with-func, extend apply-to syntax
 %   new function : fill-percent build with fill-generic a func to buid new fill function
 %   fix export-instruments : do not split MultiMeasureRest and SimultaneousMusic
@@ -937,8 +938,7 @@ If no note matches, returns the last note of the chord."
     (ly:error "Bad syntax for procedure note.\n\t (note n [m p ...] music)"))))
 
 #(define ((set-note . args) music)
-(apply extract-note (ly:music-deep-copy music) args)) % (args is filtered)
-
+(apply extract-note (ly:music-deep-copy music) args))
 % a function set-pitch is defined further (for changing pitch of notes)
 
 % set-notes+ builds chords by adding new notes to the existant one.
@@ -1468,29 +1468,44 @@ in `music."
             (else (list music)))))))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% tempo markings %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% For lilypond < 2.22, \note-by-dur-str do the same as the markup function \note .
+% In lilypond 2.22, the duration-str argument of \note is now a duration (ly:duration?)
+#(define-markup-command (note-by-dur-str layout props duration-str dir)(string? number?)
+"Like \note with a duration argument as a string"
+   (define (str->log str)
+     (let ((i (list-index string=? '("breve" "longa" "maxima") (circular-list str))))
+       (if i (- (1+ i)) ; index 0 ("breve") -> -1 , index 1 -> -2 etc
+             (let ((n (string->number str)))
+               (if (and (integer? n) (> n 0))
+                 (log2 n)
+                 (ly:error (_ "not a valid duration string: ~a") duration-str))))))
+  (let ((split-list (string-split duration-str #\.))) ;; "4.."   -> (list "4" "" "")
+     (note-by-number-markup layout props
+        (str->log (car split-list)) (length (cdr split-list)) dir)))
+
 #(define-markup-command (note=note layout props note1 note2 open-par close-par)
                                                (string? string? markup? markup?)
-(let((note1-without-stem #{ \markup \note #note1 #0 #}) ; avoid center alignment pbs
-     (note2-without-stem #{ \markup \note #note2 #0 #})) ; #0 => no stem
+(let((note1-without-stem #{ \markup \note-by-dur-str #note1 #0 #}) ; avoid center alignment pbs
+     (note2-without-stem #{ \markup \note-by-dur-str #note2 #0 #})) ; #0 => no stem
   (interpret-markup layout props
     #{ \markup \concat \smaller \raise #-0.1 \general-align #Y #DOWN {
          #open-par
          \smaller \general-align #Y #DOWN
-           \with-dimensions-from #note1-without-stem \note #note1 #1
+           \with-dimensions-from #note1-without-stem \note-by-dur-str #note1 #1
          \hspace #0.3 "=" \hspace #0.1
          \smaller \general-align #Y #DOWN
-           \with-dimensions-from #note2-without-stem \note #note2 #1
-        #close-par
+           \with-dimensions-from #note2-without-stem \note-by-dur-str #note2 #1
+         #close-par
      } #})))
 
 #(define-markup-command (note=tempo layout props note tempo open-par close-par)
                                                  (string? string? markup? markup?)
-(let((note-without-stem #{ \markup \note #note #0 #}))
+(let((note-without-stem #{ \markup \note-by-dur-str #note #0 #}))
   (interpret-markup layout props
     #{ \markup \smaller \raise #-0.1 \general-align #Y #DOWN \concat  {
          #open-par
          \smaller \general-align #Y #DOWN
-           \with-dimensions-from #note-without-stem \note #note #1
+           \with-dimensions-from #note-without-stem \note-by-dur-str #note #1
          \hspace #0.3 "=" \hspace #0.1
          #tempo
          #close-par
@@ -1966,7 +1981,7 @@ end of all pre-existing texts, unless if `overwrite? is set to #t"
                     "w"     ; Open for output in "write mode" (from scratch)
                     "a")))) ; Open for output in "append mode"
   (display (format #f
-              "                 %%%%%% instruments export du ~a %%%%%%\n\n"
+              "                 %%%%%% instruments export : ~a %%%%%%\n\n"
               (strftime "%c" (localtime (current-time)))) ; date and time
            port)
   (for-each
