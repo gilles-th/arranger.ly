@@ -1,5 +1,5 @@
 \version "2.20.0"
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2021/01/20 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2021/04/07 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%% For Lilypond 2.20 or higher %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The main goal of arranger.ly is to provide a set of functions to make arrangements
 % (for ex : a symphonic piece for a concert band (wood-winds and percussions only))
@@ -17,6 +17,8 @@
 % multi-measure rests (same length than \global). Even a starting rest is added if a
 % \partial is found in \global).
 % last changes :
+%   add-dynamics can make dynamics in a \grace section with : character
+%   set-transp allows now a pitch argument
 %   make function metronome compatible with lilypond 2.22
 %   new : em-with-func, copy-to-with-func, copy-out-with-func, extend apply-to syntax
 %   new function : fill-percent build with fill-generic a func to buid new fill function
@@ -51,7 +53,8 @@
 %% extract adds an optional parameter compared to extract-range.
 #(define* (extract music from to #:optional (start ZERO-MOMENT))
 (parameterize ((*current-moment* start))
- (extract-range (expand-notes-and-chords (ly:music-deep-copy music)) from to)))
+  (extract-range (expand-notes-and-chords-copy-of music) ; see changePitch.ly
+                 from to)))
 
 %% x-extract is an extended version : used by em-with-func and rm
 #(define (x-extract music-or-musics . args)
@@ -667,8 +670,8 @@ Shortcut for : (apply-to obj func from1 to1)(apply-to obj func from2 to2) etc ..
      (else res)))))
 
 % function rel (shortcut for relative)
-% a code like #{ \relative c' $music #} is not compatible with all language
-% so we use (ly:make-music-relative! music pitch)
+% The code #{ \relative c' $music #} is not compatible with all language
+% so (ly:make-music-relative! music pitch) is used instead.
 
 #(define (rel n m)
 "Make music (or list of musics) m, relative to the central pitch #{ c' #}
@@ -724,10 +727,13 @@ either by default, a skip of the length of global."
                  (append music (circular-list (last music))))
              (else (circular-list music)))))
 
-#(define (x-em obj pos . args)
-(fold-right (lambda(pos1 pos2 prev) (cons (em obj pos1 pos2) prev))
-  '() (cons pos args) args))
-
+#(define (x-em obj pos1 pos2 . args)
+"(x-em pos1 pos2 / pos3 pos4 / ...) make the list :
+ (list (em obj pos1 pos2) (em obj pos3 pos4) ...)"
+(let ((args (cons pos2 (filter not-procedure? args))))
+  (fold-right
+    (lambda(pos1 pos2 prev) (cons (em obj pos1 pos2) prev))
+    '() (cons pos1 args) args)))
 
 #(define (cut-end obj new-end-pos . args)  ;; args = start-pos (see em)
    (def! obj (apply em obj (moment->pos ZERO-MOMENT) new-end-pos args)))
@@ -745,48 +751,50 @@ either by default, a skip of the length of global."
 % (set-transp (lambda(p)
 %   (ly:make-pitch 0 -2 ; (3rd minor for c d f g b and 3rd major for e a (notename 2 5)
 %     (if (member (ly:pitch-notename p) '(2 5)) -1/2 0))))
+
 #(define ((set-transp . args) obj . obj-args) ; can be used with apply-to
-"Syntax 1 : (set-transp o n a/2)         (o, n, a as integers, positive or negative)
-Syntax 2 : (set-transp func(p))          (p as the current source pitch)
-Apply ly:pitch-transpose to each pitch of `obj :
-by delta pitch o (octaves), n (notename), a/2 (alterations) (syntax 1), or
-by delta pitch returned by the callback function func (syntax 2).
+"
+Syntax 1 : (set-transp o n a/2) (o n a as integers, positive or negative)
+Syntax 2 : (set-transp p) (p as a pitch)     
+Syntax 3 : (set-transp func(p))  (p as the current source pitch)
+Apply ly:pitch-transpose to each pitch of `obj. The delta-pitch is:
+either the pitch o octaves, notename n, a/2 alterations (syntax 1),
+either p (syntax 2), or either the pitch returned by the callback 
+function func (syntax 3).
 `obj can be a symbol, a list of symbols, a music or a list of musics.
 If `obj is a list, or if other arguments are given in obj-arg, the function
 returns a flat list of transposed music."
 (define delta #f)
 (case (length args)
-  ((1)(let ((func (car args)))
-         (if (procedure? func) (set! delta func))))
+  ((1)(let ((arg (car args)))
+        (cond ((procedure? arg) (set! delta arg))
+              ((ly:pitch? arg) (set! delta (lambda(dummy) arg))))))
   ((3)(if (every (lambda(r)(or (integer? r)(rational? r))) args) ;(number-list? args)
         (set! delta (lambda(dummy)(apply ly:make-pitch args))))))
-(if (not delta) (ly:warning
-"Arguments error ;\n   (set-transp o n a/2)\n   o octaves, n notename, a alterations")
-(let((res (map
-  (lambda(music)
-    (music-map
-      (lambda(m)
-         (let ((p (ly:music-property m 'pitch #f)))
-           (if p (ly:music-set-property! m 'pitch ;(begin
-             ;(format #t "~a - " (ly:music-property m 'name))
-             (ly:pitch-transpose p (delta p))));)
-           m))
-      music))
-  (map ly:music-deep-copy
-       (obj->music-list               ; a list of musics
-         (flat-lst obj obj-args)))))) ; a big list of all instruments
-; (if (= (length res) 1) (car res) res)))
-  (if (or (list? obj)(pair? obj-args))
-    res
-    (car res)))))
+(if (not delta) (ly:error "set-transp bad arguments : ~a" args))
+(let ((musics (map expand-notes-and-chords-copy-of ; see changePitch.ly
+                   (obj->music-list                ; returns a list of musics
+                      (flat-lst obj obj-args))))
+      (delta-transp (lambda(m)
+        (let ((p (ly:music-property m 'pitch #f)))
+          (if p (ly:music-set-property! m 'pitch
+                  (ly:pitch-transpose p (delta p))))
+          m))))
+  (for-each
+    (lambda(music)(music-map delta-transp music))
+    musics)
+  (if (null? (cdr musics)) (car musics) musics)))
 
+%%%
 % As I use a lot (set-transp n 0 0), I have added 2 functions : octave,
 % and octavize. See also octave+ et add-note-octave
 #(define (octave n obj)
 "Short-cut for ((set-transp n 0 0) obj)"
 (if (pair? obj)
   (map (lambda(x)(octave n x)) obj)
-  ((set-transp n 0 0) (obj->music obj))))
+  (if (eq? n 0)
+    (obj->music obj)
+    ((set-transp n 0 0) (obj->music obj)))))
 
 #(define ((set-octave n) obj)
    (octave n obj))
@@ -1105,14 +1113,58 @@ syntaxe : (adef music text dir X-align Y-offset)"
 
 % Util function for add-dynamics
 #(define (str->pos-dyn-list pos-dyn-str)
-"Parse the string pos-dyn-str and return a list of string pair representing a 
-position and a dynamic"
-  (define (split-and-trim s char)
-    (map string-trim-both (string-split s char)))
-  (define (pos-str->mom pos-str)
-    (eval-string (string-append "(pos->moment " pos-str ")")))
-              ;;;;;;;;;;;;;;;;;;;;;
-(reverse
+"Parse the string pos-dyn-str and return a list of string pair representing a position
+and a music with dynamics.
+Two specials caracters : the sharp # character for tweaking dynamic positions and the colon : character
+to insert the dynamics into a \\grace {} section."
+  (define (split-and-trim str char) (map string-trim-both (string-split str char)))
+  (define (pos-str->mom str) (eval-string (string-append "(pos->moment " str ")")))
+  (define (sharp->tweaks str) ; checks for # characters and transforms it into dynamic tweaks
+    (fold
+      (lambda(s prev-s) ; s in the form of: mf or ^mf or mf#0.5 or mf#0.5#-2 or mf#0.5#1#-2
+        (let* ((splitted-s (string-split s #\#))    ; #\# : split character = #
+               (safe-list (append splitted-s (circular-list #f)))
+               (1st (first safe-list))  ; mf or ^mf
+               (2nd (second safe-list)) ; 0.5...or #f
+               (3rd (third safe-list))  ; -2 (if 4th=#f) or 1 or #f
+               (4th (fourth safe-list)) ; -2 or #f
+               (dynstr (let ((s2 (substring 1st 0 1)))  ; s2 = string with 1st char
+                 (cond ((string=? s2 ":") 1st)  ; will a skip with no dynamics
+                       ((string-contains "-^_" s2)
+                          (string-append s2 "\\" (substring 1st 1))) ; => ^\mf
+                       (else (string-append  "\\" 1st)))))            ; => \mf
+               (align-X-tweak
+                 (if (and 2nd (not (string-null? 2nd)))
+                   (string-append "-\\tweak self-alignment-X " 2nd) ""))
+               (offset-tweak (let ((Y-offset (or 4th 3rd))
+                                   (X-offset (or (and 4th 3rd) "0")))
+                 (if Y-offset
+                   (begin (if (string-null? Y-offset) (set! Y-offset "0"))
+                          (string-append "-\\tweak extra-offset #'(" X-offset " . "  Y-offset ")"))
+                   "")))
+               (tweaks (string-trim-both (string-append align-X-tweak " " offset-tweak)))
+               (final-str (string-trim-both (string-append tweaks " " dynstr))))
+          (string-append prev-s " " final-str)))
+      ""
+      (split-and-trim str #\space))) ; "mf cresc" => '("mf" "cresc")
+  (define (colon->music-str str) ; checks for : character and transforms it into "\grace { skip }"
+    (let ((len (string-length str)))
+      (let loop ((grace "")
+                 (prev 0))
+        (let ((i (and (< prev len) (string-index str #\: prev)))) ; index of : character
+          (if i                                                 ; " \mf:16 :16*2" => i=4 then 8
+            (let* ((j (or (string-index str #\space i) len))    ; j=7 then 13
+                   (skip (string-append "s" (substring str (1+ i) j)  ; s16 then s16*2
+                                            (substring str (min (1+ prev) i) i)))) ; \mf then ""
+              ; (format #t "\nstr = ~s\nskip = ~s\ni = ~a | j = ~a | prev = ~a\n" str skip i j prev)
+              (if (= prev 0)
+                (loop (string-append "\\grace { " skip " }") (1+ j))  ; prev=8 then 14
+                (loop (string-append (substring grace 0 (1- (string-length grace))) skip " }")
+                      (1+ j))))
+            (if (> prev 0)   ; no colon found
+              (string-append grace " <>" (if (< prev len) (substring str prev len) ""))
+              (string-append "<>" str)))))))
+(reverse                   ;;;;;;;;;;;;;;;;;;;;;
   (fold
     (lambda (str prev-res)
      (let* ((len (string-length str))
@@ -1146,44 +1198,26 @@ position and a dynamic"
                              (append (reverse dest)(cdr source)))    ; skip this element
                           (else (loop (cdr source) (cons (car source) dest)))))) ; otherwise, keep it
                                   ;; ↓ if dyn not empty, (<> pos-end len) :
-          (let* ((dyn (string-trim (substring str pos-end len)))  ; skip pos
-                 (final-dyn (fold       ; formatage of dynamics :
-                   (lambda(s prev-str) ; s can be in a form like : mf or ^mf or mf#0.5 or mf#0.5#-2 or mf#0.5#1#-2
-                     (let* ((splitted-s (string-split s #\#))    ; #\# : split character = #
-                            (safe-list (append splitted-s (circular-list #f)))
-                            (1st (first safe-list))  ; mf or ^mf
-                            (2nd (second safe-list)) ; 0.5...or #f
-                            (3rd (third safe-list))  ; -2 (if 4th=#f) or 1 or #f
-                            (4th (fourth safe-list)) ; -2 or #f
-                            (dynstr (let ((s2 (substring 1st 0 1)))  ; s2 = string with 1st char
-                                      (if (string-contains "-^_" s2)
-                                        (string-append s2 "\\" (substring 1st 1)) ; => ^\mf
-                                        (string-append  "\\" 1st))))              ; => \mf
-                            (align-X-tweak (if (and 2nd (not (string-null? 2nd)))
-                                       (string-append "-\\tweak self-alignment-X " 2nd " ")
-                                       ""))
-                            (offset-tweak (let ((Y-offset (or 4th 3rd))
-                                                (X-offset (or (and 4th 3rd) "0")))
-                                            (if Y-offset
-                                 (begin
-                                    (if (string-null? Y-offset) (set! Y-offset "0"))
-                                    (string-append "-\\tweak extra-offset #'(" X-offset " . "  Y-offset " )"))
-                                  ""))))
-                       (string-append prev-str align-X-tweak offset-tweak dynstr)))
-                    ""
-                    (split-and-trim dyn #\space)))) ; mf cresc =>
-                                                    ; s = mf then s = cresc
-                (acons pos final-dyn prev-res)))))
-         ;  (begin
-;             (ly:warning (_ "String not valid for add-dynamics :\n  \"~a\" !") str)
-;             prev-res))))
+          (let* ((dyn-section (string-trim (substring str pos-end len)))  ; skip pos
+                 (dyn-with-tweaks (sharp->tweaks dyn-section))            ; # means tweaks
+                 (music-str (colon->music-str dyn-with-tweaks)))          ; : means grace section
+            ; (display music-str)
+            (acons pos music-str prev-res)))))
     '()
     (split-and-trim pos-dyn-str #\/)) ; split by slash /
   ))
 
-% (add-dynamics 'sym "5 mf / 9 _p cresc / (15 4) !"
-% will give :
+% (add-dynamics 'sym "5 mf / 9 _p cresc / (15 4) !"  will give
 % (rm-with 'sym 5 #{ <>\mf #} / 9 #{ <>_\p\cresc #} / '(15 4) #{ <>\! #}
+% 2 characters have a special action
+% - the # character
+%   mf#1#2.5#-3 results to:
+%    <>-\tweak self-alignment-X #1 -\tweak extra-offset #'(2.5 . -3) \mf
+%   mf#1  => self-alignment-X #1         | mf##2.5#-3 => extra-offset #'(2.5 . -3)
+%   mf##2.5# => extra-offset #'(2.5 . 0) | mf##-3 => extra-offset #'(0 . -3)
+% - the : character, followed by a duration expression
+%  "3 <:16 :16*2 f" => \grace { s16\< s16*2 } <>\f  (measure 3)
+%  to put after a dyn or a space (no dyn), and before a tweak section # with no spaces
 #(define (add-dynamics obj pos-dyn-str)
 "Parses pos-dyn-str and results as :
 (rm-with obj pos1 #{ <>\\dynamics1  #} / pos2 #{ <>\\dynamics2 #} ...)
@@ -1199,16 +1233,70 @@ in the same moment."
        (if (null? (cdr res)) (car res) res)))
 (if (string-null? pos-dyn-str)
   (ret-if-failed)
+  (let ((res-str (fold ; returns arguments for rm-with as a string
+          (lambda (pos-dyn prev-str)
+            (string-append prev-str " " (car pos-dyn)              ; pos param
+                                    " #{ " (cdr pos-dyn) " #}"))   ; music param
+          ""
+          (str->pos-dyn-list pos-dyn-str)))) ; make a list of pairs : see func above
+    ; (format #t "****** position and music args:\n~a\n" res-str)
+    (if (string-null? res-str) ; res-str can be empty even if pos-dyn-str is not
+      (ret-if-failed)          ; for ex "3 f / 3" => ""
+      (apply rm-with obj (eval-string (string-append "(list " res-str ")")))))))
+%{
+#(define (add-dynamics obj pos-dyn-str)
+"Parses pos-dyn-str and results as :
+(rm-with obj pos1 #{ <>\\dynamics1  #} / pos2 #{ <>\\dynamics2 #} ...)
+obj is a symbol or a list of symbols.
+The string `pos-dyn-str is a sequence of pos and dynamics, separted by slash /
+The ' for list can be omitted : (11 4 8) instead of '(11 4 8).
+All antislashes before dynamics are to be removed, but direction symbols - ^ _ are
+allowed. Several dynamics must be separated with spaces.
+A pos with no dynamics tells the function to find and delete a previous dynamic occuring
+in the same moment."
+   (define (ret-if-failed)
+     (let ((res (obj->music-list obj)))
+       (if (null? (cdr res)) (car res) res)))
+   (define (dyn-str->music-str str)
+     (let ((len (string-length str)))
+       (let loop ((grace "")
+                  (prev 0))
+         (let ((i (and (< prev len)
+                       (string-index str #\: prev)));
+               (j (and i (string-index str #\: (1+ i)))))
+
+           (if j
+             (let ((dyn ((substring
+           ;;;;;;;;;;;;;;;;;;;;;
+           (if i
+             (let* ((j (or (string-index str #\space i) len))
+                    (skip (string-append "s" (substring str (1+ i) j)
+                                             (substring str prev i))))
+
+               (format #t "str = ~a | i = ~a | j = ~a\n" str i j)
+               (if (= prev 0)
+                 (loop (string-append "\\grace { " skip " }") (1+ j))
+                 (loop (string-append
+                         (substring grace 0 (1- (string-length grace)))
+                         skip " }") (1+ j))))
+             (if (> prev 0)
+               (if (< prev len)
+                 (string-append grace " <>" (substring str prev len))
+                 grace)
+               (string-append " <>" str)))))))
+(if (string-null? pos-dyn-str)
+  (ret-if-failed)
   (let ((res-str (fold
           (lambda (pos-dyn prev-str)
-            (string-append prev-str " " (car pos-dyn) " #{ <>" (cdr pos-dyn) " #}"))
-          ""
-          (str->pos-dyn-list pos-dyn-str))))
-    ;(format #t "****** position music :\n   ~a\n" res-str)
+            (string-append prev-str " " (car pos-dyn) " #{ "
+                                    (dyn-str->music-str (cdr pos-dyn)) " #}"))
+          "" (str->pos-dyn-list pos-dyn-str))))
+    (format #t "****** position music :\n   ~a\n" res-str)
 
     (if (string-null? res-str) ; res-str can be empty even if pos-dyn-str is not
-       (ret-if-failed)          ; for ex "3 f / 3" => ""
-       (apply rm-with obj (eval-string (string-append "(list " res-str ")")))))))
+      (ret-if-failed)          ; for ex "3 f / 3" => ""
+      (apply rm-with obj (eval-string (string-append "(list " res-str ")")))))))
+%}
 
 %%%%%% assoc-pos-dyn, extract-pos-dyn-str, instru-pos-dyn->music, add-dyn %%%%%%%%
 % user can here associate each pos-dyn to a set of instruments
@@ -1471,7 +1559,7 @@ in `music."
 % For lilypond < 2.22, \note-by-dur-str do the same as the markup function \note .
 % In lilypond 2.22, the duration-str argument of \note is now a duration (ly:duration?)
 #(define-markup-command (note-by-dur-str layout props duration-str dir)(string? number?)
-"Like \note with a duration argument as a string"
+"Like \\note with a duration argument as a string"
    (define (str->log str)
      (let ((i (list-index string=? '("breve" "longa" "maxima") (circular-list str))))
        (if i (- (1+ i)) ; index 0 ("breve") -> -1 , index 1 -> -2 etc
@@ -1537,16 +1625,14 @@ in `music."
 %                 (if (markup? x) #{ \tempo $x #} x))
 %               pos-str)))
 
-#(define (tempos obj where-pos txt . args)
-"Syntax : tempos obj where-pos1 txt1 [space1] / where-pos2 txt2 [space2] / ...
-Adds a command : \tempo txt, at where-pos in global.
-If a space is specified, move horizontaly the tempo markup by space units."
+#(define (tempos-ext obj where-pos txt . args)
+"Extended function of function tempos applicable only for 'global"
 (let loop ((res '()) ; a list of list
-           (elt '()) ; a res elt
+           (elt '()) ; an elt from res
            (l (reverse              ; all arguments are reversed, so
                 (cons where-pos     ; l will end by a pos preceeded by...
                       (cons txt     ; a markup
-                            (filter not-procedure? args)))))) ; skips /
+                            (filter not-procedure? args)))))) ; skips slaches /
   (if (pair? l)
     (let ((arg (car l))
           (next (cdr l)))
@@ -1566,67 +1652,41 @@ If a space is specified, move horizontaly the tempo markup by space units."
                #{ \tempo \markup { \hspace #(third entry) #(second entry) } #})))
          res))))
 
+#(define (tempos . args)
+"Syntax : tempos where-pos1 txt1 [space1] / where-pos2 txt2 [space2] / ...
+Adds a command : \tempo txt, at where-pos in global.
+If a space is specified, move horizontaly the tempo markup by space units."
+(apply tempos-ext (cons 'global args)))
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% working with patterns %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% rhythm patterns : see changePitch.ly
 
-%{
-#(define ((set-pat pattern . args) obj)
-"Apply `change-pitch `pattern to `obj. Return a list if `obj is a list, or a
-music otherwise. If `pattern ends with rests, you can add #t as last args
-parameter to keep these rests at the end."
-(let ((func (lambda(x)
-        (let* ((pat (expand-notes-and-chords (ly:music-deep-copy pattern)))
-               (music (expand-notes-and-chords (ly:music-deep-copy (obj->music x))))
-               (notes (if (and (pair? args)(car args))  ; if args is #t
-                 (seq music (moment->skip ZERO-MOMENT)) ; adds a \skip
-                 music)))
-          (change-pitch pat notes)))))
-  (if (list? obj)(map func obj)(func obj))))
-
-#(define ((set-pitch from-notes) obj)
-"Change pitches of obj notes by pitches of `from-notes notes.
-Rhythm is untouched, articulations mixed."
-(let ((func (lambda(x)
-        (let ((pat (expand-notes-and-chords (ly:music-deep-copy (obj->music x))))
-              (notes (expand-notes-and-chords (ly:music-deep-copy from-notes))))
-          (change-pitch pat notes)))))
-  (if (list? obj)(map func obj)(func obj))))
-
-
-#(define (cp . args)
-(case (length args)
-  ((3) ((set-pat (second args)(first args)) (third args)))
-  ((2) ((set-pat (first args) #t) (second args)))
-  (else (ly:error "bad syntax : (cp [keep-last-rests?] pattern music) !"))))
-
-%}
-
-%%{
-
 #(define (cp . args) ; see change-pitch in changePitch.ly
 "syntax : (cp [keep-last-rests?] pattern[s] music[s])
-Applies change-pitch pattern to music. 
+Applies change-pitch with pattern and music as arguments. 
 Returns a music, or a list of musics if one of these arguments are a list of musics.
-By default, if pattern ends with rests, they will be also added after the very last note.
-If you set keep-last-rests? to #f, they will not, and the music will end with a note."
-(receive (booleans params)
-  (partition boolean? args)
-  (if (= (length params) 2)
-    (let ((change-pitch (if (or (null? booleans)(car booleans)) ; keep-last-rests? : #t by def
-            (lambda(pat mus)(ly:music-deep-copy
-                        (change-pitch pat (seq mus (moment->skip ZERO-MOMENT))))) ; adds s1*0
-            (lambda(pat mus)(ly:music-deep-copy (change-pitch pat mus)))))
-          (func (lambda(x)(expand-notes-and-chords (obj->music x))))) ; a pitch for all notes
-       (if (null? (filter pair? params)) ; if no lists (only musics)
-         (apply change-pitch (map func params))
-         (apply map change-pitch
-                    (map (lambda(x) (if (pair? x)(map func x)(circular-list (func x))))
-                         params))))
-    (ly:error "bad syntax : (cp [keep-last-rests?] pattern music) !"))))
+If pattern ends with rests, they are also added after the very last note, unless the
+boolean keep-last-rests? is set to #f: in this case, the returned musics will end 
+with a note."
+(receive (booleans params) (partition boolean? args)
+  (if (< (length params) 2) (ly:error "bad syntax : (cp [keep-last-rests?] pattern music) !"))
+  (let ((pats (map expand-notes-and-chords (flat-lst (car params))))
+        (musics (let ((l (map expand-notes-and-chords (obj->music (flat-lst (cdr params))))))
+          (if (or (null? booleans)(car booleans)) ; keep-last-rests?
+            (map (lambda(m) (seq m (moment->skip ZERO-MOMENT))) l)
+            l)))
+        (do-cp (lambda args (apply change-pitch (map ly:music-deep-copy args)))))
+    (let ((delta (- (length musics) (length pats))))
+      (cond
+        ((> delta 0) (map do-cp (circular-list (last pats)) musics))
+        ((< delta 0) (map do-cp pats (circular-list (last musics))))
+        (else (let ((res (map do-cp pats musics)))
+          (if (null? (cdr res)) (car res) res))))))))
 
-% shortcuts : by def, keep-last-rests? is #f for set-pat, always #t for set-pitch
-#(define ((set-pat pattern . args) obj) (cp pattern obj (and (pair? args)(car args))))
-#(define ((set-pitch from-notes) obj) (cp obj from-notes))
+%%% shortcuts
+% by def, keep-last-rests? is #f for set-pat, #t for set-pitch
+#(define ((set-pat . args1) . args2 ) (apply cp (append args1 (cons #f args2))))
+#(define ((set-pitch  . args1) . args2) (apply cp (append args2 args1)))
 
 #(define-macro (cp1 obj) `(cp patI ,obj))
 #(define-macro (cp2 obj) `(cp patII ,obj))
@@ -1640,7 +1700,6 @@ If you set keep-last-rests? to #f, they will not, and the music will end with a 
    (apply-to obj (set-pitch new-notes) pos 'end)
    (if (>= (length args) 2)(loop (first args)(second args)(list-tail args 2)))))
 
-%}
 
 %% (tweak-notes-seq `(1 2 3 2 1 (3 . ,(set-transp -1 0 0)))
 %%                  #{ d f a c e g #})
