@@ -1,5 +1,5 @@
 \version "2.20.0"
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2021/04/07 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2021/04/08 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%% For Lilypond 2.20 or higher %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The main goal of arranger.ly is to provide a set of functions to make arrangements
 % (for ex : a symphonic piece for a concert band (wood-winds and percussions only))
@@ -17,7 +17,7 @@
 % multi-measure rests (same length than \global). Even a starting rest is added if a
 % \partial is found in \global).
 % last changes :
-%   add-dynamics can make dynamics in a \grace section with : character
+%   add-dynamics can make dynamics in a \grace section, using the colon : character
 %   set-transp allows now a pitch argument
 %   make function metronome compatible with lilypond 2.22
 %   new : em-with-func, copy-to-with-func, copy-out-with-func, extend apply-to syntax
@@ -30,7 +30,7 @@
 %      "13 ^mf#-0.5" means : at measure 13, -\tweak DynamicText.self-alignment-X #-0.5 ^mf
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\include "chordsAndVoices.ly"  %% original name "chord.ly". See :
+\include "chordsAndVoices.ly"    %% original name "chord.ly". See :
                                  %% LSR = http://lsr.di.unimi.it/LSR/Item?u=1&id=761
                                  %% LSR = http://lsr.di.unimi.it/LSR/Item?u=1&id=545
 \include "changePitch.ly"        %% LSR = http://lsr.di.unimi.it/LSR/Item?id=654
@@ -38,7 +38,7 @@
 \include "addAt.ly"              %% http://code.google.com/p/lilypond/issues/detail?id=824
 % \include "extractMusic.ly"     %% LSR = http://lsr.di.unimi.it/LSR/Item?id=542
                                  %% extractMusic.ly is already included in addAt.ly
-% \include "checkPitch.ly"      %% LSR = http://lsr.di.unimi.it/LSR/Item?id=773
+% \include "checkPitch.ly"       %% LSR = http://lsr.di.unimi.it/LSR/Item?id=773
                                  %% checkPitch.ly is already included in chordsAndVoices.ly
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% internal functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1107,9 +1107,7 @@ syntaxe : (adef music text dir X-align Y-offset)"
 %%  "-\tweak self-alignment-X 1 -\tweak extra-offset #'(0 . -1.5) -\f"
 %%  f#1#2#-1.5 results as :
 %%  "-\tweak self-alignment-X 1 -\tweak extra-offset #'(2 . -1.5) -\f "
-%%  if no self-alignment-X needed : f##-1.5 or f##2#-1.5
-
-#(use-modules (ice-9 regex))
+%%  if self-alignment-X not needed : f##-1.5 or f##2#-1.5
 
 % Util function for add-dynamics
 #(define (str->pos-dyn-list pos-dyn-str)
@@ -1117,7 +1115,10 @@ syntaxe : (adef music text dir X-align Y-offset)"
 and a music with dynamics.
 Two specials caracters : the sharp # character for tweaking dynamic positions and the colon : character
 to insert the dynamics into a \\grace {} section."
-  (define (split-and-trim str char) (map string-trim-both (string-split str char)))
+  (define string-not-null? (lambda(s)(not (string-null? s))))
+  (define (split-and-trim str char) (map string-trim-both
+                                      (filter string-not-null?
+                                        (string-split str char))))
   (define (pos-str->mom str) (eval-string (string-append "(pos->moment " str ")")))
   (define (sharp->tweaks str) ; checks for # characters and transforms it into dynamic tweaks
     (fold
@@ -1144,12 +1145,12 @@ to insert the dynamics into a \\grace {} section."
                    "")))
                (tweaks (string-trim-both (string-append align-X-tweak " " offset-tweak)))
                (final-str (string-trim-both (string-append tweaks " " dynstr))))
-          ; (format #t "~a => ~a\n" s final-str)
+          ;(format #t "~a => ~a\n" s final-str)
           (string-append prev-s " " final-str)))
       ""
       (split-and-trim str #\space))) ; "mf cresc" => '("mf" "cresc")
   (define (colon->music-str str) ; checks for : character and transforms it into "\grace { skip }"
-    (let ((len (string-length str))) ; str must be formated = a space : only between 2 words
+    (let ((len (string-length str))) ; str must be formated = a space must only be between 2 words
       (let loop ((grace "")
                  (pos 0))            ; position of the beginning of the section to parse
         (let ((i (and (< pos len) (string-index str #\: pos)))) ; index of : character
@@ -1203,7 +1204,8 @@ to insert the dynamics into a \\grace {} section."
           (let* ((dyn-section (string-trim (substring str pos-end len)))      ; skip pos
                  (dyn-with-tweaks (string-trim (sharp->tweaks dyn-section)))  ; # => tweaks
                  (music-str (colon->music-str dyn-with-tweaks)))              ; : => grace section
-            ;(format #t "dyn-section=~a\ndyn-with-tweaks=~a\nmusic-str=~a" dyn-section dyn-with-tweaks music-str)
+            ; (format #t "\ndyn-section=~a\ndyn-with-tweaks=~a\nmusic-str=~a\n"
+            ;                dyn-section dyn-with-tweaks music-str)
             (acons pos music-str prev-res)))))
     '()
     (split-and-trim pos-dyn-str #\/)) ; split by slash /
