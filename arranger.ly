@@ -1144,25 +1144,27 @@ to insert the dynamics into a \\grace {} section."
                    "")))
                (tweaks (string-trim-both (string-append align-X-tweak " " offset-tweak)))
                (final-str (string-trim-both (string-append tweaks " " dynstr))))
+          ; (format #t "~a => ~a\n" s final-str)
           (string-append prev-s " " final-str)))
       ""
       (split-and-trim str #\space))) ; "mf cresc" => '("mf" "cresc")
   (define (colon->music-str str) ; checks for : character and transforms it into "\grace { skip }"
-    (let ((len (string-length str)))
+    (let ((len (string-length str))) ; str must be formated = a space : only between 2 words
       (let loop ((grace "")
-                 (prev 0))
-        (let ((i (and (< prev len) (string-index str #\: prev)))) ; index of : character
-          (if i                                                 ; " \mf:16 :16*2" => i=4 then 8
-            (let* ((j (or (string-index str #\space i) len))    ; j=7 then 13
+                 (pos 0))            ; position of the beginning of the section to parse
+        (let ((i (and (< pos len) (string-index str #\: pos)))) ; index of : character
+          (if i                                       ; for str = "\mf:16 :16*2" => i=3 then 7
+            (let* ((j (or (string-index str #\space i) len))                   ; => j=6 then 12
                    (skip (string-append "s" (substring str (1+ i) j)  ; s16 then s16*2
-                                            (substring str (min (1+ prev) i) i)))) ; \mf then ""
-              ; (format #t "\nstr = ~s\nskip = ~s\ni = ~a | j = ~a | prev = ~a\n" str skip i j prev)
-              (if (= prev 0)
-                (loop (string-append "\\grace { " skip " }") (1+ j))  ; prev=8 then 14
+                                            (substring str pos i))))  ; \mf then ""
+              ; (format #t "\nstr = ~s\nskip = ~s\ni = ~a | j = ~a | pos = ~a\n" str skip i j pos)
+              (if (= pos 0)
+                (loop (string-append "\\grace { " skip " }")
+                      (1+ j))                                         ; pos=7 then 13
                 (loop (string-append (substring grace 0 (1- (string-length grace))) skip " }")
                       (1+ j))))
-            (if (> prev 0)   ; no colon found
-              (string-append grace " <>" (if (< prev len) (substring str prev len) ""))
+            (if (> pos 0)   ; if a colon was found
+              (string-append grace " <>" (if (< pos len) (substring str pos len) ""))
               (string-append "<>" str)))))))
 (reverse                   ;;;;;;;;;;;;;;;;;;;;;
   (fold
@@ -1198,10 +1200,10 @@ to insert the dynamics into a \\grace {} section."
                              (append (reverse dest)(cdr source)))    ; skip this element
                           (else (loop (cdr source) (cons (car source) dest)))))) ; otherwise, keep it
                                   ;; ↓ if dyn not empty, (<> pos-end len) :
-          (let* ((dyn-section (string-trim (substring str pos-end len)))  ; skip pos
-                 (dyn-with-tweaks (sharp->tweaks dyn-section))            ; # means tweaks
-                 (music-str (colon->music-str dyn-with-tweaks)))          ; : means grace section
-            ; (display music-str)
+          (let* ((dyn-section (string-trim (substring str pos-end len)))      ; skip pos
+                 (dyn-with-tweaks (string-trim (sharp->tweaks dyn-section)))  ; # => tweaks
+                 (music-str (colon->music-str dyn-with-tweaks)))              ; : => grace section
+            ;(format #t "dyn-section=~a\ndyn-with-tweaks=~a\nmusic-str=~a" dyn-section dyn-with-tweaks music-str)
             (acons pos music-str prev-res)))))
     '()
     (split-and-trim pos-dyn-str #\/)) ; split by slash /
@@ -1243,60 +1245,6 @@ in the same moment."
     (if (string-null? res-str) ; res-str can be empty even if pos-dyn-str is not
       (ret-if-failed)          ; for ex "3 f / 3" => ""
       (apply rm-with obj (eval-string (string-append "(list " res-str ")")))))))
-%{
-#(define (add-dynamics obj pos-dyn-str)
-"Parses pos-dyn-str and results as :
-(rm-with obj pos1 #{ <>\\dynamics1  #} / pos2 #{ <>\\dynamics2 #} ...)
-obj is a symbol or a list of symbols.
-The string `pos-dyn-str is a sequence of pos and dynamics, separted by slash /
-The ' for list can be omitted : (11 4 8) instead of '(11 4 8).
-All antislashes before dynamics are to be removed, but direction symbols - ^ _ are
-allowed. Several dynamics must be separated with spaces.
-A pos with no dynamics tells the function to find and delete a previous dynamic occuring
-in the same moment."
-   (define (ret-if-failed)
-     (let ((res (obj->music-list obj)))
-       (if (null? (cdr res)) (car res) res)))
-   (define (dyn-str->music-str str)
-     (let ((len (string-length str)))
-       (let loop ((grace "")
-                  (prev 0))
-         (let ((i (and (< prev len)
-                       (string-index str #\: prev)));
-               (j (and i (string-index str #\: (1+ i)))))
-
-           (if j
-             (let ((dyn ((substring
-           ;;;;;;;;;;;;;;;;;;;;;
-           (if i
-             (let* ((j (or (string-index str #\space i) len))
-                    (skip (string-append "s" (substring str (1+ i) j)
-                                             (substring str prev i))))
-
-               (format #t "str = ~a | i = ~a | j = ~a\n" str i j)
-               (if (= prev 0)
-                 (loop (string-append "\\grace { " skip " }") (1+ j))
-                 (loop (string-append
-                         (substring grace 0 (1- (string-length grace)))
-                         skip " }") (1+ j))))
-             (if (> prev 0)
-               (if (< prev len)
-                 (string-append grace " <>" (substring str prev len))
-                 grace)
-               (string-append " <>" str)))))))
-(if (string-null? pos-dyn-str)
-  (ret-if-failed)
-  (let ((res-str (fold
-          (lambda (pos-dyn prev-str)
-            (string-append prev-str " " (car pos-dyn) " #{ "
-                                    (dyn-str->music-str (cdr pos-dyn)) " #}"))
-          "" (str->pos-dyn-list pos-dyn-str))))
-    (format #t "****** position music :\n   ~a\n" res-str)
-
-    (if (string-null? res-str) ; res-str can be empty even if pos-dyn-str is not
-      (ret-if-failed)          ; for ex "3 f / 3" => ""
-      (apply rm-with obj (eval-string (string-append "(list " res-str ")")))))))
-%}
 
 %%%%%% assoc-pos-dyn, extract-pos-dyn-str, instru-pos-dyn->music, add-dyn %%%%%%%%
 % user can here associate each pos-dyn to a set of instruments
@@ -1626,7 +1574,7 @@ in `music."
 %               pos-str)))
 
 #(define (tempos-ext obj where-pos txt . args)
-"Extended function of function tempos applicable only for 'global"
+"Extended function of function tempos, here applicable not only for 'global"
 (let loop ((res '()) ; a list of list
            (elt '()) ; an elt from res
            (l (reverse              ; all arguments are reversed, so
