@@ -1,5 +1,5 @@
 \version "2.20.0"
-%% changePitch.ly version Y/M/D = 2020/10/19
+%% changePitch.ly version Y/M/D = 2021/04/21
 %% for lilypond 2.20 or higher
 %% LSR :
 %%   http://lsr.di.unimi.it/LSR/Item?id=654
@@ -96,6 +96,10 @@
 (expand-repeat-notes! (expand-repeat-chords! (list 'rhythmic-event) music)))
 % (list 'rhythmic-event) can be replaced by (cons 'rhythmic-event (ly:parser-lookup '$chord-repeat-events))
 
+#(define (expand-notes-and-chords-copy-of music) ; for arranger.ly
+   (expand-repeat-notes!
+     (expand-repeat-chords! (list 'rhythmic-event)
+       (ly:music-deep-copy music))))
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% changePitch %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #(define cPInsertInPattern (gensym))
 #(define cPSamePitch (gensym))
@@ -104,7 +108,7 @@
 #(define cPPatternEnd (gensym))
 
 #(define (make-notes-list music)
-"Make a list with each element will be of one of these types :
+"Make a list with each element as one of these types :
   1- a note, a chord, a rest
   2- an integer, indicating the number of notes to skip in pattern ( The user will
      indicate that, by a corresponding number of skips (s or \\skip) in `newnotes 
@@ -428,4 +432,10 @@ cPII = #(define-music-function (newnotes) (ly:music?)
 %{
 convert-ly (GNU LilyPond) 2.19.82  convert-ly: Traitement de «  »...
 Conversion en cours : 2.19.80
+%}
+
+
+%{
+convert-ly (GNU LilyPond) 2.22.0  convert-ly: Traitement de «  »...
+Conversion en cours : 2.21.0, 2.21.2, 2.22.0
 %}
