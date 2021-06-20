@@ -1,5 +1,5 @@
-%% exemple5.ly
-\version "2.19.83"
+%% exemple08.ly
+\version "2.20.0"
 
 \include "arranger.ly"
 
@@ -28,4 +28,4 @@ music = { e'2 f' | g' f' | e'1 }
 \new StaffGroup <<
   \new Staff \with{ instrumentName = "clarI" } { << \global \clI >> }
   \new Staff \with{ instrumentName = "clarII" } { << \global \clII >> }
-  >>
+  >> 

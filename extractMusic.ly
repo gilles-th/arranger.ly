@@ -1,5 +1,5 @@
 \version "2.20.0"
-%% version Y/M/D = 2020/10/19 for lilypond 2.20
+%% version Y/M/D = 2021/06/20 for lilypond > 2.20
 %% LSR = http://lsr.di.unimi.it/LSR/Item?id=542
 % Last modif. (the last at the end) :
 % - change append! by cons in (make-signature-list)
@@ -59,9 +59,8 @@
 %%  http://gillesth.free.fr/Lilypond/extractMusic/more-doc/momentToRhythm-doc-fr.pdf
 %% Tex Sources in : http://gillesth.free.fr/Lilypond/extractMusic/more-doc/
 #(define (moment->rhythm moment)
-"Try to convert moment to a duration suitable for displaying a note or a rest,
-so in the following form : (ly:make-duration k dots 1 1)
-Note that, if moment=5/8, for example, no duration of this form is possible."
+"Try to convert a moment to a duration in the form: (ly:make-duration k dots). 
+Moments as <Mom 5/8>, will return (ly:make-duration k dots num den)"
 (let* ((p (ly:moment-main-numerator moment))
        (q (ly:moment-main-denominator moment))
        (k (- (ly:intlog2 q) (ly:intlog2 p))))
@@ -295,6 +294,7 @@ named \\global. The first event in global begins always at measure first-measure
                          (set! local-pos save-pos))
                          elts)
                      (set! local-pos max-pos)))
+                ((eq? name 'GraceMusic)) ; do nothing !
                 (else    ; all sequential-musics, volta-repeats etc ...
                   (if (ly:music? elt) (collect-timing-infos elt))
                   (if (pair? elts) (for-each collect-timing-infos elts)))))))))
@@ -410,7 +410,7 @@ named \\global. The first event in global begins always at measure first-measure
 %% save it once in the *timing-sections* variable. This possibility is used in arranger.ly
 %% to allow user to add timing events in \global with build-in functions, while keeping in
 %% "real-time", the right correspondance : measure numbers / moments
-%% Te optional arg first-measure is used also in arranger.ly
+%% The optional arg first-measure is used also in arranger.ly
 %% It is the caller responsability to check if number >= first-measure
 #(define* (measure-number->moment number #:optional first-measure)
 "Give the length of the music, before the measure number `number"
@@ -572,12 +572,14 @@ replaceVoltaMusic = #(define-music-function (musicWithVoltas where replacementMu
        (cond
          ((eq? name 'SequentialMusic)
             (let ((elts (ly:music-property m 'elements)))
+              ;(display-scheme-music elts)
               (cond ((null? elts)
                        (if (ly:music-property m 'to-relative-callback #f)
                          (cons m l) ;; \resetRelativeOctave
                          l))  ;; skip m : well not sure it is absoluty safe...
-                    ; the \tempo command makes a sequential music of 2 events (the first is a 'TempoChangeEvent). It seems
-                    ; that \displayLilyMusic need this sequential music to work ! Is there others Lilypond commands like that ?
+                    ; the \tempo command makes a sequential music of 2 events (the first
+                    ; is a 'TempoChangeEvent). It seems that \displayLilyMusic need this
+                    ; sequential music to work ! Is there others Lilypond commands like that ?
                     ((or (eq? 'TempoChangeEvent (name-of (car elts)))
                          (pair? (ly:music-property m 'tags)))  ; a tag can be important !
                        (cons m l))  ; don't reduce the sequential music
@@ -588,7 +590,12 @@ replaceVoltaMusic = #(define-music-function (musicWithVoltas where replacementMu
              (ly:music-set-property! m 'elements
                (map reduce-seq (ly:music-property m 'elements)))
              (cons m l))
-         (else (cons m l)))))
+         (else
+           (if (not (ly:music-property m 'duration #f))
+             (let ((elt (ly:music-property m 'element)))
+               (if (ly:music? elt)
+                 (ly:music-set-property! m 'element (reduce-seq elt)))))
+           (cons m l)))))
 (let ((name (ly:music-property mus 'name)))
   (cond
     ((eq? name 'SequentialMusic)
@@ -598,7 +605,7 @@ replaceVoltaMusic = #(define-music-function (musicWithVoltas where replacementMu
     ((eq? name 'SimultaneousMusic)
        (ly:music-set-property! mus 'elements
               (map reduce-seq (ly:music-property mus 'elements))))
-    ((memq name (list 'RelativeOctaveMusic 'UnrelativableMusic 'TransposedMusic))
+    ((memq name '(RelativeOctaveMusic UnrelativableMusic TransposedMusic))
        (ly:music-set-property! mus 'element
               (reduce-seq (ly:music-property mus 'element)))))
   mus))
@@ -676,7 +683,7 @@ multiExtractMusic = #(define-music-function (from seq-music) (ly:music? ly:music
 (let* ((from-length (check-length ZERO-MOMENT from))
        (elts (ly:music-property seq-music 'elements))
        (len (length elts))
-       (n  (+ (quotient len 2) (remainder len 2))) ; len = 9 => n = 9/2 + 1 = 5
+       (n (+ (quotient len 2) (remainder len 2))) ; len = 9 => n = 9/2 + 1 = 5
        (result-list (make-list n)))
  (if (not (and (pair? result-list)
                (eq? 'SequentialMusic (ly:music-property seq-music 'name))))
@@ -731,7 +738,7 @@ multiExtractMusic = #(define-music-function (from seq-music) (ly:music? ly:music
 
 %%%%%%%%%%%%%%%%%%%%%
 
-multiReplaceMusic =#(define-music-function (music seq-music) (ly:music? ly:music?)
+multiReplaceMusic = #(define-music-function (music seq-music) (ly:music? ly:music?)
 (let ((res music))
   (if (eq? 'SequentialMusic (ly:music-property seq-music 'name))
     (let loop ((pointer-list (ly:music-property seq-music 'elements)))

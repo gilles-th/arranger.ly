@@ -1,31 +1,31 @@
 \version "2.20.0"
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2021/04/08 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2021/06/20 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%% For Lilypond 2.20 or higher %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% The main goal of arranger.ly is to provide a set of functions to make arrangements
-% (for ex : a symphonic piece for a concert band (wood-winds and percussions only))
-% The basic possibility is to allow the user to be able to insert a fragment of
-% music, to simultaneously a whole set of instruments, and to several musical
-% positions in one shot.
-% For that, "positions" have had to be re-defined, here. A new timing location system
-% is based on measure number as main position indicators (Lilypond use instead moments).
-% The user has just, beforehand, to define a \global variable, in which he has to
-% store all timing signature changes, separated by skips of appropriate length.
-% ex :    global = { s1*4 \time 5/8 s8*5*7 \time 3/4 s4*3*6 etc ...}
-% Others timing events like \partial, cadenzaOn/Off... are supported.
-% The user then, calls the init function (see later) with a set of instruments as parameter.
+% The main objective of arranger.ly is to provide a set of functions to make
+% arrangements of pieces originally intended for another band :
+% for ex a symphonic piece arranged for a concert band (wood-winds and percussions only).
+% In particular, arranger.ly allows the insertion of a fragment of music (a theme for ex),
+% to simultaneously a whole set of instruments, and to several musical positions in one shot.
+% To achieve this goal, the notion of "position" had to be redefined. The timing
+% location system is now based on measure number (Lilypond use instead moments).
+% To use arranger.ly functions, a user has just to :
+% 1- define a variable called \global, where all time signatures are stored.
+%   ex:      global = { s1*4 \time 5/8 s8*5*7 \time 3/4 s4*3*6 ...}
+%   (but others timing events like \partial, cadenzaOn/Off... are also supported)
+% 2- call the init function (see later) with a set of instruments as parameter.
 % The immediat result is that each instruments are automatically filled by appropriate
-% multi-measure rests (same length than \global). Even a starting rest is added if a
-% \partial is found in \global).
-% last changes :
-%   add-dynamics can make dynamics in a \grace section, using the colon : character
+% multi-measure rests (same length than \global). (Even a starting rest is added if a
+% \partial is found in \global). Then the insertion of musics can begin.
+% last changes (Most recent at the top):
+%   export-instruments has been redone : do not split MultiMeasureRest and SimultaneousMusic
+%   new functions : mmr, seq-r, signatures, keys, marks
+%   add-dynamics can add dynamics in a \grace section, using the colon ":" character
 %   set-transp allows now a pitch argument
 %   make function metronome compatible with lilypond 2.22
 %   new : em-with-func, copy-to-with-func, copy-out-with-func, extend apply-to syntax
-%   new function : fill-percent build with fill-generic a func to buid new fill function
-%   fix export-instruments : do not split MultiMeasureRest and SimultaneousMusic
+%   new function : fill-percent. Is build with fill-generic, a func to buid new fill function
 %   rename set-notes to set-pitch
-%   cp : allows an optional argument keep-last-rests?
-%            (cp [keep-last-rests?] pattern music)
+%   cp : allows an optional argument keep-last-rests? : (cp [keep-last-rests?] pattern music)
 %   str->pos-dyn-list : allows tweaking X alignment
 %      "13 ^mf#-0.5" means : at measure 13, -\tweak DynamicText.self-alignment-X #-0.5 ^mf
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -66,7 +66,7 @@
 %% scheme function corresponding to the \replaceMusic function in extractMusic.ly
 #(define* (replace music where replacement-music #:optional (start ZERO-MOMENT))
 (let* ((repla (ly:music-deep-copy replacement-music))
-       (repla-len (ly:music-length replacement-music))
+       (repla-len (ly:music-length repla))
        (repla-end (ly:moment-add where repla-len))
        (res (filter defined-music? (list
               (extract music start where start)
@@ -76,7 +76,6 @@
  ;(display repla-len)(display "\n")(display repla-end)
  (if (null? res) (make-music 'Music 'void #t)
                  (reduce-seq (make-sequential-music res)))))
-
 
 %%%%%%%%%%%% the by-measure-number positionning system %%%%%%%%%%%%%%%%%%%%%%%%%%
 %% = defining a musical position using measure numbers. %%
@@ -100,14 +99,25 @@
 % int->moment deals basically with powers of two : 2 4 8 16...
 #(define (int->moment n) ; (better name : scheme->moment ?)
 "If n = 0, returns ZERO-MOMENT
-If n is an integer (positive or negative), returns <moment 1/n>
+If n is an exact integer (positive or negative), returns <moment 1/n>
+If n is a decimal number (4.3 for ex), returns the length of <duration (log2 i) count>,
+with i as the integer part of n (4 for 4.3), and count the decimal part (3). 
+(count defaults to 1 if decimal part = 0 (4. for ex))
 If n is a rationnal, returns <moment n>
 Any moment remains unchanged"
-(cond
-    ((integer? n) (ly:make-moment 1 n 0 0)) ; zeros needed ! (if n <= 0)
-      ; if n = 0, (ly:make-moment 1 0 0 0) => ZERO-MOMENT
-    ((ly:moment? n) n) ;can be usefull with scaled musics
-    ((rational? n) (ly:make-moment n))
+(cond    ; Note: (integer? 4.) => #t !
+    ((integer? n)(if (exact? n) ; 4 or 4. form ?
+       (ly:make-moment 1 n 0 0) ; zeros needed ! (if n <= 0)
+       (ly:make-moment 3 (* 2 (inexact->exact n)) 0 0))) ; 4. => <mom 3/8>
+       ; if n = 0, (ly:make-moment 1 0 0 0) => ZERO-MOMENT
+    ((ly:moment? n) n) ; can be usefull with scaled musics
+    ((rational? n) (if (exact? n) ; 7/8 or 4.3 form ?
+       (ly:make-moment n) ; form: 7/8
+       (let* ((10n (inexact->exact (truncate (* 10 (abs n))))) ; 4.3 -> 43 | -4.3 -> 43
+              (q (quotient 10n 10)) ; => 4 (log2 for duration: 2 (4 = 2^2))
+              (r (modulo 10n 10))   ; => 3 (number of points = rest of division)
+              (mom (ly:duration-length (ly:make-duration (ly:intlog2 q) r))))
+         (if (> n 0) mom (mom-sub ZERO-MOMENT mom)))))
     (else ZERO-MOMENT)))
 
 %% The main code in pos->moment is provided by measure-number->moment, which is
@@ -119,8 +129,8 @@ Any moment remains unchanged"
                   (m first-measure-number)) ; if n < m, take m later
          (cond ((not (integer? n)) ; can be 'end or 'begin
                   (if (eq? 'end n)(ly:music-length global) ;
-                                  ZERO-MOMENT)) ; 'begin
-               (else (measure-number->moment (max n m) m))))));;
+                                  ZERO-MOMENT)) ; b = 'begin
+               (else (measure-number->moment (max n m) m))))))
   (apply mom-add mom (map int->moment (cdr pos-list)))))
 
 #(define (moment->pos moment)
@@ -183,7 +193,7 @@ Any moment remains unchanged"
   (else x)))
 
 #(define (obj->music-list obj)
-(if (list? obj)
+(if (cheap-list? obj)
   (map obj->music obj)
   (list (obj->music obj))))
 
@@ -199,7 +209,7 @@ Any moment remains unchanged"
   (lambda(x); x should be a symbol or a list of symbols
     (or (and (pair? x)(pair? (filter instrument? x)))
         (instrument? x)))
-  (if (list? obj) obj (list obj))))
+  (if (cheap-list? obj) obj (list obj))))
 
 #(define (music-obj? obj)
 "Is obj a music, or a list with only music elements ?"
@@ -211,35 +221,37 @@ Any moment remains unchanged"
                (music-obj? next))))))
 
 #(define (music-func->obj-func music-func)
-   (define (func obj)
-     (if (list? obj)
-       (map func obj)
-       (music-func
-         (ly:music-deep-copy (obj->music obj)))))
+   (define (func obj) (if (cheap-list? obj)
+     (map func obj)
+     (music-func (ly:music-deep-copy (obj->music obj)))))
    func)
 
-%% To allow separation slashes / in . args (see x-rm for ex)
-#(define (not-procedure? x)(not (procedure? x)))
-
+%% not-procedure? allows separation slashes / in . args (see x-rm for ex)
+%% In guile 2.0 it will be possible to use the new negate function.
+#(define (not-procedure? x)(not (procedure? x)))     % (negate procedure?)
+#(define (not-string-null? x)(not (string-null? x))) % (negate string-null?)
 %%%%  Utilities for making lists. %%%%
 %%%% lst %%%%
 %% can be use also by user.  example :
 %% fls = '(piccolo flI flII)
 %% all = (lst fls 'oboe 'bassoon) => '(piccolo flI flII oboe bassoon)
 #(define (lst . args)
-"Make a list with each elements of args, or if a element is a list, with the 
-elements themselves of this element-list."
+"Returns args but if an element is a list, his elements are inserted 
+in the parent list instead."
 (fold-right
-  (lambda(x prev-lst) ; (please, don't change list? by pair?)
-     (if (list? x)(append x prev-lst)(cons x prev-lst)))
+  (lambda(x prev-lst)(if (cheap-list? x) ; don't change cheap-list? by pair? !
+    (fold-right cons prev-lst x) ; (append x prev-lst)
+    (cons x prev-lst)))
   '()
   args))
 
 %% like lst but goes deeper.
 #(define (flat-lst . args)
+"Returns a big list of elements of args, with no sub-lists."
 (fold-right
-  (lambda(x prev-lst) ; (please, don't change list? by pair?)
-     (if (list? x)(append (apply flat-lst x) prev-lst)(cons x prev-lst)))
+  (lambda(x prev-lst)(if (cheap-list? x) ; don't change cheap-list? by pair? !
+    (fold-right cons prev-lst (apply flat-lst x));(append (apply...) prev-lst)
+    (cons x prev-lst)))
   '()
   args))
 
@@ -282,31 +294,28 @@ than the smaller length list. Lists are proper list (predicate proper-list?)"
 %% (apply x-rm 'music #{ c'8 c' c' #} (x-pos 1 3 '((n 8)(n 2 8)))) ;; use apply
 %% => music = { e'8 c' c' c' f' c' c' c' | g' c' c' c' f' c' c' c' | e'1 }
 #(define* (x-pos from-measure to-measure #:optional pos-pat (step 1))
-"pos-pat is a quoted list of by-measure-number positions with a letter, typically n,
-instead of the measure number.
-x-pos expand this pattern, replacing n (the letter) by from-measure and increasing
-repeatedly this value by step, while lesser to to-measure.
+"Makes a list of 'by-measure-positions' from the pattern pos-pat.
+pos-pat is a quoted list of positions with a letter, typically n, instead of the
+measure number. The pattern is expanded replacing n (the letter) by from-measure
+and increasing repeatedly this value by step, while lesser to to-measure.
 By default, pos-pat is '(n), step is 1"
-(let ((func (if (not pos-pat)
-              (lambda(n prev) (cons n prev))
-              (lambda(n prev)
-                (fold-right (lambda (x prev2)(cons x prev2))
-                            prev
-                            (let loop ((x pos-pat))
-                               (cond ((symbol? x) n)
-                                     ((pair? x)(map loop x))
-                                     (else x)))))))
+(let ((func (if pos-pat
+              (lambda(n prev)(fold-right cons prev (let loop ((x pos-pat))(cond
+                                                     ((symbol? x) n)
+                                                     ((pair? x)(map loop x))
+                                                     (else x)))))
+              cons))
       (d (- to-measure from-measure)))
 (fold-right func '() (iota (quotient (+ d (remainder d step)) step) ; count
                            from-measure
                            step))))
-%{ #(map (lambda (x) (display x)(newline)) (list    ;; tests
+%{ #(for-each (lambda(x)(format #t "~a\n" x)) (list    ;; tests
  (x-pos 10 12)               ;; => (10 11)
  (x-pos 10 12 '(n (n 4)))    ;; => (10 (10 4) 11 (11 4))
  (x-pos 10 12 '(n (n 4)) 2)  ;; => (10 (10 4))
  (x-pos 10 13 '(n (n 4)) 2)  ;; => (10 (10 4) 12 (12 4))
  (x-pos 10 14 '(n (n 4)) 2)  ;; => (10 (10 4) 12 (12 4))
- )  %}
+ ))  %}
 
 %% Guile 2.0 propose a compose function, not 1.8 :-(
 #(define ((compose func-n . func-i) obj)
@@ -529,23 +538,23 @@ You can specify several sections to copy by the following way :
 If sourceX is omitted, the prev source is assumed"
 (let ((music? (music-obj? destination)))
           (define (source->dest-copy from-pos to-pos)
-             ((em-with-func func) source from-pos to-pos source-start-pos))
+            ((em-with-func func) source from-pos to-pos source-start-pos))
   (let loop ((res (rm destination from-pos (source->dest-copy from-pos to-pos)))
              (args (filter not-procedure? ;; del all /
                           (if source-start-pos (cddr args) ;; skip key and key-values
                                                args))))
-     (if (< (length args) 2)
-       res
-       (loop
-         (let ((arg1 (first args)))
-           (if (not (pos? arg1)) ;; => arg1 is a source
-             (begin (set! source arg1)
-                    (set! args (cdr args))
-                    (set! arg1 (first args))))
-           (rm (if music? res destination)
-               arg1
-               (source->dest-copy arg1 (second args))))
-         (list-tail args 2))))))
+    (if (< (length args) 2)
+      res
+      (loop
+        (let ((arg1 (first args)))
+          (if (not (pos? arg1)) ;; => arg1 is a source
+            (begin (set! source arg1)
+                   (set! args (cdr args))
+                   (set! arg1 (first args))))
+          (rm (if music? res destination)
+              arg1
+              (source->dest-copy arg1 (second args))))
+        (list-tail args 2))))))
 
 #(define copy-to (copy-to-with-func #f))
 
@@ -554,7 +563,7 @@ If sourceX is omitted, the prev source is assumed"
 obj must be a symbol of an instrument, or a list of symbols.
 You can copy several where-pos :
  (copy-out obj from-pos to-pos where-pos1 where-pos2 where-pos3 ...etc)"
-(let ((obj (if (list? obj) (flat-lst obj) obj))) ; no list inside list - symbols only
+(let ((obj (if (cheap-list? obj) (flat-lst obj) obj))) ; no list inside list - symbols only
          (define (obj->dest-copy from-pos to-pos)
              ((em-with-func func) obj from-pos to-pos))
   (apply x-rm obj (obj->dest-copy from-pos to-pos) where-pos other-where-pos)))
@@ -608,10 +617,12 @@ Shortcut for : (apply-to obj func from1 to1)(apply-to obj func from2 to2) etc ..
 #(define (xchg-music obj1 obj2 from-pos to-pos . other-from-to-pos)
 "Exchange the music of the range [from-pos to-pos[ between obj1 and obj2"
    (define (sub-list->sym obj) ; Take the first not-list element of sub-lists
-     (if (list? obj) (map (lambda(x)(let loop ((x x))
-                            (if (list? x) (loop (car x)) x)))
-                          obj)
-                     obj))
+     (if (cheap-list? obj)
+       (map (lambda(x)
+              (let loop ((x x))
+                 (if (cheap-list? x) (loop (car x)) x)))
+            obj)
+       obj))
 (let loop ((from-pos from-pos)
            (to-pos to-pos)
            (args (filter not-procedure? other-from-to-pos)))
@@ -700,9 +711,38 @@ transposed by n octaves."
      (make-music (quote VoiceSeparator))
      music2))
 
+#(define (mmr arg0 . args)
+"Returns a multiMeasasureRest. Takes 1 rational or 2 bar numbers:
+(mmr arg0) has the length of (ly:make-moment arg0)
+(mmr arg0 arg1) has the length of the music between bars arg0 arg1"
+(make-music 'MultiMeasureRestMusic 'duration
+  (make-duration-of-length (if (null? args)
+    (ly:make-moment arg0)
+    (pos-sub (car args) arg0)))))
+
+#(define (seq-r . args)  ; 2 4 8... or 4. (1 point), 4.2 (2 points), 4.3 (3 points), or a music
+"Make a sequential music of rests. 
+args is basically a list of powers of two: (seq-r 2 4 8) means { r2 r4 r8 }
+If a point . following by a digit 1..9 is appened to the number, this digit will be the points count.
+ex : (seq-r 2.3 8) means: { r2... r8 }
+No digits after the point defaults count to 1: (seq-r 4.) and (seq-r 4.1) mean both r4.
+Any music argument is added unaltered into the sequence"
+  (define (number->rest n) ; n = 4 or 4. or 4.2 or 3/8 ... or a music
+    (cond ((number? n) (make-music 'RestEvent 'duration
+             (if (exact? n)     ;  integer or rational p/q
+               (if (integer? n)
+                 (ly:make-duration (if (> n 0) (ly:intlog2 n) (1- n))) ; 0 breve -1 longa -2 maxima
+                 (moment->rhythm (moment n))) ; will fail if n < 0
+               (let* ((10n (inexact->exact (truncate (* 10 (abs n))))) ; 4.3 -> 43
+                      (q (quotient 10n 10)) ; 4 : for the log of duration
+                      (r (modulo 10n 10)))  ; 3 : number of points = rest of the division
+                 (ly:make-duration (if (> n 0) (ly:intlog2 q) (1- q)) (if (= r 0) 1 r))))))
+          (else (obj->music n)))) ; Is obj->music needed ?
+(reduce-seq (make-sequential-music (map number->rest (flat-lst args)))))
+
 #(define (at pos mus)
-   (if (list? mus)(map (lambda(x)(at pos x)) mus)
-                  (seq (pos->skip pos) mus)))
+   (if (cheap-list? mus)(map (lambda(x)(at pos x)) mus)
+                        (seq (pos->skip pos) mus)))
 
 #(define* ((sym-append sym2 #:optional to-begin?) sym1)
 (cond ((symbol? sym1)(if to-begin? (symbol-append sym2 sym1)
@@ -732,7 +772,7 @@ either by default, a skip of the length of global."
  (list (em obj pos1 pos2) (em obj pos3 pos4) ...)"
 (let ((args (cons pos2 (filter not-procedure? args))))
   (fold-right
-    (lambda(pos1 pos2 prev) (cons (em obj pos1 pos2) prev))
+    (lambda(pos-x1 pos-x2 prev) (cons (em obj pos-x1 pos-x2) prev))
     '() (cons pos1 args) args)))
 
 #(define (cut-end obj new-end-pos . args)  ;; args = start-pos (see em)
@@ -850,7 +890,7 @@ Use `obj-start-pos if 'obj doesn't begin at the beginning of the whole music.
   if 'nthvoice is 1, param1 = voice, param2 = obj
   otherwise param1 = obj, param2 = voice "
 (let*((end-pos (or to-pos 'end)) ;
-      (voices (if (list? voice) voice (list voice)))
+      (voices (if (cheap-list? voice) voice (list voice)))
       (corrected-voices
          (let ((res (if voice-start-pos  ; voice-start-pos < where-pos
                   (em voices where-pos end-pos voice-start-pos)
@@ -1115,10 +1155,8 @@ syntaxe : (adef music text dir X-align Y-offset)"
 and a music with dynamics.
 Two specials caracters : the sharp # character for tweaking dynamic positions and the colon : character
 to insert the dynamics into a \\grace {} section."
-  (define string-not-null? (lambda(s)(not (string-null? s))))
-  (define (split-and-trim str char) (map string-trim-both
-                                      (filter string-not-null?
-                                        (string-split str char))))
+  (define (split-by-space str) (filter not-string-null? (string-split str #\space)))
+  (define (split-by-slash str) (map string-trim-both (string-split str #\/)))
   (define (pos-str->mom str) (eval-string (string-append "(pos->moment " str ")")))
   (define (sharp->tweaks str) ; checks for # characters and transforms it into dynamic tweaks
     (fold
@@ -1130,7 +1168,7 @@ to insert the dynamics into a \\grace {} section."
                (3rd (third safe-list))  ; -2 (if 4th=#f) or 1 or #f
                (4th (fourth safe-list)) ; -2 or #f
                (dynstr (let ((s2 (substring 1st 0 1)))  ; s2 = string with 1st char
-                 (cond ((string=? s2 ":") 1st)  ; will a skip with no dynamics
+                 (cond ((string=? s2 ":") 1st)  ; will be a skip with no dynamics
                        ((string-contains "-^_" s2)
                           (string-append s2 "\\" (substring 1st 1))) ; => ^\mf
                        (else (string-append  "\\" 1st)))))            ; => \mf
@@ -1143,12 +1181,11 @@ to insert the dynamics into a \\grace {} section."
                    (begin (if (string-null? Y-offset) (set! Y-offset "0"))
                           (string-append "-\\tweak extra-offset #'(" X-offset " . "  Y-offset ")"))
                    "")))
-               (tweaks (string-trim-both (string-append align-X-tweak " " offset-tweak)))
-               (final-str (string-trim-both (string-append tweaks " " dynstr))))
+               (final-str (string-join (split-by-space (string-append ; delete all unneeded spaces
+                             align-X-tweak " " offset-tweak " " dynstr)))))
           ;(format #t "~a => ~a\n" s final-str)
           (string-append prev-s " " final-str)))
-      ""
-      (split-and-trim str #\space))) ; "mf cresc" => '("mf" "cresc")
+      "" (split-by-space str))) ; (split-by space " mf  cresc ") => '("mf" "cresc")
   (define (colon->music-str str) ; checks for : character and transforms it into "\grace { skip }"
     (let ((len (string-length str))) ; str must be formated = a space must only be between 2 words
       (let loop ((grace "")
@@ -1171,7 +1208,7 @@ to insert the dynamics into a \\grace {} section."
   (fold
     (lambda (str prev-res)
      (let* ((len (string-length str))
-            (last-par-i (string-rindex str #\)))    ;; last close parenthesis ) index (false is not found)
+            (last-par-i (string-rindex str #\)))    ;; last close parenthesis ) index (#f is not found)
             (pos-end (or (and last-par-i (1+ last-par-i)) ;; include last )
                          (string-index str #\space) ;; first space
                          len))
@@ -1204,11 +1241,11 @@ to insert the dynamics into a \\grace {} section."
           (let* ((dyn-section (string-trim (substring str pos-end len)))      ; skip pos
                  (dyn-with-tweaks (string-trim (sharp->tweaks dyn-section)))  ; # => tweaks
                  (music-str (colon->music-str dyn-with-tweaks)))              ; : => grace section
-            ; (format #t "\ndyn-section=~a\ndyn-with-tweaks=~a\nmusic-str=~a\n"
+            ;(format #t "\ndyn-section=~a\ndyn-with-tweaks=~a\nmusic-str=~a\n"
             ;                dyn-section dyn-with-tweaks music-str)
             (acons pos music-str prev-res)))))
     '()
-    (split-and-trim pos-dyn-str #\/)) ; split by slash /
+    (split-by-slash pos-dyn-str)) ; split by /
   ))
 
 % (add-dynamics 'sym "5 mf / 9 _p cresc / (15 4) !"  will give
@@ -1550,9 +1587,9 @@ in `music."
     } #})))
 
 #(define* (metronome mvt note arg #:optional (txt "") open-par close-par)
-"Return a markup like \\tempo does. `mvt and `note are string.
- If `arg is a number, `arg is the number of ticks per minute, else it is like the `note
- parameter : a string reprensenting a rhythm of a note : \"4.\" for ex.
+"Return a markup like \\tempo does. mvt and note are string.
+ If arg is a number, arg represents the number of ticks per minute, else it is like the note
+ parameter : a string reprensenting a duraation of a note : \"4.\" for ex.
  txt is \" env.\" or \" ca.\" appenned after the number of ticks per minute. 
  open-par and close-par are the characters around the \"note = arg\" markup (parenthesis by default)"
 (cond
@@ -1568,45 +1605,93 @@ in `music."
   (markup #:line
              (mvt #:note=note note arg open-par close-par))))
 
-% #(define (tempos where-pos txt . pos-str)
-% (apply rm-with 'global
-%          where-pos #{ \tempo $txt #}
-%          (map (lambda(x)
-%                 (if (markup? x) #{ \tempo $x #} x))
-%               pos-str)))
-
-#(define (tempos-ext obj where-pos txt . args)
-"Extended function of function tempos, here applicable not only for 'global"
+#(define (tempos where-pos mvt . args) ;
+"Syntax 1 : tempos where-posA mvtA [spaceA] / where-posB mvtB [spaceB] / ...
+Syntax 2 : tempos obj where-posA mvtA [spaceA] / where-posB mvtB [spaceB] / ...
+Adds a command : \tempo mvt, at where-pos in 'global (syntax 1) or in obj (syntax 2).
+If a space is specified, move horizontaly the tempo markup by space units."
+(define (do-tempos obj args)
 (let loop ((res '()) ; a list of list
            (elt '()) ; an elt from res
-           (l (reverse              ; all arguments are reversed, so
-                (cons where-pos     ; l will end by a pos preceeded by...
-                      (cons txt     ; a markup
-                            (filter not-procedure? args)))))) ; skips slaches /
+           (l (reverse args))) ; all arguments are reversed, so l will end by
+                               ; a pos preceded by a markup
   (if (pair? l)
     (let ((arg (car l))
           (next (cdr l)))
-      (if (markup? arg)                   ; arg is txt argument ?
+      (if (markup? arg)                   ; is arg a mvt argument ?
         (loop (cons (cons (car next)      ; yes ? where-pos is just after. (reversed list)
-                          (cons arg elt)) ; add where-pos and txt to elt.
+                          (cons arg elt)) ; add where-pos and mvt to elt.
                     res)                  ; add elt to res
               '()                         ; reset elt
               (cdr next))                 ; skip the 2 elements added
         (loop res
               (cons arg elt)              ; just add arg to elt
               next)))
-    (map (lambda(entry)                             ; entry = '(where-pos txt [space])
+    (map (lambda(entry)                             ; entry = '(where-pos mvt [space])
            (rm obj (first entry)                    ; where-pos
              (if (< (length entry) 3)               ; no 3rd element (space argument) ?
-               #{ \tempo \markup #(second entry) #} ; txt.
+               #{ \tempo \markup #(second entry) #} ; mvt.
                #{ \tempo \markup { \hspace #(third entry) #(second entry) } #})))
          res))))
+(let ((args (cons where-pos (cons mvt (filter not-procedure? args))))) ; skip slashes /
+  (if (pos? where-pos)
+    (do-tempos 'global args) ; syntax 1
+    ; replace 'global by the 1st args (syntax 2). (length args) must be >= 3
+    (do-tempos (car args) (cdr args)))))
 
-#(define (tempos . args)
-"Syntax : tempos where-pos1 txt1 [space1] / where-pos2 txt2 [space2] / ...
-Adds a command : \tempo txt, at where-pos in global.
-If a space is specified, move horizontaly the tempo markup by space units."
-(apply tempos-ext (cons 'global args)))
+% (signatures 1 "3/4" 10 "3,2 5/8" 20 "4/4") =>
+% (rm-with 'global 1 #{ \time 3/4 } / 10  #{ \time 3,2 5/8 #} / 20 #{ \time 4/4 #})
+#(define (signatures pos sig-str . args)
+"Inserts time signatures in 'global.
+syntax: (signatures pos1 sig-str1 [/] pos2 sig-str2 [/] ...)
+A sig-str is all the argument(s) of a \\time command inserted between 2 quotation marks.
+A pos is the barnumber where to insert the time signature."
+(let ((args (fold-right
+        (lambda(arg prev)
+          (if (string? arg)
+            (cons (eval-string (string-append "#{ \\time " arg " #}")) prev)
+            (cons arg prev)))
+        '() (cons pos (cons sig-str (filter not-procedure? args))))))
+  (apply rm-with 'global args)))
+
+% (keys 1 "c major" 20 "c minor" 30 "g") =>
+% (rm-with 'global 1 #{ \key c \major } / 10  #{ \key c \minor #} / 20 #{ \key g \major #})
+#(define (keys pos key-mode-str . args)
+"syntax 1: (keys posA key-mode-strA [posB key-mode-strB [...]])
+syntax 2: (keys obj posA key-mode-strA [posB key-mode-strB [...]])
+Inserts key changes in obj (syntax 2) or in 'global (syntax 1), at the specified position pos.
+A key-mode-str is the same 2 arguments: key + mode of the \\key command, inserted between
+2 quotation marks. The default mode is \\major if mode is omitted. The backslash \\ before
+the mode can be omitted too: major instead of \\major. ."
+(define (callback arg prev) ; callback for fold-right. arg is a string or a pos
+  (if (string? arg)
+    (cons (eval-string
+            (let* ((key-modes (filter not-string-null? (string-split arg #\space)))
+                   (modes (cdr key-modes)))
+              (string-append
+                "#{ \\key " (car key-modes) " "
+                (if (null? modes)
+                  "\\major"
+                  (let ((mode (car modes))) (if (char=? (string-ref mode 0) #\\)
+                    mode (string-append "\\" mode))))
+                " #}")))
+          prev)
+    (cons arg prev))) ; arg is a pos
+(let ((args (cons pos (cons key-mode-str (filter not-procedure? args)))))
+   (if (pos? pos)
+     (apply rm-with 'global (fold-right callback '() args)) ; syntax 1
+     ; replace 'global by the 1st args (syntax 2). (length args) must be >= 3
+     (apply rm-with (car args) (fold-right callback '() (cdr args))))))
+
+#(define (marks pos . other-pos)
+"syntax: (marks [obj] pos1 pos2 ...)
+Inserts a \\mark \\default to each positions pos, in 'global or in obj if
+specified."
+(let* ((mark (make-music 'MarkEvent))         ; \mark \default
+       (args (if (pos? pos)
+         (cons 'global (cons mark (cons pos other-pos)))
+         (cons pos (cons mark other-pos)))))  ; pos = obj
+  (apply x-rm args)))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% working with patterns %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% rhythm patterns : see changePitch.ly
@@ -1644,12 +1729,14 @@ with a note."
 #(define (cp-with obj pos new-notes . others-pos-new-notes)
 (let loop ((pos pos)
            (new-notes new-notes)
-           (args (filter
-              (lambda(x)(or (not-procedure? x)(promise? x)))
-              others-pos-new-notes)))
-   (apply-to obj (set-pitch new-notes) pos 'end)
-   (if (>= (length args) 2)(loop (first args)(second args)(list-tail args 2)))))
-
+           (args (filter not-procedure? others-pos-new-notes))) ;; del slashes /
+  (let ((res (apply-to obj (set-pitch new-notes) pos 'end)))
+    (if (< (length args) 2)
+      res
+      (loop (first args)
+            (let((arg2 (second args)))
+              (if (promise? arg2) (force arg2) arg2))
+            (list-tail args 2))))))
 
 %% (tweak-notes-seq `(1 2 3 2 1 (3 . ,(set-transp -1 0 0)))
 %%                  #{ d f a c e g #})
@@ -1726,7 +1813,7 @@ or even a list of event."
 #(define (fill-with pat from-pos to-pos)
 "Repeats the pattern `pat, as much times needed to fill the range [from-pos 
 to-pos], cutting if necessary the last repeat to fit exactly the range."
-(if (list? pat)
+(if (cheap-list? pat)
   (map (lambda(m)(fill-with m from-pos to-pos)) pat)
   (let* ((len (ly:music-length pat))
          (delta (pos-sub to-pos from-pos))
@@ -1816,7 +1903,9 @@ addStaffSet = {
                             (em instru mes-n `(,mes-n ,(ly:music-length music)))))))
   (obj->instru-list obj)
   (obj->music-list musics)
-  (if (list? alignAboveContext) alignAboveContext (circular-list alignAboveContext))))
+  (if (cheap-list? alignAboveContext)
+    alignAboveContext
+    (circular-list alignAboveContext))))
 
 %%%%%%%%%%%%%%%%%%%%%%%%% compile only a section of score %%%%%%%%%%%%%%%%%%%%%%
 #(define (show-score from-pos to-pos)
@@ -1885,99 +1974,87 @@ letter is added to the left"
   measure-list))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% clean export of instruments %%%%%%%%%%%%%%%%%%%%%%%%%
-%% display-lily-music add a line break only when a bar-check is found.
-%% This function try to add a "|" for-each measure (em music i (1+ i)) but
-%% multi-measure rests must not be splitted. Idem for
-%% simultaneous Music. So the following function :
-#(define* (add-bar-checks music #:optional (music-begin-pos (moment->pos ZERO-MOMENT)))
-   (define (make-has-proc named-music-list named-music-sym)
-     (lambda(m) (and
-       (pair? named-music-list)
-       (pair? (extract-named-music m named-music-sym)))))
-(let*((music ((set-del-events 'BarCheck) music)) ;; del BarChecks to avoid double Barcheck
-       ; list of measure-rest
-      (MMRs (extract-named-music music 'MultiMeasureRestMusic))
-      ; SIMs (Simultaneous) : list of 3 elts vectors #(sim-music mom-start mom-end)
-      (SIMs (reverse
-        (let((mom (pos->moment music-begin-pos)))
-          (let loop ((m music)
-                     (res '()))
-            (let ((name (name-of m))
-                  (dur? (ly:music-property m 'duration #f)))
-              (cond
-                ((or dur? (eq? name 'EventChord))
-                   (set! mom (ly:moment-add mom (ly:music-length m)))
-                   res)
-                ((eq? name 'SimultaneousMusic)
-                   (let ((mom-start mom)
-                         (mom-end (ly:moment-add mom (ly:music-length m))))
-                     (set! mom mom-end)
-                     (cons (vector m mom-start mom-end) res)))
-                (else
-                   (fold
-                     loop
-                     (let ((elt (ly:music-property m 'element)))
-                        (if (null? elt) res
-                                        (loop elt res)))
-                     (ly:music-property m 'elements)))))))))
-      (has-MMR? (make-has-proc MMRs 'MultiMeasureRestMusic))
-      (has-SIM? (make-has-proc SIMs 'SimultaneousMusic))
-      (1st-i (pos:num music-begin-pos))
-      (partial (and (= 1st-i first-measure-number)
-                    (extract music ZERO-MOMENT (pos->moment first-measure-number)))))
-  ;   (for-each (lambda(v) (format #t "start-pos ~a : end-pos ~a\n" (vector-ref v 1)(vector-ref v 2))
-;                           (display-lily-music (vector-ref v 0)))
-;               SIMs)
+%% export-instruments function uses display-lily-music to export each instrument in a file.
+%% As display-lily-music adds a line break only when a bar-check is found, the add-bar-cheks
+%% function below, was designed to basically add a bar-chek "|" after each measure.
+%% However, some events that spread over several measures (like multi-measure rests) should not be
+%% splitted into several one. For a simultaneous music, only inner voices should be splitted.
+#(define* (add-bar-checks music #:optional (music-start-pos (moment->pos ZERO-MOMENT)))
+;; utilities
+   (define whole-event-names ; events that must not be splitted
+     '(NoteEvent EventChord RestEvent MultiMeasureRestMusic SkipEvent SkipMusic SimultaneousMusic))
+   (define (make-whole-event-list music i)
+      "Makes a list of all whole-event in music, in reverse order, creating if i is
+       an integer, a property 'index for each event."
+     (let ((set-index (if i (lambda(m)(set! i (1+ i))
+                                      (ly:music-set-property! m 'index i)
+                                      m) ; returns (not #f)
+                            (lambda(m) m)))) ; identity
+       (fold-some-music (lambda(m)(and (memq (name-of m) whole-event-names)
+                                       (set-index m)))
+                        cons '() music)))
+   (define (event->index m) (ly:music-property m 'index #f))
+   (define (index->event whole-event-list i)
+     (and i (any (lambda(m) (let ((index (event->index m)))
+                              (and index (= index i) m)))
+                 whole-event-list)))
+   (define (copy-dur from-whole-evt to-whole-evt) ; done to work also with chords
+     (define (dur-evt? m) (ly:music-property m 'duration #f))
+     (define (dur-evts-in evt) (fold-some-music dur-evt? cons '() evt))
+     (for-each (lambda(from to)(ly:music-set-property! to 'duration
+                                  (ly:music-property from 'duration)))
+               (dur-evts-in from-whole-evt)
+               (dur-evts-in to-whole-evt)))
+;; main
+(let* ((music ((set-del-events 'BarCheck) music)) ;; del previous BarChecks to avoid double Barcheck
+       (1st-i (pos:num music-start-pos)) ; bar number
+       (partial (and (= 1st-i first-measure-number)
+                     (extract music ZERO-MOMENT (pos->moment first-measure-number))))
+       (original-whole-events (reverse (make-whole-event-list music 0))))
   (let loop ((i 1st-i) ; the measure number
-             (res (if (and partial (defined-music? partial)) ; if partial...
-                    (list (seq partial (make-music 'BarCheck)))        ; ... add it.
+             (res (if (and partial (defined-music? partial))    ; if partial...
+                    (list (seq partial (make-music 'BarCheck))) ; ... add it.
                     '())))
-    (let ((m (em music i (1+ i) music-begin-pos)))  ;; extract 1 measure
+    (let ((m (em music i (1+ i) music-start-pos)))  ;; extract 1 measure
       (if (defined-music? m) ;; true while end not reached
-        (loop (cond ;; find next i
-                ((has-MMR? m) ; avoid for ex : R1*3 to be splitted in : R1 R1 R1
-                   (let* ((mmr (car MMRs))
-                          (end-mmr-pos (moment->pos
-                               (ly:moment-add (pos->moment i) (ly:music-length mmr))))
-                          (new-i (pos:num end-mmr-pos)))
-                     ; (format #t "~a ~a\n" i new-i)
-                     (set! m (em music i new-i music-begin-pos))
-                     (set! MMRs (cdr MMRs))
-                     new-i)) ;; measure number after mmr
-                ((has-SIM? m)
-                    (let* ((entry (car SIMs))
-                           (sim (vector-ref entry 0))
-                           (start-pos (moment->pos (vector-ref entry 1)))
-                           (end-pos (moment->pos (vector-ref entry 2)))
-                           (new-i (if (equal? (pos:remain end-pos) ZERO-MOMENT) ;; 1st beat ?
-                                    (pos:num end-pos)
-                                    (1+ (pos:num end-pos)))))
-                    ; (format #t "start : ~a - end : ~a\n" start-pos end-pos)
-                     (ly:music-set-property! sim 'elements (map
-                       (lambda(e)(add-bar-checks e start-pos))
-                       (ly:music-property sim 'elements)))
-                     (let ((es (filter defined-music?
-                                       (list (em music i start-pos music-begin-pos)
-                                             sim
-                                             (em music end-pos new-i music-begin-pos)))))
-                        (if (pair? es)
-                          (set! m (cond ((pair? (cdr es)) (apply seq es))
-                                        (else (car es))))))
-                     (set! SIMs (cdr SIMs))
-                     new-i)) ;; measure number after m
-                 ;; default next i
-                (else (1+ i)))
-              ;; res
-              (if (equal? (ly:music-length m) ZERO-MOMENT)
-                (cons m res)
-                (cons (seq m (make-music 'BarCheck))
-                      res)))
+        (let* ((l (make-whole-event-list m #f)) ; event of the current measure
+               (sim (any (lambda(m)(and (eq? (name-of m) 'SimultaneousMusic) m)) l)))
+          (if sim
+            (let* ((sim-start-mom (mom-sub (pos->moment (1+ i))(ly:music-length sim)))
+                   (sim-start-pos (moment->pos sim-start-mom))
+                   (index (event->index sim))
+                   (original-sim (index->event original-whole-events index)))
+              (ly:music-set-property! sim 'elements (map
+                    (lambda(voice)(if (equal? (ly:music-length voice) ZERO-MOMENT)
+                                    voice (add-bar-checks voice sim-start-pos)))
+                    (ly:music-property original-sim 'elements)))
+              ;(display-lily-music m)
+              (let* ((sim-end-mom (mom-add sim-start-mom (ly:music-length sim)))
+                     (sim-end-pos (moment->pos sim-end-mom))
+                     (new-i (if (equal? (pos:remain sim-end-pos) ZERO-MOMENT)
+                       (pos:num sim-end-pos)                       ; sim ends at a bar-start
+                       (let ((bar-pos (1+ (pos:num sim-end-pos)))) ; sim ends at the middle of the measure
+                         (set! m (seq m (em music sim-end-pos bar-pos music-start-pos))) ; adds the remaining music
+                         bar-pos))))
+                 (loop new-i (cons (seq m (make-music 'BarCheck)) res))))
+            (let* ((last-evt (car l)) ; get last whole-event in m (= first in l) : has it been cut ?
+                   (index (event->index last-evt))
+                   (original (index->event original-whole-events index)))
+              (if original (copy-dur original last-evt))
+              (let* ((m-end-mom (mom-add (pos->moment i) (ly:music-length m)))
+                     (m-end-pos (moment->pos m-end-mom))
+                     (new-i (if (equal? (pos:remain m-end-pos) ZERO-MOMENT) ; m ends at a bar-start ?
+                              (pos:num m-end-pos) (1+ (pos:num m-end-pos)))))
+                (if (> new-i i) (set! m (em music i new-i music-start-pos))) ; takes several measures
+                (loop new-i
+                      (if (equal? (ly:music-length m) ZERO-MOMENT)
+                        (cons m res)
+                        (cons (seq m (make-music 'BarCheck))
+                              res)))))))
         ;; not defined-music? => end of music reached
-        ;(display i)
         (cond ((null? res) (make-music 'Music))
               ((null? (cdr res)) (car res))
-              (else (apply seq (reverse res)))))))))
-%        (reduce-seq (make-sequential-music (reverse res))))))))
+              (else (seq (reverse res)))))))))
 
 
 #(define* (export-instruments instruments filename #:optional overwrite?)

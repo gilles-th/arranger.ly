@@ -1,4 +1,4 @@
-%% exemple1.ly
+%% set-transp-func-en.ly
 \version "2.20.0"
 
 \include "arranger.ly"

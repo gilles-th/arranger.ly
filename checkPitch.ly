@@ -1,6 +1,6 @@
 \version "2.20.0"
 %% LSR = http://lsr.di.unimi.it/LSR/Item?id=773
-%% version Y/M/D = 2020/10/19
+%% version Y/M/D = 2021/06/20
 %% Last modification :
 %%   - add same-pitch-as
 %%   - optimization of correct-out-of-range

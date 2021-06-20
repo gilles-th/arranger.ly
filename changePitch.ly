@@ -1,5 +1,5 @@
 \version "2.20.0"
-%% changePitch.ly version Y/M/D = 2021/04/21
+%% changePitch.ly version Y/M/D = 2021/06/20
 %% for lilypond 2.20 or higher
 %% LSR :
 %%   http://lsr.di.unimi.it/LSR/Item?id=654
@@ -7,6 +7,8 @@
 %%   http://gillesth.free.fr/Lilypond/changePitch/
 %% This directory contains also a doc called: changePitch-doc.pdf
 %% Last changes (the more recent to the top) :
+%%    - \relative in lilypond has changed internally. The lines in copy-dur+arti
+%%      that used to manage the relative mode are no longer required. They are deleted.
 %%    - combine copy-duration and copy-arti into 1 function: copy-dur+arti
 %%    - function check-for-ties has been redone.
 %%    - allows \displayLilyMusic to work, using reduce-seq in a music with a \tempo command
@@ -108,7 +110,7 @@
 #(define cPPatternEnd (gensym))
 
 #(define (make-notes-list music)
-"Make a list with each element as one of these types :
+"Make a list with each element has one of these types :
   1- a note, a chord, a rest
   2- an integer, indicating the number of notes to skip in pattern ( The user will
      indicate that, by a corresponding number of skips (s or \\skip) in `newnotes 
@@ -146,6 +148,7 @@
 %%%%%%%%%%%%  used inside change-pitch
 #(use-modules (ice-9 receive)) %% for the use of receive
 #(define (copy-dur+arti from to) ; from and to as EventChord or NoteEvent
+"Copy duration and articulation between 2 notes or chords"
 (let((es-from (ly:music-property from 'elements))
      (es-to (ly:music-property to 'elements)))
   (receive (notes-from artis-from)
@@ -154,42 +157,35 @@
       (partition noteEvent? es-from))                             ; an EventChord
     (let* ((durs-from (map (lambda(note)(ly:music-property note 'duration)) notes-from))
            (dur-from (fold    ; 2 notes in a chord can have different durations !
-                        (lambda(dur1 dur2)(if (ly:duration<? dur1 dur2) dur2 dur1))
-                        (car durs-from) ; initial and default value
-                        (cdr durs-from))))
+                       (lambda(dur1 dur2)(if (ly:duration<? dur1 dur2) dur2 dur1))
+                       (car durs-from) ; initial and default value
+                       (cdr durs-from))))
       (if (null? es-to)
         (begin                                       ; a NoteEvent
           (ly:music-set-property! to 'duration dur-from)
           (ly:music-set-property! to 'articulations
-            (append (ly:music-property to 'articulations) artis-from))
-          (ly:music-set-property! to 'to-relative-callback
-            (ly:music-property from 'to-relative-callback)))
+            (append (ly:music-property to 'articulations) artis-from)))
         (let((notes-to (filter noteEvent? es-to)))   ; an EventChord
           (for-each (lambda(evt)(ly:music-set-property! evt 'duration dur-from))
                     notes-to)
-          (ly:music-set-property! to 'elements (append es-to artis-from))
-          (ly:music-set-property! to 'to-relative-callback
-              ly:music-sequence::event-chord-relative-callback)
-          (if (null? es-from)
-            (ly:music-set-property! (car notes-to) 'to-relative-callback
-              (ly:music-property from 'to-relative-callback))))))
+          (ly:music-set-property! to 'elements (append es-to artis-from)))))
       (ly:music-set-property! to 'tags
-         (append (ly:music-property from 'tags)(ly:music-property to 'tags))))))
+        (append (ly:music-property from 'tags)(ly:music-property to 'tags))))))
 
-%% del-arti is called for all notes but the first of a \samePitch section.
+%% del-note-arti is called for all notes but the first of a \samePitch section.
 #(define (del-note-arti note-or-chord)
-(ly:music-set-property! note-or-chord 'articulations '())
 (ly:music-set-property! note-or-chord 'tags '())
-(ly:music-set-property! note-or-chord 'elements
-  (filter (lambda(x)
-              (and (ly:duration? (ly:music-property x 'duration))
-                   (ly:music-set-property! x 'articulations '())))
-          (ly:music-property note-or-chord 'elements))) ; can be empty
-(music-map  ;; del all caution accidentals
-  (lambda(x)(if (eq? (name-of x) 'NoteEvent) (begin
-               (ly:music-set-property! x 'force-accidental #f)
-               (ly:music-set-property! x 'cautionary #f)))
-             x)
+(map-some-music
+  (lambda(x)
+    (if (eq? (name-of x) 'EventChord)
+      (begin (ly:music-set-property! note-or-chord 'elements ; del all but notes
+               (filter (lambda(y)(eq? (name-of y) 'NoteEvent))
+                       (ly:music-property note-or-chord 'elements)))
+             #f)  ; don't stop recursing
+      (begin (ly:music-set-property! x 'articulations '())   ; x is a note
+             (ly:music-set-property! x 'force-accidental #f)
+             (ly:music-set-property! x 'cautionary #f)
+             x))) ; stop recursing
   note-or-chord))
 
 #(define ((set-tags-prop-if-not tag-stop) evt tag-to-add . tags-to-del)

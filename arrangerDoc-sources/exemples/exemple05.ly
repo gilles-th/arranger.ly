@@ -1,5 +1,5 @@
-%% example 3
-\version "2.19.83"
+%% example 5
+\version "2.20.0"
 
 \include "arranger.ly"
 

@@ -1,5 +1,5 @@
 \version "2.20.0"
-%% version Y/M/D = 2020/10/19 for lilypond 2.20.0 or higher
+%% version Y/M/D = 2021/06/20 for lilypond 2.20.0 or higher
 %% LSR = http://lsr.di.unimi.it/LSR/Item?id=769
 %% last changes :
 %%   - tuplets have now a duration . fix line 92-93 and 179
@@ -191,9 +191,10 @@ braketifyChords = #(define-music-function (music) (ly:music?)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                       %% shortcuts %%
-
-artiI = c-.              % default values for artiI and artiII, if the user does
-artiII = {c( c) c-. c-.} % not define them, before using \cAI and \cAII
+note = #(make-music 'NoteEvent 'duration (ly:make-duration 2) ; independant language note
+                               'pitch (ly:make-pitch 0 0))
+artiI = { \note-. }   % default values for artiI and artiII, if the user does not define
+artiII = { \note( \note) \note-. \note-. }  % them, before using \cAI and \cAII
 
 cAI = #(define-music-function (music) (ly:music?)
 #{ \copyArticulations \artiI $music #})

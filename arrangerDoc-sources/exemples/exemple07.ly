@@ -1,3 +1,6 @@
+%% exemple07.ly
+\version "2.20.0"
+
 \include "arranger.ly"
 
 \paper  {

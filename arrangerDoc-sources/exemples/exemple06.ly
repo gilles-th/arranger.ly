@@ -1,3 +1,6 @@
+%% exemple06.ly
+\version "2.20.0"
+
 \include "arranger.ly"
 
 #(ly:set-option 'crop #t)
