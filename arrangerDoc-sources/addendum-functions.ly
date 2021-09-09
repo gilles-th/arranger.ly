@@ -36,15 +36,15 @@
    (sim
      (make-clef-set clef)
      global
-     (part-combine                ; \partCombine
-       (sim                       ; instru1 : upper voice
+     (part-combine           ; \partCombine
+       (sim                  ; instru1 : upper voice
          ;partCombineApart        ; for working
          partCombineAutomatic     ; default
          dynamicUp                ; dynamics above Staff
-         (add-dyn (list 'xor instru1 instru2)) ; instru1 dyn if not instru2 dyn
-         (obj->music instru1))   ; instru1 music
-       (obj->music instru2)) ; instru2 music : lower voice
-     (add-dyn instru2)))     % instru2 dynamics
+         (add-dyn (list 'xor instru1 instru2)) ; dyn only if no instru2 dyn
+         (obj->music instru1))    ; instru1 music
+       (obj->music instru2)) ; instru2 : lower voice music
+     (add-dyn instru2)))          % instru2 dynamics
 
 %%%%%%%%%%%%%%%%%%%
 % For dynamics

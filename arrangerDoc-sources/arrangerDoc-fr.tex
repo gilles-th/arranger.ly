@@ -2409,7 +2409,12 @@ Dans l'exemple suivant, le texte sera aligné à gauche dans le conducteur et à
 Préalable : avoir défini \type{assocDynList} (dans le fichier {\em dynamics.ily})\\
 \type{instru->music} utilise une fonction d'{\em arranger.ly} : \type{obj->music}, qui renvoie la musique associée à un instrument \footnote{\type{(obj->music 'clar)} renvoie \type{clar}}, et la fonction \type{make-clef-set}, définie dans le répertoire {\em Lilypond}, fichier \type{scm/parser-clef.scm} et qui est l'équivalent scheme de \type{\clef}.
 \startmylily
-dynamics
+#(define* (instru->music instru #:optional (clef "treble"))
+(sim                   ; << ... >> (simultaneous)
+  (make-clef-set clef) ; = \clef
+  global
+  (obj->music instru)  ; music of instru
+  (add-dyn instru)))   % dynamics of instru
 \stopmylily
 Les parties séparées en clef de sol, pourront être éditées simplement avec :
 \startmylily \new Staff { $(instru->music 'vlI) } \stopmylily
