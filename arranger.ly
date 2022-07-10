@@ -1,6 +1,6 @@
 \version "2.20.0"
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2021/06/20 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%% For Lilypond 2.20 or higher %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/07/11 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%% tested with Lilypond 2.22  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The main objective of arranger.ly is to provide a set of functions to make
 % arrangements of pieces originally intended for another band :
 % for ex a symphonic piece arranged for a concert band (wood-winds and percussions only).
@@ -17,6 +17,10 @@
 % multi-measure rests (same length than \global). (Even a starting rest is added if a
 % \partial is found in \global). Then the insertion of musics can begin.
 % last changes (Most recent at the top):
+%   add-dynamics supports also now \afterGrace section
+%   syntax extension for x-pos function
+%   voice function allows more parameters (voice n [m ..] music)
+%   extended features for voices count > 2 in functions split, chords->voices, voices->chords
 %   export-instruments has been redone : do not split MultiMeasureRest and SimultaneousMusic
 %   new functions : mmr, seq-r, signatures, keys, marks
 %   add-dynamics can add dynamics in a \grace section, using the colon ":" character
@@ -92,7 +96,6 @@
 %% Is initialized by ... init (see later)
 #(define first-measure-number #f)
 
-
 %%%% conversion position <-> moment utilities %%%%%%
 
 % extractMusic.ly defines a moment->int function. We need here a int->moment
@@ -105,11 +108,12 @@ with i as the integer part of n (4 for 4.3), and count the decimal part (3).
 (count defaults to 1 if decimal part = 0 (4. for ex))
 If n is a rationnal, returns <moment n>
 Any moment remains unchanged"
-(cond    ; Note: (integer? 4.) => #t !
+(cond
+    ((= n 0) ZERO-MOMENT)
+    ; Note: (integer? 4.) => #t !
     ((integer? n)(if (exact? n) ; 4 or 4. form ?
        (ly:make-moment 1 n 0 0) ; zeros needed ! (if n <= 0)
        (ly:make-moment 3 (* 2 (inexact->exact n)) 0 0))) ; 4. => <mom 3/8>
-       ; if n = 0, (ly:make-moment 1 0 0 0) => ZERO-MOMENT
     ((ly:moment? n) n) ; can be usefull with scaled musics
     ((rational? n) (if (exact? n) ; 7/8 or 4.3 form ?
        (ly:make-moment n) ; form: 7/8
@@ -118,7 +122,7 @@ Any moment remains unchanged"
               (r (modulo 10n 10))   ; => 3 (number of points = rest of division)
               (mom (ly:duration-length (ly:make-duration (ly:intlog2 q) r))))
          (if (> n 0) mom (mom-sub ZERO-MOMENT mom)))))
-    (else ZERO-MOMENT)))
+    (else ZERO-MOMENT))) % ignores any error
 
 %% The main code in pos->moment is provided by measure-number->moment, which is
 %% defined in "extractMusic.ly". idem for mom-add which allows args count > 2
@@ -174,7 +178,7 @@ Any moment remains unchanged"
 
 #(define (pos-sub pos2 pos1)
 "Returns the length between pos1 and pos2"
-   (ly:moment-sub (pos->moment pos2) (pos->moment pos1)))
+(ly:moment-sub (pos->moment pos2) (pos->moment pos1)))
 
 #(define (pos->string pos) ; used by str->pos-dyn-list
 (cond ((number? pos)(number->string pos))
@@ -287,8 +291,7 @@ than the smaller length list. Lists are proper list (predicate proper-list?)"
        (if (pair? zip-elt)
          (loop (reverse next-i-list)(cons (reverse zip-elt) res))
          (reverse res))))))
-
-%% x-pos
+%{ OLD VERSION of x-pos
 %% Making a list of pos from a pattern. To use for ex with x-rm like this :
 %% music = { e'2 f' | g' f' | e'1 }
 %% (apply x-rm 'music #{ c'8 c' c' #} (x-pos 1 3 '((n 8)(n 2 8)))) ;; use apply
@@ -316,14 +319,66 @@ By default, pos-pat is '(n), step is 1"
  (x-pos 10 13 '(n (n 4)) 2)  ;; => (10 (10 4) 12 (12 4))
  (x-pos 10 14 '(n (n 4)) 2)  ;; => (10 (10 4) 12 (12 4))
  ))  %}
+%}
+
+%{ x-pos
+syntax 1 :
+(x-pos from-measure to-measure [pos-pat [step]])
+Makes a list of 'by-measure-positions' from the pattern : pos-pat.
+pos-pat is a quoted list of positions with a letter, typically n, instead of the
+measure number. The pattern is expanded replacing n (the letter) by from-measure
+and increasing repeatedly this value by step, while lesser to to-measure.
+By default, pos-pat is '(n), step is 1"
+
+syntax 2 :
+((x-pos [pos-pat [step]]) from-measure1 to-measure1 [from-measure2 to-measure2 ...])
+x-pos is applied repeatedly with the same pos-pat and step to all couple of from/to measures.
+The result lists of each iteration are concatained together.
+%}
+
+#(define (x-pos param . args)
+   (define* (basic-x-pos from-measure to-measure #:optional pos-pat (step 1))
+     ; syntax 1
+     (if (eq? from-measure 'begin) (set! from-measure first-measure-number))
+     (if (eq? to-measure 'end) (set! to-measure (pos:num (moment->pos (ly:music-length global)))))
+     (fold-right
+       (if pos-pat
+         (lambda(n prev)(fold-right cons prev (let loop ((x pos-pat))
+               (cond ((symbol? x) n)
+                     ((pair? x)(map loop x))
+                     (else x)))))
+         cons)
+       '()
+       (iota           ;; iota param count ↴
+         (let ((d (- to-measure from-measure)))
+           (if (= step 1) d
+                          (quotient (+ d (remainder d step))
+                                    step)))
+         from-measure  ;; iota param start
+         step)))       ;; iota param step
+   (define ((ext-x-pos . args) . bar-numbers)
+     ; syntax 2
+     (let ((l (filter not-procedure? bar-numbers)))
+       (let loop ((l l)
+                  (i (length l))
+                  (res '()))
+         (if (< i 2)
+          (reverse res)
+          (let ((pos-list (apply basic-x-pos (first l) (second l) args)))
+            (loop (cddr l)
+                  (- i 2)
+                  (fold cons res pos-list)))))))
+(apply (if (pair? param) ext-x-pos basic-x-pos)
+       param ; = pos-pat (a list) syntax 2, or = from-measure syntax 1
+       args))
 
 %% Guile 2.0 propose a compose function, not 1.8 :-(
-#(define ((compose func-n . func-i) obj)
-"((compose func3 func2 func1) obj) will result to
-(func3 (func2 (func1 obj)))"
-(if (null? func-i)
+#(define ((compose func-n . other-funcs) obj)
+"((compose func-n ... func-2 func-1) obj) will result to 
+  (func-n ... (func-2 (func-1 obj)))"
+(if (null? other-funcs)
   (func-n obj)
-  (func-n ((apply compose (car func-i)(cdr func-i)) obj))))
+  (func-n ((apply compose (car other-funcs)(cdr other-funcs)) obj))))
 
 %%%% skip utilities %%%%
 #(define* (moment->skip mom-or-rationnal #:optional text dir X-align Y-offset)
@@ -368,7 +423,7 @@ are the length of each \\alternative section"
 %%  first [ Note that symb-list can be empty : '() ]
 #(define* (init symb-list #:optional mes1num)
 "Declares and initializes with multiRests all instruments (symbols) of the given list 
-and optionnaly set the number of first measure."
+and optionally set the number of first measure."
 (let*((spaces "\n  ")
       (errormsg (lambda(str)
         (format #t "**** function init error :~a~a\n******\n" spaces str))))
@@ -588,7 +643,7 @@ obj-start-pos is the measure of the score corresponding to the beginning of obj.
                    #f obj-start-pos))
 
 #(define* (x-apply-to obj func from-pos to-pos #:key obj-start-pos . other-from-to-pos)
-"syntaxe : (x-apply-to obj func from1 to1 / from2 to2 / etc ...
+"syntax : (x-apply-to obj func from1 to1 / from2 to2 / etc ...
 Shortcut for : (apply-to obj func from1 to1)(apply-to obj func from2 to2) etc ..."
 (let ((music? (music-obj? obj)))
   (let loop ((res (apply-to obj func from-pos to-pos obj-start-pos))
@@ -610,9 +665,9 @@ Shortcut for : (apply-to obj func from1 to1)(apply-to obj func from2 to2) etc ..
 => all c' will be transformed in d' between measures 10 and 15
 %}
 #(define (to-set-func func)
-   (lambda(music) (music-map (lambda(m) (func m)
-                                        m)
-                             (ly:music-deep-copy music))))
+   (lambda(music)
+     (music-map (lambda(m)(func m) m)
+                (ly:music-deep-copy music))))
 
 #(define (xchg-music obj1 obj2 from-pos to-pos . other-from-to-pos)
 "Exchange the music of the range [from-pos to-pos[ between obj1 and obj2"
@@ -705,11 +760,32 @@ transposed by n octaves."
 "Equivalent to << music1 music2 music3 ...>>"
 (make-simultaneous-music (map obj->music (flat-lst args))))
 
-#(define (split music1 music2)
-"Equivalent to << music1 \\ music2 >> "
-(sim music1
-     (make-music (quote VoiceSeparator))
-     music2))
+#(define (split arg music1 . musics)
+"Syntax : (split ['(id1 id2 id3...)] music1 music2 music3...)
+Equivalent to : \\voices id1,id2,id3 ... << music1 \\\\ music2 \\\\ music3 ... >> 
+The list of the ids of each voice is optional. The default list is based on the
+model '(1 3 5 ... 6 4 2)"
+   (define (odd-even-iota n)
+     "(makes a list '(1 3 5 ... 6 4 2)"
+     (receive (evens odds)
+       (partition even? (iota n 1))
+       (lst odds (reverse evens))))
+(if (null? musics) ; arg must be a music.
+  (sim arg (make-music 'VoiceSeparator) music1) ; don't use voicify-music
+  (let ((ids (or (and (number-list? arg) arg)   ; needed by voicify-music
+                 (and (number? arg) (odd-even-iota arg))))
+        (musics (cons music1 musics)))
+    (if (not ids) ; no ids specified
+      (begin      ; arg must be a music.
+        (set! musics (cons arg musics))
+        (set! ids (odd-even-iota (length musics)))))
+    (let* ((musics-rev (reverse musics))
+           (vocify-args (fold
+             (lambda(m prev)
+               (cons m (cons (make-music 'VoiceSeparator) prev)))
+             (list (car musics-rev))
+             (cdr musics-rev))))
+      (voicify-music (sim vocify-args) ids)))))
 
 #(define (mmr arg0 . args)
 "Returns a multiMeasasureRest. Takes 1 rational or 2 bar numbers:
@@ -750,7 +826,6 @@ Any music argument is added unaltered into the sequence"
       ((pair? sym1)(map (sym-append sym2 to-begin?) sym1))
       (else (ly:error "Arguments for sym-append must be symbols\n"))))
 
-
 #(define* (def! sym #:optional music)
 "Equivalent to a declaration at the top-level. sym is a symbol or a list of
 symbols and the value associated for each of them, is either music, if specified,
@@ -767,18 +842,21 @@ either by default, a skip of the length of global."
                  (append music (circular-list (last music))))
              (else (circular-list music)))))
 
-#(define (x-em obj pos1 pos2 . args)
+#(define (x-em obj . from-to-pos)
 "(x-em pos1 pos2 / pos3 pos4 / ...) make the list :
  (list (em obj pos1 pos2) (em obj pos3 pos4) ...)"
-(let ((args (cons pos2 (filter not-procedure? args))))
-  (fold-right
-    (lambda(pos-x1 pos-x2 prev) (cons (em obj pos-x1 pos-x2) prev))
-    '() (cons pos1 args) args)))
+(let ((args (filter not-procedure? from-to-pos)))
+  (let loop ((l args)
+             (i (length args))
+             (res '()))
+    (if (< i 2)
+      (reverse res)
+      (loop (cddr l)
+            (- i 2)
+            (cons (em obj (first l) (second l)) res))))))
 
 #(define (cut-end obj new-end-pos . args)  ;; args = start-pos (see em)
    (def! obj (apply em obj (moment->pos ZERO-MOMENT) new-end-pos args)))
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% transposition %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % examples of use set-transp
@@ -801,7 +879,8 @@ Apply ly:pitch-transpose to each pitch of `obj. The delta-pitch is:
 either the pitch o octaves, notename n, a/2 alterations (syntax 1),
 either p (syntax 2), or either the pitch returned by the callback 
 function func (syntax 3).
-`obj can be a symbol, a list of symbols, a music or a list of musics.
+`obj can be an instrument (a symbol), a list of instruments, a music or a
+list of musics.
 If `obj is a list, or if other arguments are given in obj-arg, the function
 returns a flat list of transposed music."
 (define delta #f)
@@ -839,7 +918,7 @@ returns a flat list of transposed music."
 #(define ((set-octave n) obj)
    (octave n obj))
 
-#(define octave (int-music-generic octave))
+#(define octave (int-music-generic octave)) % syntax extension
 
 #(define (octavize n obj from-pos to-pos . pos-args)
 "Transpose the section [from-pos to-pos] by n octaves.
@@ -848,12 +927,32 @@ You can specify several sections by the following way :
 (apply x-apply-to obj (set-transp n 0 0) from-pos to-pos pos-args))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% voices %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#(define (voice n music)
-"Extract the n-th Voice in a multiple Voices music"
-(extract-voice (ly:music-deep-copy music) n #f))
+%#(define (voice n music)
+%"Extract the n-th Voice in a multiple Voices music"
+%(extract-voice (ly:music-deep-copy music) n #f))
 
-#(define ((set-voice n) music)
-   (voice n music))
+#(define (voice n . args)
+"Syntax : (voice n [m p ...] music)
+Extracts the n-th voice in a multiple voices music.
+If other numbers m, p ... are given, returns a list of all matching voices.
+If a number is greater than the number of voices, the last voice is returned."
+(let* ((args (reverse (cons n args)))
+       (music (car args))
+       (n-list (cdr args)))  ; in reversed order
+  (if (and (ly:music? music)
+           (pair? n-list))
+    (let ((res (fold (lambda(n prev) (cons
+                       (extract-voice (ly:music-deep-copy music) n #f)
+                       prev))
+                     '()
+                     n-list)))
+      (if (and (pair? res)(null? (cdr res)))
+        (car res)
+        res))
+    (ly:error "Bad syntax for procedure voice.\n\t (voice n [m p ...] music)"))))
+
+#(define ((set-voice n . args) music)
+   (apply voice n (lst args music)))
 
 #(define (replace-voice n music repla)
 (map-some-music
@@ -880,14 +979,14 @@ You can specify several sections by the following way :
 %% a generic function for adding voices
 #(define* ((add-voice nthvoice combine-func) obj where-pos voice
                     #:optional voice-start-pos to-pos obj-start-pos)
-"Combine `voice with `obj at `where-pos.
-`obj is a symbol of an instrument or a list of symbols.
-`voice is a music or a list of musics.
-Use `voice-start-pos, if `voice begins before `where-pos.
-Use `to-pos if you want to stop before the end of `voice.
-Use `obj-start-pos if 'obj doesn't begin at the beginning of the whole music.
-`combine-func is a function with 2 music parameters (like `split or `chords) :
-  if 'nthvoice is 1, param1 = voice, param2 = obj
+"Combine voice with obj at where-pos.
+obj is a symbol of an instrument or a list of symbols.
+voice is a music or a list of musics.
+Use voice-start-pos, if voice begins before where-pos.
+Use to-pos if you want to stop before the end of voice.
+Use obj-start-pos if obj doesn't begin at the beginning of the whole music.
+combine-func is a function with 2 music parameters (like split or sim) :
+  if nthvoice is 1, param1 = voice, param2 = obj
   otherwise param1 = obj, param2 = voice "
 (let*((end-pos (or to-pos 'end)) ;
       (voices (if (cheap-list? voice) voice (list voice)))
@@ -945,7 +1044,6 @@ Use `obj-start-pos if 'obj doesn't begin at the beginning of the whole music.
 
 #(define combine2 (add-voice 2 part-combine))
 
-
 %%%  add-voice-octave %%%  (see also add-note-octave)
 #(define (add-voice-octave n sym from-pos to-pos . args)
 "Double by n octave,the music in instrument sym, in the range [from-pos to-pos].
@@ -961,8 +1059,8 @@ A serie of ranges can be specified like in this example :
 %#(define add-octave add-voice-octave) % for compatibility with my old works
 
 #(define (dispatch-voices instruments where-pos music-with-voices . args)
-"At measure `where-pos, assign to the first element of `instruments the first
-voice of `music-with-voices, the second one to the second voice, and so on."
+"At measure where-pos, assign to the first element of instruments the first
+voice of music-with-voices, the second one to the second voice, and so on."
 (let ((i 1))
   (for-each
     (lambda (x)
@@ -977,12 +1075,12 @@ voice of `music-with-voices, the second one to the second voice, and so on."
 #(define (note . args)
 "Syntax : (note n [m p ...] music)
 Extracts the n-th note of each chords in music, keeping articulations.
-If other numbers are given, m, p ..., returns chords with all matching notes
+If other numbers m, p ... are given, returns chords with all matching notes
 If no note matches, returns the last note of the chord."
 (let ((music (and (pair? args)(pair? (cdr args))
                   (obj->music (last args)))))
   (if (and music (ly:music? music))   ;; see chordsAndVoices.ly for extract-note
-    (apply extract-note (ly:music-deep-copy music) args);(args is filtered)
+    (apply extract-note (ly:music-deep-copy music) args) ; (args is filtered)
     (ly:error "Bad syntax for procedure note.\n\t (note n [m p ...] music)"))))
 
 #(define ((set-note . args) music)
@@ -1004,8 +1102,8 @@ note of music2..., then repeat the process with each following notes of each mus
 #(define (notes+ musics . args)
 (let ((all-args (flat-lst musics args)))
   (if (null? all-args)
-   (ly:error "notes+ needs a least one music argument, or a list of musics")
-   ((apply set-notes+ (cdr all-args)) (car all-args)))))
+    (ly:error "notes+ needs a least one music argument, or a list of musics")
+    ((apply set-notes+ (cdr all-args)) (car all-args)))))
 
 #(define (add-notes obj where-pos music . args) ; args = music1 music2 ...
 "(add-notes obj where-pos music [music1 music2 ..[obj-start-pos]])
@@ -1022,25 +1120,76 @@ obj-start-pos can be set in last arguments of args"
     (apply-to obj (apply set-notes+ musics) ;; func
                   where-pos 'end (and (pos? obj-start-pos) obj-start-pos)))))
 
-% voices->chords behaves as \partCombine with \partcombineChords option
+% voices->chords behaves as \partCombine with \partCombineChords option
 % To use with apply-to
-#(define (voices->chords music)
-"Transformes 2 simultaneous voices { a b } { c d } in { <a c> <b d> }"
-((set-notes+ (voice 2 music))(voice 1 music)))
+%#(define (voices->chords music)
+%"Transformes 2 simultaneous voices { a b } { c d } in { <a c> <b d> }"
+%((set-notes+ (voice 2 music))(voice 1 music)))
 
-#(define (chords->voices music)
-"Split 2 notes chords in 2 voices.
-    <a c> <b d> < c e> becomes << { a b c} \\\\ { c d e } >> "
-(split (note 2 music)(note 1 music)))
+#(define (voices->chords arg . args)
+"Syntax : (voices->chords [n] music)
+Replaces all simultaneous musics of music by a sequential musics with n notes chords. 
+If omitted, n defaults to 2.
+The first note of a chord matchs to the last voice but notes order
+in chords can be customized by setting n as a list of numbers.
+ex : music = << { e' g' } { c' d' } { a b } >>
+(voices->chords 3 music) and (voices->chords '(3 2 1) music) result both in
+{ <a c' e'> <b d' g'> } but (voices->chords '(2 1 3) music) results to 
+{ <c' e' a> <d' g' b> }"
+;; set-notes+ used in the loop below are building chords in reverse order !
+;; so the list of integers n-list must be reversed.
+(let* ((nlist+music (if (ly:music? arg)
+         (cons '(1 2) arg) ; ie '(2 1)
+         (let ((music (and (pair? args) (car args))))
+           (if (not (ly:music? music))
+             (ly:error "The second argument of voices->chords must be a music"))
+           (cons (cond
+                   ((integer? arg) (if (> arg 2) (iota arg 1) '(1 2)))
+                   ((and (cheap-list? arg)(pair? (cdr arg))
+                         (every (lambda(n)(and (integer? n)(> n 0))) arg))
+                      (reverse arg))
+                   (else (ly:error
+ "The first argument of voices->chords must be an integer, or a list of intergers")))
+                 music))))
+       (nlist (car nlist+music))
+       (music (cdr nlist+music)))
+  ;(display-scheme-music (voice (car nlist) music))
+  (let loop ((res (voice (car nlist) music))
+             (nlist (cdr nlist)))
+    (if (null? nlist)
+      res
+      (loop ((set-notes+ (voice (car nlist) music)) res)
+            (cdr nlist))))))
 
 #(define (chords->nmusics n music)
-"{<a c e> <b d g> <c e g c>} and n=3 will give the list ({e g g}{c d e}{a b c})"
+"{<a c' e'> <b d' g'> <c' e' g' c'>} and n=3 results in the list 
+{e' g' g'} {c' d' e'} {a b c'}"
 (if (> n 0)
-  (map (lambda(i)(note (1+ i) music))
-       (reverse (iota n)))
+  (map (lambda(i)(note i music))
+       (iota n n -1)) ; '(5 4 3 2 1) for n = 5
   music))
 #(define ((set-chords->nmusics n) music)
-   (chords->nmusics n music))
+ (chords->nmusics n music))
+
+%#(define (chords->voices music)
+%"Split 2 notes chords in 2 voices.
+%    <a c> <b d> < c e> becomes << { a b c} \\\\ { c d e } >> "
+%(split (note 2 music)(note 1 music)))
+
+% chords->voices uses the functions chords->nmusics and the function split
+#(define (chords->voices arg . args)
+"Syntax : (chords->voices [n] music)
+Equivalent to : 
+  (split (note n music) (note (- n 1) music) ... (note 1 music))
+n = 2 by default.
+n is converted by the function split in a list of ids for each voices,
+but a list of numbers can be set directly."
+(cond
+  ((ly:music? arg) (apply split (chords->nmusics 2 arg)))
+  ((number? arg) (apply split (apply chords->nmusics arg args)))
+  ((number-list? arg) (apply split arg
+                                  (apply chords->nmusics (length arg) args)))
+  (else (ly:error "syntax error :\n\t(chords->voices [n] music) or (chords->voices '(1 3 ... 4 2) music)"))))
 
 #(define (octave+ n music)
 (cond ((= n 0) music)
@@ -1157,6 +1306,7 @@ Two specials caracters : the sharp # character for tweaking dynamic positions an
 to insert the dynamics into a \\grace {} section."
   (define (split-by-space str) (filter not-string-null? (string-split str #\space)))
   (define (split-by-slash str) (map string-trim-both (string-split str #\/)))
+  (define (str->pos->pos-str s) (pos->string (eval-string s)))
   (define (pos-str->mom str) (eval-string (string-append "(pos->moment " str ")")))
   (define (sharp->tweaks str) ; checks for # characters and transforms it into dynamic tweaks
     (fold
@@ -1186,23 +1336,51 @@ to insert the dynamics into a \\grace {} section."
           ;(format #t "~a => ~a\n" s final-str)
           (string-append prev-s " " final-str)))
       "" (split-by-space str))) ; (split-by space " mf  cresc ") => '("mf" "cresc")
-  (define (colon->music-str str) ; checks for : character and transforms it into "\grace { skip }"
-    (let ((len (string-length str))) ; str must be formated = a space must only be between 2 words
+  (define (colon->music-str str) ; checks for : char and transforms it into "\grace { skip }"
+    (define after-grace-frac (scale->factor (ly:parser-lookup 'afterGraceFraction)))
+    (let ((len (string-length str)) ; str must be formated : only 1 space between 2 words
+          (after-grace #f)) ; actived by "::" ex "p::4 :8 f:16" => \afterGrace s4\p { s8 s16\f }
       (let loop ((grace "")
-                 (pos 0))            ; position of the beginning of the section to parse
-        (let ((i (and (< pos len) (string-index str #\: pos)))) ; index of : character
-          (if i                                       ; for str = "\mf:16 :16*2" => i=3 then 7
-            (let* ((j (or (string-index str #\space i) len))                   ; => j=6 then 12
-                   (skip (string-append "s" (substring str (1+ i) j)  ; s16 then s16*2
-                                            (substring str pos i))))  ; \mf then ""
-              ; (format #t "\nstr = ~s\nskip = ~s\ni = ~a | j = ~a | pos = ~a\n" str skip i j pos)
-              (if (= pos 0)
-                (loop (string-append "\\grace { " skip " }")
-                      (1+ j))                                         ; pos=7 then 13
-                (loop (string-append (substring grace 0 (1- (string-length grace))) skip " }")
-                      (1+ j))))
-            (if (> pos 0)   ; if a colon was found
-              (string-append grace " <>" (if (< pos len) (substring str pos len) ""))
+                 (pos 0))   ; position of the section to parse
+        (let ((i (and (< pos len) (string-index str #\: pos))))               ; index of : char
+          (if i                                        ; for str = "\mf:16 :16*2" => i=3 then 7
+            (let* ((k (or (string-index str #\space i) len))                  ;  => k=6 then 12
+                   (j (1+ i))
+                   (2cols? (string= str ":" j (1+ j))) ; "::" ? (Returns #f or index after "::")
+                   (dur (substring str (if 2cols? 2cols? j) k)) ; string after ":" or "::"
+                   (dyn (substring str pos i))                  ; string before 1st : char
+                   (skip (string-append "s" dur                 ; s16 then s16*2
+                                            dyn)))              ; \mf then ""
+              ; (format #t "\nstr = ~a\ni = ~a\nj = ~a\nk = ~a\n2cols? = ~a\n" str i j k 2cols?)
+              (cond
+                (2cols? (let* ((splitted-dur (string-split dur #\:))
+                               (dur (car splitted-dur))
+                               (fracs (cdr splitted-dur))
+                               (frac (if (null? fracs)
+                                 after-grace-frac
+                                 (string->number (string-append
+                                   (car fracs) "/"
+                                   (if (null? (cdr fracs)) "1" (cadr fracs))))))
+                               (scale-dur "\\scaleDurations "))
+                          (set! after-grace (cons ; before and after the grace section
+                            (string-append scale-dur (number->string frac)
+                                                     " s" dur dyn
+                                           " { ")
+                            (string-append " } "
+                                           scale-dur (number->string (- 1 frac))
+                                                     " s" dur))))
+                        (loop grace (1+ k)))
+                ((string-null? grace) (loop (string-append "\\grace { " skip " }")
+                                            (1+ k))) ; ; pos=7 then 13
+                (else (loop (string-append
+                              (substring grace 0 (1- (string-length grace)))
+                              skip " }")
+                            (1+ k)))))
+            (if (> pos 0)   ; if a least 1 : char has been found
+              (string-append
+                (if after-grace (car after-grace) "")
+                grace " <>" (if (< pos len) (substring str pos len) "")
+                (if after-grace (cdr after-grace) ""))
               (string-append "<>" str)))))))
 (reverse                   ;;;;;;;;;;;;;;;;;;;;;
   (fold
@@ -1215,19 +1393,15 @@ to insert the dynamics into a \\grace {} section."
             (pos-start (or (and last-par-i (string-index str #\()) ;; 1st open parenthesis (skipping ' char if any)
                            0))
             (pos (let ((s (substring str pos-start pos-end))) ; a string representing a position
-               (cond ((not last-par-i)                        ; pas de parenthèses ( ... ) ?
-                        (if (string-any char-set:letter s)    ; is s containing a least a letter ?
-                          (pos->string (eval-string s))       ; must be a user-defined pos: A for example
-                          s))        ; only digit or perhaps +- , hoping no extra unexpected characters...
-;                          (number->string (eval-string s))) ;; ← allows (+ 57 29) or (+ A 29) => 86 (if A = 57)
-                      (else   ;; it will allow (A 2 8) => '(57 2 8), or ((+ A 29) 2 8) => '(86 2 8)
+               (cond ((not last-par-i)          ; if no parenthesis ( ... )
+                        (str->pos->pos-str s))  ; allows a user defined variable: ex A = #57
+                      (else   ;; it will allow (A 2 8) => '(57 2 8) or ((+ A 29) 2 8) => '(86 2 8)
                         (let ((s-splitted (string-split (substring s 1) #\space)))
-                          ;(display (car s-splitted))
                           (if (let ((1st-word (car s-splitted)))                ; 1st word in s
-                                (and (not (char=? (string-ref 1st-word 0) #\()) ; first char = "(" => it a sub list or func
+                                (and (not (char=? (string-ref 1st-word 0) #\()) ; first char = "(" => it a sub list or a func
                                      (procedure? (eval-string 1st-word))))      ; is it a func ? (must return a pos !)
-                            (pos->string (eval-string s))                       ; apply func. Convert the resulting pos to string
-                            (pos->string (eval-string (string-append "(list " (substring s 1))))))))))) ; force evaluation
+                            (str->pos->pos-str s) ; apply func and convert resulting pos to string. ex (cons A '(2 8.))
+                            (str->pos->pos-str (string-append "(list " (substring s 1)))))))))) ; force evaluation
         ; (format #t "\n~a - ~a" str pos)   ; ← uncomment for debugging
         (if (= pos-end len)                           ; ← if no dyn specified :
           (let ((mom (pos-str->mom pos)))             ; that means that user want
@@ -1259,6 +1433,7 @@ to insert the dynamics into a \\grace {} section."
 % - the : character, followed by a duration expression
 %  "3 <:16 :16*2 f" => \grace { s16\< s16*2 } <>\f  (measure 3)
 %  to put after a dyn or a space (no dyn), and before a tweak section # with no spaces
+%   a :: seq results to an afterGrace. "p::4 :8 f:16" => \afterGrace s4\p { s8 s16\f }
 #(define (add-dynamics obj pos-dyn-str)
 "Parses pos-dyn-str and results as :
 (rm-with obj pos1 #{ <>\\dynamics1  #} / pos2 #{ <>\\dynamics2 #} ...)
@@ -1327,7 +1502,7 @@ obj is an instrument or a list of instruments."
 
 % xor is not defined in standard guile 1.8. We don't use this function directly
 % but something called 'xor has to be defined
- #(if (not (defined? 'xor)) (define (xor a b) (and a (not b))))
+ #(if (not (defined? 'xor)) (ly:parser-define! 'xor (lambda(a b) (and a (not b)))))
 
 #(define (extract-pos-dyn-str extract-code assoc-dyn-list)
   (define (clean-code elts)  ;; make a list with only symbols and sub-lists :
@@ -1507,10 +1682,10 @@ A slash / can optionally be used to separate all pitch percu-sym sections"
 beetween it and the following anchor. If several anchors match with `sym, the
 function returns a sequential-music of all the musics extracted."
 (let* ((res (fold-right ;; iteration from end of anchors list
-         (lambda(anchor prev-list) ; anchor entry = '(moment . sym) or '(moment . syms)
-           (let ((mom1 (car anchor))
+         (lambda(entry prev-list) ; anchor entry = '(moment . sym) or '(moment . syms)
+           (let ((mom1 (car entry))
                  (mom2 (car prev-list))
-                 (syms (cdr anchor)))
+                 (syms (cdr entry)))
              ;(display anchor)(display "\n")
              (cons mom1        ; will be mom2 in the next iteration (= previous anchor)
                (if (and syms   ; #f only in 1st iteration (last anchor = (list length(fragments) #f)
@@ -1521,11 +1696,38 @@ function returns a sequential-music of all the musics extracted."
          (list ZERO-MOMENT)           ; dummy value (prev-list must not be empty)
          (cons (list ZERO-MOMENT sym) ; at beginning, no anchor will mean all symbols match
            (anchor->list music #f)))) ; get all anchors from beginning
-       (seq (map delete-anchors  ; cleaning
+       (sqm (map delete-anchors  ; cleaning
                  (cdr res))))    ; skip mom1
-  (if (= (length seq) 1)
-     (car seq)
-     (make-sequential-music seq))))
+  (if (= (length sqm) 1)
+    (car sqm)
+    (make-sequential-music sqm))))
+%{
+#(define ((set-frag music) . anchors)
+"If an anchor (a symbol) is found in music, the function extracts the music
+beetween it and the following anchor. If several anchors match with `sym, the
+function returns a sequential-music of all the musics extracted."
+   (
+(let* ((res (fold-right ;; iteration from end of anchors list
+         (lambda(entry prev-list) ; anchor entry = '(moment . sym) or '(moment . syms)
+           (let ((mom1 (car entry))
+                 (mom2 (car prev-list))
+                 (syms (cdr entry)))
+             ;(display anchor)(display "\n")
+             (cons mom1        ; will be mom2 in the next iteration (= previous anchor)
+               (if (and syms   ; #f only in 1st iteration (last anchor = (list length(fragments) #f)
+                        (memq sym syms)
+                        (ly:moment<? mom1 mom2))
+                 (cons (extract music mom1 mom2)(cdr prev-list)) ; extract music
+                 (cdr prev-list)))))  ; skip mom2
+         (list ZERO-MOMENT)           ; dummy value (prev-list must not be empty)
+         (cons (list ZERO-MOMENT sym) ; at beginning, no anchor will mean all symbols match
+           (anchor->list music #f)))) ; get all anchors from beginning
+       (sqm (map delete-anchors  ; cleaning
+                 (cdr res))))    ; skip mom1
+  (if (= (length sqm) 1)
+    (car sqm)
+    (make-sequential-music sqm))))
+%}
 
 #(define (music->list music)
 "Extract the list of the first sequential or simultaneous music encountered

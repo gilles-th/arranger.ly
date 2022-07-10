@@ -808,10 +808,11 @@ Voir un exemple à la fonction \goto{\type{volta-repeat->skip}}[volta-repeat->sk
 
 %%%%%%%%%
 \func{split}
-\syntax {(split musicI musicII)}{}
+\syntax {(split ['(id1 id2 id3...)] music1 music2 music3...)}{}
 
-Équivalent de \type+<< \musicI \\ \musicII >>+\\
-Les 2 arguments sont des {\em musique}s.
+Équivalent de \type+\voices id1,id2,id3 ... << music1 \\ music2 \\ music3 ... >> +\\
+La liste des {\em id}s pour chaque voix est optionnelle.\\
+La liste par defaut est basée sur le modèle \type+'(1 3 5 ... 6 4 2)+
 \blank[1em]
 \midaligned{ \tfd ------------}
 \godown[1em]
@@ -895,8 +896,9 @@ On peut utiliser la fonction \type{def!} décrite \at{page}[def!], pour créer u
 \func{mmr}
 \syntax {(mmr ratio)}{}
 \syntax {(mmr from-bar-num to-bar-num)}{}
-Renvoie un \type{multiMeasasureRest} de longueur soit \type{(ly:make-moment ratio)}(par exemple\\ \type{(mmr 3/4)} pour \type+#{ R4*3 #}+, ou \type{(mmr 2)} pour \type+#{ R1*2 #}+), soit de la longueur de la musique entre les mesures \type{from-bar-num} à \type{to-bar-num} (par exemple \type{(mmr 5 13)} pour un silence remplissant intégralement les mesures 5 à 13). La syntaxe 2 utilise en interne la fonction \type{pos-sub} décrit plus haut.
-\blank[1em]
+Renvoie un \type{multiMeasasureRest} de longueur soit \type{(ly:make-moment ratio)}(par exemple\\ \type{(mmr 3/4)} pour \type+#{ R4*3 #}+, ou \type{(mmr 2)} pour \type+#{ R1*2 #}+), soit de la longueur de la musique entre les mesures \type{from-bar-num} et \type{to-bar-num} (par exemple \type{(mmr 5 13)} pour un silence remplissant intégralement les mesures 5 à 13). La syntaxe 2 utilise en interne la fonction \type{pos-sub} décrite plus haut.
+
+\blank
 \midaligned{ \tfd ------------}
 \page  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -907,16 +909,37 @@ Voir aussi {\em chordsAndVoices-doc.pdf} à \from[chord]
 \blank[-1em]
 %%%%%%%%%
 \func{voice} 
-\syntax {(voice n music)}{}
+\syntax {(voice n [m p …] music)}{}
 \index{set-voice}
 ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
-\syntax {((set-voice n) music)}{}
-Extrait la voix \type{n} dans une musique à plusieurs voix simultanées.\\ 
-Si \type+music = << { a b } \\ { c d } >>+, le code :\\
-\type+(voice 2 music)+ donnera \type+{ c d }+
+\syntax {((set-voice n [m p …]) music)}{}
+Extrait la voix \type{n} dans une musique à plusieurs voix simultanées :\\
+\godown[0.1em]
+\startmylily music = << { a b } \\ { c d } >> \stopmylily
+\godown[-0.5em] 
+\starttabulate[|l|l|c|l|]
+    \NC\myindent\NC {\type{(voice 1 music)}}\NC $\Longrightarrow$ \NC \type+ { a b } +
+    \NR
+    \NC\myindent\NC {\type{(voice 2 music)}} \NC $\Longrightarrow$  \NC \type+ { c d } +
+    \NR
+    \NC\myindent\NC {\type{(voice 3 music)}} \NC $\Longrightarrow$  \NC \type+ { c d } +
+    \NR
+    \NC\myindent\NC { \space \dots} \NC 
+\stoptabulate
+\godown[0.7em]
+Si d'autres nombres \type{m p …} sont spécifiés, la fonction renvoie une liste des voix correspondante à chacuns de nombres \type{n m p …}
+\startmylily 
+(rm '(instru1 instru2) 5 (voice 1 2 music)) 
+\stopmylily
+est équivalent à :
+\startmylily 
+(rm 'instru1 5 { a b })
+(rm 'instru2 5 { c d })
+\stopmylily
 
-\blank
-\midaligned{ \tfd ------------}\\
+\godown[0.2em]
+\midaligned{ \tfd ------------}
+\godown[1em]
 
 %%%%%%%%%
 \func{replace-voice} 
@@ -929,7 +952,8 @@ Si \type+music = << { a b } \\ { c d } >>+, le code :\\
 \type+(replace-voice 2 music #{ f g #})+ donnera \type+<< { a b } \\ { f g } >>+
 
 \blank
-\midaligned{ \tfd ------------}\\
+\midaligned{ \tfd ------------}
+\godown[1.5em]
 
 %%%%%%%%%
 \func{dispatch-voices}
@@ -954,7 +978,7 @@ Voir \in{la fonction \type{rm} (\at{page}[rm-info])}[rm-info] pour la significat
 
 \blank
 \midaligned{ \tfd ------------}
-
+\page  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%
 \hairline
 Les fonctions qui vont suivre sont toutes créées, au niveau des paramètres, sur le même modèle. Chacunes d'elles permettent juste d'obtenir un type de musique simultanée particulier :
@@ -967,8 +991,8 @@ Les fonctions qui vont suivre sont toutes créées, au niveau des paramètres, s
     \NR
 \stoptabulate 
 \hairline
-\page  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\blank
 \func{add-voice1, add-voice2}{}
 \syntax{(add-voice1 obj where-pos new-voice}{voice-start-pos to-pos obj-start-pos)}        
 \syntax{(add-voice2 obj where-pos new-voice}{voice-start-pos to-pos obj-start-pos)}
@@ -988,7 +1012,7 @@ la mesure~1,~voir la \at{fonction \type{init} page}[init]).
 
 \blank
 \midaligned{ \tfd ------------}
-\page[preference]
+\godown[1.5em]
 
 %%%%%%%%%
 \func{merge-in}
@@ -997,24 +1021,26 @@ la mesure~1,~voir la \at{fonction \type{init} page}[init]).
 La musique de \type{obj} est remplacée à la mesure \type{where-pos} par : 
 \startmylily << new-voice [existing music] >> \stopmylily
 Pour les paramètres optionnels, voir ci-dessus (\type{add-voice1}).
-\blank[1em]
+
+\blank
 \midaligned{ \tfd ------------}
-\godown[0.8em]
+\godown[1.5em]
 
 %%%%%%%%%
 \func{merge-in-with}
 \syntax {(merge-in-with obj pos1 music1 / pos2 music2 / pos3 music3 …)}{}
 est un raccourci pour :
-\startmylily 
+\startlily 
 (merge-in obj pos1 music1)
 (merge-in obj pos2 music2)
 (merge-in obj pos3 music3)	
 …
-\stopmylily
+\stoplily
 La barre oblique \type{/} est optionnelle
+
 \blank
 \midaligned{ \tfd ------------}
-\godown[0.8em]
+\godown[1.5em]
 
 %%%%%%%%%
 \func{combine1, combine2}{}
@@ -1025,10 +1051,12 @@ La musique de chaque {\em instrument}, est remplacée à la position \type{where
 \startmylily \partCombine [musique existante] \new-voice  &\rm{&pour&}& combine2 \stopmylily
 et par
 \startmylily \partCombine \new-voice [musique existante]  &\rm{&pour&}& combine1&\rm{&.&}& \stopmylily
-\\Voir la fonction \type{add-voice} en haut de la page, pour les paramètres optionnels.
-\blank[1em]
+\blank
+Voir la fonction \type{add-voice} en haut de la page, pour les paramètres optionnels.
+
+\blank
 \midaligned{ \tfd ------------}
-\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\godown[1.5em]
 
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subject[gerer-accords]{Gérer les accords}
@@ -1042,7 +1070,7 @@ ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[
 Extrait la n\high{\itxx ième} note de chaque accord (dans un ordre identique à celui du fichier source).\\
 Si d'autres nombres sont spécifiés, (\type{m}, \type{p} …), \type{note} formera des accords, en recherchant dans l'accord d'origine, la note correspondante à chacun de ces nombres.\\
 Si aucune correspondance n'est trouvée, \type{note} renvoie la dernière note de l'accord.\\ 
-
+\blank[1em]
 \underbar{\sc\Words Exemple} :
 \startmylily
 music = { <c e g>-\p <d f b>-. }
@@ -1050,7 +1078,7 @@ music = { <c e g>-\p <d f b>-. }
 (note 2 3 music) &$\Longrightarrow$& { <e g>-\p <f b>-. }
 (note 4 music)   &$\Longrightarrow$& { g-\p b-. }
 \stopmylily
-\blank[0.9em]
+\blank[1em]
 \midaligned{ \tfd ------------}
 \godown[1em]
 
@@ -1062,28 +1090,28 @@ ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[
 \syntax {((set-notes+ newnotes1 [newnotes2…]) music))}{}
 Transforme chaque note de \type{music} en accord, et y insère la note des \type{newnotes}  correspondante.\\
 Un \type{\skip} dans \type{newnotes} laisse la note originale inchangée.\\
-
+\blank[1em]
 \underbar{\sc\Words Exemple} :
 \startmylily
 music = { c'4  b  <g c'>2  c'  c' }
 notes = { e  <d f>  e      s   c  }	
 (notes+ music notes) &$\Longrightarrow$& { <e c'>4 <d f b> <e g c'>2 c' <c c'> }
 \stopmylily
-\blank[0.9em]
+\blank[1em]
 \midaligned{ \tfd ------------}
-\godown[1.2em]
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%
 \func{add-notes} 
 \syntax {(add-notes obj where-pos newnotes1 [newnotes2]…[obj-start-pos])}{}
 
-Même chose que \type{notes+} mais appliquée cette fois-ci à partir d'une position \type{where-pos} donnée.\\
+Même chose que la fonction \type{notes+} précédente mais appliquée cette fois-ci à partir d'une position \type{where-pos} donnée.\\
 \type{obj} peut être ici, un {\em instrument}, une liste d'{\em instrument}s, une {\em musique} ou une liste de {\em musique}s.\\
-Les \type{newnotes} sont des {\em musique}s, mais si à la fois \type{newnotes1} et \type{obj} sont des listes, \type{notes+} est appliqué élément à élément.\\
+Les \type{newnotes} sont typiquement des {\em musique}s, mais si à la fois \type{newnotes1} et \type{obj} sont des listes, \type{notes+} est appliqué élément à élément.\\
 Voir \in{la fonction \type{rm} (\at{page}[rm-info])}[rm-info] pour l'usage du dernier paramètre optionnel \type{obj-start-pos}.
-\blank[0.9em]
+\blank[1em]
 \midaligned{ \tfd ------------}
-\godown[1.2em]
+\godown[1.5em]
 
 %%%%%%%%%
 \func{dispatch-chords}  
@@ -1092,24 +1120,24 @@ Voir \in{la fonction \type{rm} (\at{page}[rm-info])}[rm-info] pour l'usage du de
 \type{dispatch-chords} assigne chaque notes des accords d'une {\em musique} à des parties séparées.\\
 \type{instruments} est la liste d'{\em instrument}s recevant, à la position \type{where-pos}, ces parties.\\
 \type{music-with-chords} est la {\em musique} contenant les accords.
-\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 La note 1 d'un accord est envoyée au dernier élément de la liste \type{instruments} , puis la note 2 à l'avant dernier etc…\\
 Le code :
-\startmylily
+\startlily
 music = { <c e g>4 <d f b>-. }
 (dispatch-chords '(alto (tenorI tenorII) basse) 6 music)
-\stopmylily
+\stoplily
 donnera à la mesure 6 :
-\startmylily
+\startlily
 basse   &$\leftarrow$& { c4 d-. }
 tenorI  &$\leftarrow$& { e4 f-. }
 tenorII &$\leftarrow$& { e4 f-. }
 alto    &$\leftarrow$& { g4 b-. }
-\stopmylily
+\stoplily
+\blank
 Les arguments optionnels disponibles, sont les mêmes que \goto{la fonction \type{rm}}[rm-info] (\at{page}[rm-info]) 
 \blank[1em]
 \midaligned{ \tfd ------------}
-\godown[1.6em]
+\godown[1.5em]
 
 %%%%%%%%%
 \func{reverse-chords}  
@@ -1124,6 +1152,7 @@ Par défaut, \type{strict-comp?} est à \type{#f} pour \type{set-reverse} et à 
 \blank[2em]
 \underbar{\sc\Words Exemple} (en mode hauteur absolue) :
 \blank[1.3em]
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \startmylily
                    music    &\hbox to 1.3em {\\$=$\\}\hbox to 0.1em {\\}&  { <c e g>   <c g e'>    <c e c'> }
 (reverse-chords 1 music)    &$\Longrightarrow$&  {   <e g c'>  <g e' c''>  <e c' c''> }
@@ -1135,6 +1164,7 @@ Par défaut, \type{strict-comp?} est à \type{#f} pour \type{set-reverse} et à 
 
 (reverse-chords 1 music #f) &$\Longrightarrow$&  {   <e g c'>  <g e' c''>  <e c' c'> }
 \stopmylily
+
 \blank
 \midaligned{ \tfd ------------}
 \godown[1.2em]
@@ -1145,12 +1175,13 @@ Par défaut, \type{strict-comp?} est à \type{#f} pour \type{set-reverse} et à 
 
 Ajoute des crochets aux accords, contenant au moins 2 notes, et non liés à l'accord précédent par un tilde  \type{~} \\
 Cette fonction étend la fonction \type{\braketifyChords} définie dans {\em copyArticulations.ly} en acceptant aussi en paramètre, une liste de {\em musique}s, un {\em instrument}, ou une liste d'{\em instrument}s.
-\blank[1.5em]
-\midaligned{ \tfd ------------}
-\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\blank[1.2em]
+\midaligned{ \tfd ------------}\\
+\godown[-0.5em]
 
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                     
 \subject[gerer-accords-voix]{Gérer accords et voix ensemble}
+Les fonctions suivantes sont toutes compatibles avec \goto{\type{apply-to}}[apply-to].
 \godown[2em] 
 
 %%%%%%%%%
@@ -1162,6 +1193,7 @@ accord.
 
 \blank
 \midaligned{ \tfd ------------}\\
+\godown[0.5em]
 
 %%%%%%%%%
 \func{bass-of} 
@@ -1172,26 +1204,66 @@ accord.
 
 \blank
 \midaligned{ \tfd ------------}\\
+\godown[0.5em]
 
 %%%%%%%%%
 \func{voices->chords} 
-\syntax {(voices->chords music)}{} 
+\syntax {(voices->chords [n] music)}{} 
 
-Transforme une {\em musique} simultanée \type+<<{a b} \\ {c d}>>+ \\%
-en une {\em musique} séquentielle \type+{<a c> <b d>}+
+Transforme les {\em musiques simultanées} de \type{music} en des
+{\em musiques séquentielles} avec des accords de \type{n} notes. (\type{n = 2} si \type{n} omis)\\
+Par défaut, la 1\high{ère} note d'un accord est extrait de la dernière voix, 
+et ainsi de suite, mais un ordre particulier peut être établi en remplaçant
+\type{n} par une liste d'entiers. \\
+\startlily
+music = << { e' g' } { c' d' } { a b } >>
+(voices->chords 3 music)        &\rm{donnera}& { <a c' e'> <b d' g'> }
+(voices->chords '(3 2 1) music) &\rm{donnera}& { <a c' e'> <b d' g'> } &\rm{(idem)}&
+(voices->chords '(2 1 3) music) &\rm{donnera}& { <c' e' a> <d' g' b> }
+\stoplily
+Les resultats obtenus seront exactement les mêmes pour :
+\startlily
+music = << { e'4. g'8 } \\ { c'4 d' } \\ { a8 b4. } >>
+\stoplily
+et le rythme sera pris sur la voix 1 soit \type+{ 4. 8 }+ \\
+\page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Par contre pour :
+\startlily
+music = \voices 1,3,2 << { e'4. g'8 } \\ { c'8 d'4. } \\ { a b } >>
+\stoplily
+le 1\high{er} accord sera précédé de toute une serie d'\type+\override+ ou de \type+\set+\\
+On peut utiliser la fonction \goto{\type{set-del-events}}[set-del-events] pour ne garder que les notes.
+\startlily
+((set-del-events 'OverrideProperty 'PropertySet)(voices->chords 3 music))
+\stoplily
 
 \blank
 \midaligned{ \tfd ------------}\\
+\godown[1.5em]
 
 %%%%%%%%%
 \func{chords->voices} 
-\syntax {(chords->voices music)}{} 
+\syntax {(chords->voices [n] music)}{}
 
-Transforme une séquence d'accords \type+{<a c> <b d>}+ \\
-en une {\em musique} simultanée \type+<<{a b} \\ {c d}>>+
+La fonction utilise la fonction \goto{\type{note}}[note] (\at{page}[note]) et la fonction \goto{\type{split}}[split] (\at{page}[split]).\\
+Elle est équivalent à :\\
+\startlily 
+(split (note n music) 
+       (note (- n 1) music)
+       …
+       (note 1 music))
+\stoplily
+Par défaut, \type+n = 2+\\
+\type+n+ est converti par la fonction \goto{\type{split}}[split] en une liste de {\em id}s pour chaque voix. Néanmoins, une liste de nombres peut être directement spécifiée, mais en tenant compte qu'à la 1\high{ère} note d'un accord correspond la dernière voix.
+\startlily
+music = { <a c' e'> <b d' g'> }
+(chords->voices 3 music) &\rm{et}& (chords->voices '(1 3 2) music) &\rm{donneront} :& 
+\voices 1,3,2 << { e' g' } \\ { c' d' } \\ { a b } >>
+\stoplily
 
 \blank
-\midaligned{ \tfd ------------}\\
+\midaligned{ \tfd ------------}
+\godown[1.5em]
 
 %%%%%%%%%
 \func{chords->nmusics} 
@@ -1200,8 +1272,8 @@ en une {\em musique} simultanée \type+<<{a b} \\ {c d}>>+
 ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
 \syntax {((set-chords->nmusics n) music)}{}
 
-Transforme une séquence d'accords en une {\em liste} de %
-\type{n} {\em musiques}\\
+Transforme une séquence d'accords en une {\em liste} de\type{ n }{\em musiques}\\
+\blank
 Pour : \type+music = {<e g c'> <d f b> <c e g c'>}+\\
 La fonction \type{chords->nmusics} donnera les listes suivantes :
 
@@ -1403,7 +1475,7 @@ Applique la fonction \type{(octave+ n music)} précédente à chaque section \ty
 
 \godown[1em]
 \midaligned{ \tfd ------------}
-\godown[2em]
+\godown[1.5em]
 
 %%%%%%%%%
 \hairline
@@ -1425,6 +1497,7 @@ Ces 3 lignes sont équivalentes :
 (fix-pitch music 0)
 (fix-pitch music -1 0 0)
 \stopmylily
+\blank
 La fonction \goto{\type{apply-to}}[apply-to] correspondante \type{((set-fix-pitch …) music)} reprend ces mêmes paramètres de hauteur de note.
 \blank[0.2em]
 \midaligned{ \tfd ------------}
@@ -1624,17 +1697,19 @@ patI = { r8 c16 c c8 c c c }
 
 %%%%%%%%%%
 \func{x-pos} : pattern de {\em numéros de mesure}
-\syntax {(x-pos from-measure to-measure}{pos-pat (step 1))} 
+\syntax {(x-pos n-from n-to [pos-pat [step]])} {}
+\syntax {((x-pos [pos-pat [step]]) n-from1 n-to1 [n-from2 n-to2...])} {}
 
-\type{from-measure} et \type{to-measure} sont des numéros de mesures (des nombres entiers).\\
+Les paramètres \type{n-from} et \type{n-to} sont des numéros de mesures (des nombres entiers).\\
 \type{pos-pat} est une liste de {\em position}s \footnote {Les positions sont définies \in{dans le paragraphe \quotation{positions musicales}, \at{page}[positions_musicales].}[positions_musicales]}, avec une lettre, habituellement n, à la place du numéro de mesure.\\
-\type{x-pos} convertit cette liste, en remplaçant n (la lettre) par le numéro de mesure  \type{from-measure} et en l'augmentant récursivement de \type{step} unités, tant que cette valeur reste strictement inférieure à \type{to-measure}.\\
+\type{x-pos} convertit cette liste, en remplaçant n (la lettre) par le numéro de mesure  \type{n-from} et en l'augmentant récursivement de \type{step} unités, tant que cette valeur reste strictement inférieure à \type{n-to}.\\
+Dans la syntaxe 2, \type{x-pos} applique successivement le même pattern \type{pos-pat} et \type{step} à chacun des couples \type{n-from}/\type{n-to}.\\
 Par defaut, \type{pos-pat} = \type{'(n)}, \type{step} = 1
 \page %%%%%%%%%%%%%%%%%%%%
 Le tableau suivant montre la liste obtenue avec différentes valeurs:
 \startmylily
 (x-pos 10 14)              & $\Longrightarrow$ & '(10 11 12 13)
-(x-pos 10 14 '(n (n 4)))   & $\Longrightarrow$ & '(10 (10 4) 11 (11 4)) 12 (12 4) 13 (13 4))
+(x-pos 10 14 '(n (n 4)))   & $\Longrightarrow$ & '(10 (10 4) 11 (11 4) 12 (12 4) 13 (13 4))
 (x-pos 10 14 '(n (n 4)) 2) & $\Longrightarrow$ & '(10 (10 4) 12 (12 4))
 (x-pos 10 13 '(n (n 4)) 2) & $\Longrightarrow$ & '(10 (10 4) 12 (12 4))
 (x-pos 10 12 '(n (n 4)) 2) & $\Longrightarrow$ & '(10 (10 4))
@@ -1882,6 +1957,42 @@ On pourra utiliser conjointement le caractère \type+#+ pour les "tweaks" de pos
 \stoplily
 \stopfiguretext
 
+- Dans le cas où une section \type+\grace+ serait le  2\high{ème} paramètre d'une commande \type+\afterGrace+, une syntaxe particulière est requise pour le 1\high{er} paramètre  ("la note réelle").\\
+Il suffira juste, ici, de faire précéder la section \type+\grace+ de la valeur rythmique du  1\high{er} paramètre, que l'on marquera par un double caractère \type+::+\\
+\startmylily 
+\afterGrace s4\f { s16\p s } 
+f::4 p:16 :16    &\leftarrow\em{\tfx& la nuance éventuelle avant :: la valeur rythmique après&}&
+\stopmylily
+La fraction optionnelle de la commande \type+\afterGrace+ s'obtient de la manière suivante :
+\startmylily 
+\afterGrace 15/16 s4\f { s16\p s } 
+f::4:15:16 p:16 :16
+\stopmylily
+On veillera a bien faire correspondre la fraction de la musique et des nuances.
+\startfiguretext[right][exemple]{}
+{\vbox{\blank[5.85em]
+       \hbox{\externalfigure[afterGrace-dynamics.pdf][wfactor=180, align=flushright]
+             \hspace[big]}}}
+\underbar{\sc\Words Exemple} :
+\godown[-0.2em]
+\startlily[space=fixed]
+musicI = { r2 r4 \afterGrace d4-> { es16( e f fis }
+           g4->) r r2 } % &\em{\tfx&fraction &}&3/4 &\em{\tfx&par def &}&
+musicII = { r2 r4 \afterGrace 15/16 d4-> { es16( e f fis }
+            g4->) r r2 } % &\em{\tfx&fraction&}& 15/16 
+#(rm all 1 (rel 1 musicI musicII))
+
+#(begin
+(def! '(dyn1 dyn2))
+(add-dynamics 'dyn1 ; &\em{\tfx&fraction &}&3/4
+  "(1 2.) f::4 p:16 <:16 :8 / 2 f")
+(add-dynamics 'dyn2 ; &\em{\tfx&fraction &}&15/16 
+  "(1 2.) f::4:15:16 p:16 <:16 :8 / 2 f")
+)
+
+\stoplily
+\stopfiguretext
+
 \hairline
 Les fonctions qui suivent, \type{assoc-pos-dyn}, \type{extract-pos-dyn-str}, \type{instru-pos-dyn->music} et \type{add-dyn}, sont des tentatives de simplifier encore plus la gestion des nuances, en évitant notamment, 1) la redondance d'informations à fournir pour les instruments ayant les mêmes nuances aux mêmes endroits, et 2) de résoudre le problème de nuances en double quand, dans les conducteurs, 2 instruments partagent la même portée.
 \hairline
@@ -1909,18 +2020,19 @@ L'extraction des nuances pour un instrument donné, pourra ensuite être réalis
 Notez enfin qu'une chaîne de caractères \type{"1 f / 3 mf / 5 p"} pourra aussi être entrée sous forme d'une liste : \type{'("1 f" "3 mf" "5 p")}. L'\at{addendum 2 page}[set-dyn] montre une  utilisation de ce formatage automatique.
 \godown[1em]
 \midaligned{ \tfd ------------}
-\page %%%%%%%%%%%%%%%%%%%
+\godown[2em]
+
 %%%%%%%%
 \func{extract-pos-dyn-str}
 \syntax {(extract-pos-dyn-str extract-code assoc-pos-dyn-list)}{}
 \type{assoc-pos-dyn-list} est la liste d'association créée avec la fonction \in{\type{assoc-pos-dyn}}[assoc-pos-dyn] précédente.
 La fonction \type{extract-pos-dyn-str} renvoie une chaîne de caractères, du type {\em pos-dyn-str} défini \in{dans la fonction \type{add-dynamics}}[add-dynamics]. Elle est formée à partir de tous les {\em pos-dyn-str} dont le ou les {\em instrument}s associés répondent \quotation{vrai} au prédicat \type{extract-code}.
 \blank[0.7em]
-Voici comment fonctionne le prédicat \type{extract-code} :\\
+Voici comment fonctionne le prédicat \type{extract-code} :\\\\
 - \type{extract-code} est soit un {\em instrument} seul, soit une liste d'{\em instrument}s avec comme 1\high{er} élément, un des 3 opérateurs logiques suivants : \type{'or 'and 'xor}\\
 Pour un instrument seul, \type{extract-code} renvoie \quotation{vrai} quand la liste 
 d'instruments associée à un {\em pos-dyn-str} donné, contient cet instrument.\\
-Pour 2 instruments, cela dépend de l'opérateur :\\
+Pour 2 instruments, cela dépend de l'opérateur\\\\
 \hbox{{\hspace[lilyindent]}
 \starttable[|c|c|]  
 \NC \type{extract-code} \VL liste associée \NC\SR
@@ -1931,6 +2043,8 @@ Pour 2 instruments, cela dépend de l'opérateur :\\
 \NC \type{'(xor a b)} \VL contient \type{'a} mais {\bold \underbar pas} \type{'b} \NC\LR
 \stoptable 
 }\\
+
+\page %%%%%%%%%%%%%%%%%%%
 \underbar{\sc{Exemple}} :
 \startmylily
 cors = #'(corI corII corIII)
@@ -1983,8 +2097,8 @@ Cette macro ne marchera donc qu'à condition d'avoir defini la variable \type{as
 \hairline
 \type{assocDynList} bénéficie d'un \goto{complément d'information}[addendum3] \at{dans l'addendum 3 page}[addendum3].
 \hairline
+\page %%%%%%%%%%%%%%%%%%%
 
-\blank[2em]
 \subject{Gérer les indications de tempo, d'armature et les repères}  %%%%%%%%%%%%%%%%%%%%%
 Les fonctions qui suivent sont utilisées dans l'\in{addendum I concernant \type{\global} \at{page}[addendum1].}[addendum1]
 \godown[2.5em]
@@ -1999,7 +2113,7 @@ Renvoie un {\em markup} équivalent à celui produit par la fonction \type{\temp
 - Grâce aux arguments \type{open-par} et \type{close-par}, on peut changer (ou supprimer, en mettant~\type{""}) les parenthèses ouvrantes et fermantes entourant l'indication métronomique.
 \blank[1.3em]
 \midaligned{ \tfd ------------}
-\godown[1em]
+\godown[1.3em]
 
 %%%%%%%%
 \func{tempos}
@@ -2020,7 +2134,7 @@ Les barres obliques / sont optionnelles.
 \stopmylily
 \blank[1.3em]
 \midaligned{ \tfd ------------}
-\page %%%%%%%%%%%%%%%%%%%%%%%%%
+\godown[1.3em]
 
 %%%%%%%%
 \func{signatures}
@@ -2038,9 +2152,9 @@ Un argument {\em sig-str} est constitué des arguments d'une commande \type{\tim
                 20 #{ \time 4/4 #})
 \stopmylily
 Chaque groupes d'arguments peuvent être séparées par une barre oblique /.
-\blank[1em]
+\blank[1.3em]
 \midaligned{ \tfd ------------}
-\godown[0.5em]
+\page %%%%%%%%%%%%%%%%%%%
 
 \func{keys}
 \syntax {(keys [obj] posA key-mode-strA [/] posB key-mode-strB [/] ...)}{}
@@ -2060,16 +2174,16 @@ La barre oblique inversée \type+\+ ~devant le mode est obtenue soit en la doubl
                 40 #{ \key f \major #})
 \stopmylily
 Chaque groupes d'arguments peuvent être séparées par une barre oblique /.
-\blank[0.8em]
+\blank[1.3em]
 \midaligned{ \tfd ------------}
-\godown[0.5em]
+\godown[1.3em]
 
 \func{marks}
 \syntax {(marks [obj] posA [/] posB [/] ...)}{}
 Insère un \type{\mark \default} aux positions \type{pos}, dans \type{'global} ou dans \type{obj} si spécifié.
-\blank[0.8em]
+\blank[1.3em]
 \midaligned{ \tfd ------------}
-\godown[-0.2em]
+\godown[0.3em]
 
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                              
 \subject{Manipuler les listes}
@@ -2105,18 +2219,18 @@ le résultat serait
 cuivres = #'(tpI (tpII tpIII) corI corII tbnI tbnII tuba)
 \stopmylily
 Si ce n'est pas le résultat escompté, on peut utiliser la fonction \type{flat-lst} (même syntaxe), qui, elle, renvoie une liste composée uniquement d'{\em instrument}s, quelque soit la profondeur des listes données en paramètres.
-\godown[0.5em]
+\godown[1.3em]
 \midaligned{ \tfd ------------}
-\godown[1em]
+\godown[1.3em]
 
 %%%%%%%%%
 \func{lst-diff}
 \syntax {(lst-diff mainlist . tosubstract)}{}
 Enlève de \type{mainlist} les {\em instrument}s spécifiés dans \type{tosubstract}.\\
 \type{tosubstract} est une suite d'{\em instrument}s ou de listes d'{\em instrument}s
-\godown[1.5em]
+\godown[1.3em]
 \midaligned{ \tfd ------------}
-\godown[1em]
+\godown[1.3em]
 
 %%%%%%%%%
 \func{zip}
@@ -2144,9 +2258,9 @@ donnera à la mesure 6 :
 '(tpII clII altII) & $\leftarrow$ & { e' f' }
 '(tpIII clIII)     & $\leftarrow$ & { c' d' }
 \stopmylily
-\blank[1em]
+\blank[1.3em]
 \midaligned{ \tfd ------------}
-\godown[-1em]
+\godown[-0.3em]
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                                                                  
 \subject{Fonctions diverses}
@@ -2179,14 +2293,14 @@ Dans les parties séparées ou le conducteur, on mettra~:
 \blank[0.5em]
 Pour alléger l'écriture des \type{\new Staff}, on peut pousser l'automatisation encore plus loin. Ceci est montrée en exemple par la fonction \goto{\type{instru->music}}[instru->music] de \at{l'addendum 2, page}[instru->music].
 % \type{part->music} de \goto{l'addendum II}[addendum2] \at{page}[addendum2]. 
-\blank[0.8em]
+\blank[1.3em]
 \midaligned{ \tfd ------------}
-\godown[0.8em]
+\godown[1.3em]
 
 %%%%%%%%
 \func{set-del-events}
 \syntax {(set-del-events event-sym . args)}{}
-Supprime tous les événements de nom\footnote {Un nom d'événement commence par une majuscule, et se termine par \quotation{Event}. Exemple : {\em 'SlurEvent}} \type{event-sym} \\
+Supprime tous les événements de nom\footnote {Un nom d'événement commence par une majuscule, et se termine généralement par \quotation{Event}. Exemple : {\em 'SlurEvent}} \type{event-sym} \\
 Plusieurs événements peuvent être spécifiés, à la suite ou sous forme d'une liste.\\
 Ainsi, la liste nommée \type{dyn-list}, définie dans {\em "chordsAndVoices.ly"} de la manière suivante :
 \blank[0.5em]
@@ -2201,9 +2315,9 @@ permet, utilisée avec la fonction \type{set-del-events}, d'effacer toutes les n
    (apply-to 'trompette del-dyn 8 12)
    (add-dynamics 'trompette "8 p / 10 mp < / 11 mf"))
 \stopmylily
-\blank[0.8em]
+\godown[1.3em]
 \midaligned{ \tfd ------------}
-\godown[1em]
+\godown[1.3em]
 
 %%%%%%%%
 \func{n-copy}
@@ -2212,9 +2326,9 @@ permet, utilisée avec la fonction \type{set-del-events}, d'effacer toutes les n
 ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
 \syntax {((set-ncopy n) music)}{}
 Copie \type{n} fois \type{music}.
-\blank[-0.3em]
+\godown[1.3em]
 \midaligned{ \tfd ------------}
-\godown[1em]
+\godown[1.3em]
 
 %%%%%%%%
 \index{index->string-letters}
@@ -2225,6 +2339,7 @@ Les 3 paramètres suivant \type{measures} sont optionnels et se distinguent uniq
 \type{index->string} est une fonction de rappel renvoyant une {\em chaîne de caractères}, et prenant en paramètre un {\em index} (un entier positif). L'index est incrémenté de 1 à chaque appel, en commençant par la valeur du paramètre \type{start-index} (\type{0} si \type{start-index} non spécifié).\\
 Par défaut, \type{index->string} est la fonction interne \type{index->string-letters} qui renvoie la ou les lettre(s) capitale(s) correspondante(s) à leur index dans l'alphabet, mais en sautant la lettre~\quotation{\type{I}}~: "\type{A}"…"\type{H}" puis "\type{J}"…"\type{Z}" puis "\type{AA}"…"\type{AH}" 
 puis "\type{AJ}"…"\type{AZ}" etc…\\
+\page %%%%%%%%%%%%%%%%%%%
 L'instruction : \type {#(def-letters '(9 25 56 75 88 106))} donne les correspondances suivantes :\\
 \midaligned{\hbox{\hspace[lilyindent]
 \starttable[s0|cs1|c|ls2|]
@@ -2245,9 +2360,9 @@ L'instruction : \type {#(def-letters '(9 25 56 75 88 106))} donne les correspond
 Si une lettre était déjà définie avant l'appel de \type{def-letters}, la fonction fait précéder la lettre par le caractère \quotation{\type{_}}. Ceci est surtout nécessaire pour les lettres \type{X} et \type{Y}, qui ont \type{0} et \type{1} comme valeur associée dans {\em Lilypond}. Ces  2 lettres deviendront donc {\em toujours} \type{_X} et \type{_Y}.\\
 Un message prévient l'utilisateur du changement, sauf si on inclut \type{#f} dans les options (paramètre \type{show-infos?}) :
 \startmylily #(def-letters '(9 25 …) #f) \stopmylily
-\blank[0.6em]
+\godown[1.3em]
 \midaligned{ \tfd ------------}
-\godown[-1.0em]
+\godown[-0.3em]
 
 %% set-frag is not ready enough (bugs remains). Perhaps in a future version of arranger.ly
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                                                 
@@ -2274,19 +2389,19 @@ Un message prévient l'utilisateur du changement, sauf si on inclut \type{#f} da
 
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                                                 
 \subject{Compiler une portion de score}
-\godown[1.1em]
+\godown[1.3em]
 %%%%%%%%
 \func{show-score}
 \syntax {(show-score from-pos to-pos)}{}
 
 Insert dans \type+\global+, des \type+\set Score.skipTypesetting = ##t+ ou \type+##f+,  de manière à ne compiler (et ne montrer) que la musique de la partition se trouvant entre les positions \type+from-pos+ et \type+to-pos+ (utile pour les gros \quotation{scores}).
-\blank[0.8em]
+\godown[1.3em]
 \midaligned{ \tfd ------------}
-\godown[0.5em]                     
+\godown[-0.3em]                  
 
                      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                              
 \subject{Exporter ses instruments}
-\godown[1.0em]                                        
+\godown[1.3em]                                        
 %%%%%%%%
 \func{export-instruments}
 \syntax {(export-instruments instruments filename}{overwrite?)}
@@ -2547,7 +2662,7 @@ assocDynList = #(assoc-pos-dyn
 #(define ((set-dyn fmt0 . fmt-args) arg0 . args)
    (apply format (lst                ;&\tfx\em{& liste des arguments pour format&}&
      #f fmt0 fmt-args arg0 
-     (filter not-procedure? args)))) %&\tfx\em{& syntaxe argo0 / arg1 / arg2… possible &}& 
+     (filter not-procedure? args)))) %&\tfx\em{& syntaxe arg0 / arg1 / arg2… possible &}& 
 \stoplily
 Les paramètres \type{fmt} sont des chaînes de caractères qui pourront se servir des même séquences d'échappement que la fonction scheme \type{format}. Ainsi, par exemple, chaque apparition de \type{~a} dans \type{fmt0}, sera remplacée successivement par le paramètre \type{arg0, arg1, arg2 …}, préalablement converti en chaîne de caractères.\\ 
 En voici quelques utilisations possibles :

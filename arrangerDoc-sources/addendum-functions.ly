@@ -8,7 +8,7 @@
 #(define score? (part? 'score))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
-% From her, a variable called assocDynList must have been defined with assoc-pos-dyn
+% From here, a variable called assocDynList must have been defined with assoc-pos-dyn
 %    assocDynList = #(assoc-pos-dyn ...)
 
 %%% 1 instru in a Staff

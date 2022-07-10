@@ -1,5 +1,6 @@
 \version "2.20.0"
-%% version Y/M/D = 2021/06/20
+%% version Y/M/D = 2022/07/11
+%% Tested with Lilypond 2.22
 %% LSR = http://lsr.di.unimi.it/LSR/Item?u=1&id=761
 %% LSR = http://lsr.di.unimi.it/LSR/Item?u=1&id=545
 %% for Lilypond 2.20 or higher.

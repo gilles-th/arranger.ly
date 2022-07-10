@@ -1,5 +1,6 @@
 \version "2.20.0"
-%% version Y/M/D = 2021/06/20 for lilypond 2.20.0 or higher
+%% version Y/M/D = 2022/07/11
+%% Tested with Lilypond 2.22
 %% LSR = http://lsr.di.unimi.it/LSR/Item?id=769
 %% last changes :
 %%   - tuplets have now a duration . fix line 92-93 and 179
@@ -24,15 +25,12 @@
 (eq? (name-of music) 'NoteEvent))
 
 #(define (has-notes? music)
-"Return true if there is at least one note in `music, false otherwise."
- (or (noteEvent? music)
+"Return the first note of music or false if there is not at least one note"
+ (or (and (noteEvent? music) music)
      (let ((e (ly:music-property music 'element)))
         (and (ly:music? e)
              (has-notes? e)))
-     (let loop ((es (ly:music-property music 'elements)))
-        (and (pair? es)
-             (or (has-notes? (car es))
-                 (loop (cdr es)))))))
+     (any has-notes? (ly:music-property music 'elements '()))))
 
 #(define (make-arti-list pattern)
 "Make a list of articulations "

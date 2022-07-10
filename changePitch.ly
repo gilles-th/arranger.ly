@@ -1,6 +1,6 @@
 \version "2.20.0"
-%% changePitch.ly version Y/M/D = 2021/06/20
-%% for lilypond 2.20 or higher
+%% version Y/M/D = 2022/07/11
+%% Tested with Lilypond 2.22
 %% LSR :
 %%   http://lsr.di.unimi.it/LSR/Item?id=654
 %% Last release here :
@@ -37,12 +37,12 @@
 (eq? (name-of music) 'NoteEvent))
 
 #(define (has-notes? music)
-"Return true if there is at least one note in `music, false otherwise."
- (or (eq? (name-of music) 'NoteEvent)
+"Return the first note of music or false if there is not at least one note"
+ (or (and (noteEvent? music) music)
      (let ((e (ly:music-property music 'element)))
-        (and (ly:music? e)
-             (has-notes? e)))
-     (any has-notes? (ly:music-property music 'elements))))
+       (and (ly:music? e)
+            (has-notes? e)))
+     (any has-notes? (ly:music-property music 'elements '()))))
 
 %% An EventChord is sometimes used as a wrapper in Lilypond, so we have to check
 %% if a chord is a standard chord with notes. We could have used has-notes?
@@ -231,7 +231,7 @@ note with the tie symbol)"
 
 #(if (and (defined? 'cPCheckForTies) ; compatibility for files made with previous version. To add :
           (not cPCheckForTies))      ; (define cPCheckForTies #f) before \include "changePitch.ly"
-    (define (check-for-ties pattern) pattern))
+    (ly:parser-define! 'check-for-ties (lambda(pattern) pattern)))
 
 #(define (change-pitch pattern newnotes)
 "The scheme function of \\changePitch, `pattern and `newnotes as music."

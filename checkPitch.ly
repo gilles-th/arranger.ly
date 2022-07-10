@@ -1,6 +1,7 @@
 \version "2.20.0"
 %% LSR = http://lsr.di.unimi.it/LSR/Item?id=773
-%% version Y/M/D = 2021/06/20
+%% version Y/M/D = 2022/07/11
+%% Tested with Lilypond 2.22
 %% Last modification :
 %%   - add same-pitch-as
 %%   - optimization of correct-out-of-range

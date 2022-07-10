@@ -1,5 +1,6 @@
 \version "2.20.0"
-%% version Y/M/D = 2021/06/20 for lilypond > 2.20
+%% version Y/M/D = 2022/07/11
+%% Tested with Lilypond 2.22
 %% LSR = http://lsr.di.unimi.it/LSR/Item?id=542
 % Last modif. (the last at the end) :
 % - change append! by cons in (make-signature-list)
@@ -424,21 +425,6 @@ named \\global. The first event in global begins always at measure first-measure
       (let ((mom (vector-ref section 1))
             (1measure-len (vector-ref section 2)))
         (mom-add mom (mom-imul 1measure-len (- number n))))))))
-
-% #(define* (measure-number->moment number #:optional first-measure)
-% "Give the length of the music, before the measure number `number"
-% (if (<= number first-measure)
-%   ZERO-MOMENT
-%   (let loop ((l (or (*timing-sections*)
-%                     (make-timing-sections first-measure))))
-%     ; l is in reverse order, last sections to the beginning
-%     (let* ((section (car l))           ; l is never empty
-%            (n (vector-ref section 0))) ; a section begins at measure number n
-%       (if (< number n)                 ; is number in this section ?
-%         (loop (cdr l))                 ; no ? : prev section. Crash if number < first-measure
-%         (let ((mom (vector-ref section 1))
-%               (1measure-len (vector-ref section 2)))
-%           (mom-add mom (mom-imul 1measure-len (- number n)))))))))
 
 %%
 upToMeasure = #(define-music-function (number) (integer?)

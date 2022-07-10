@@ -1,6 +1,6 @@
 \version "2.20.0"
-%% version Y/M/D = 2021/06/20
-%% For Lilypond 2.20 or higher
+%% version Y/M/D = 2022/04/11
+%% Tested with Lilypond 2.22
 %% Is a work-around for that :
 %% http://code.google.com/p/lilypond/issues/detail?id=824
 %% Last features/modifications since last version:
@@ -15,7 +15,7 @@
 
 #(define* (anchor->list music-with-anchors sym
             #:optional (pred (lambda(sym syms lst)
-              (and (or (pair? lst)       ; sym has been found, add anchors after sym
+              (and (or (pair? lst)       ; sym has been found, we add anchors after sym
                        (not sym)         ; sym = #f => adds all anchors from beginning
                        (memq sym syms))  ; sym found ?
                    syms))))              ; the value to retrieve
