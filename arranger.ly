@@ -1,5 +1,5 @@
 \version "2.20.0"
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/07/11 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/08/01 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%% tested with Lilypond 2.22  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The main objective of arranger.ly is to provide a set of functions to make
 % arrangements of pieces originally intended for another band :
@@ -20,7 +20,7 @@
 %   add-dynamics supports also now \afterGrace section
 %   syntax extension for x-pos function
 %   voice function allows more parameters (voice n [m ..] music)
-%   extended features for voices count > 2 in functions split, chords->voices, voices->chords
+%   extended features for voices count > 2 for functions split, chords->voices, voices->chords
 %   export-instruments has been redone : do not split MultiMeasureRest and SimultaneousMusic
 %   new functions : mmr, seq-r, signatures, keys, marks
 %   add-dynamics can add dynamics in a \grace section, using the colon ":" character
@@ -103,26 +103,28 @@
 #(define (int->moment n) ; (better name : scheme->moment ?)
 "If n = 0, returns ZERO-MOMENT
 If n is an exact integer (positive or negative), returns <moment 1/n>
-If n is a decimal number (4.3 for ex), returns the length of <duration (log2 i) count>,
-with i as the integer part of n (4 for 4.3), and count the decimal part (3). 
-(count defaults to 1 if decimal part = 0 (4. for ex))
+If n is a decimal number (4.3 for ex), the integer part 4 is the main duration and the
+decimal part 3 is the count of . for this duration, and the function returns the length
+ of <duration 4...> ie <moment 15/32>
+The count of . defaults to 1 if decimal part = 0 ; (int->moment 4.) returns <moment 3/8>
 If n is a rationnal, returns <moment n>
 Any moment remains unchanged"
-(cond
-    ((= n 0) ZERO-MOMENT)
-    ; Note: (integer? 4.) => #t !
-    ((integer? n)(if (exact? n) ; 4 or 4. form ?
-       (ly:make-moment 1 n 0 0) ; zeros needed ! (if n <= 0)
-       (ly:make-moment 3 (* 2 (inexact->exact n)) 0 0))) ; 4. => <mom 3/8>
-    ((ly:moment? n) n) ; can be usefull with scaled musics
-    ((rational? n) (if (exact? n) ; 7/8 or 4.3 form ?
-       (ly:make-moment n) ; form: 7/8
-       (let* ((10n (inexact->exact (truncate (* 10 (abs n))))) ; 4.3 -> 43 | -4.3 -> 43
-              (q (quotient 10n 10)) ; => 4 (log2 for duration: 2 (4 = 2^2))
-              (r (modulo 10n 10))   ; => 3 (number of points = rest of division)
-              (mom (ly:duration-length (ly:make-duration (ly:intlog2 q) r))))
-         (if (> n 0) mom (mom-sub ZERO-MOMENT mom)))))
-    (else ZERO-MOMENT))) % ignores any error
+(cond              ; Note for guile and integers : (integer? 4.) returns #t !
+  ((integer? n) (cond  ; is n an exact or inexact integer ? ie 4 or 4. form ?
+     ((= n 0) ZERO-MOMENT) ; n will be a denominator so must be non 0
+     ((exact? n)           ; 4 => <mom 1/4>
+        (ly:make-moment 1 n 0 0)) ; zeros needed ! ( n can be < 0 )
+     (else                 ; 4. => <mom 3/8>
+        (ly:make-moment 3 (* 2 (inexact->exact n)) 0 0))))
+  ((ly:moment? n) n)      ; this syntax is used by moment->pos below.
+  ((rational? n) (if (exact? n) ; 7/8 or 4.3 form ?
+     (ly:make-moment n)    ; 7/8 => <mom 7/8>
+     (let* ((10n (inexact->exact (truncate (* 10 (abs n))))) ; 4.3 -> 43 | -4.3 -> 43
+            (q (quotient 10n 10)) ; => 4 (log2 for duration: 2 (4 = 2^2))
+            (r (modulo 10n 10))   ; => 3 (number of points = rest of division)
+            (mom (ly:duration-length (ly:make-duration (ly:intlog2 q) r))))
+       (if (> n 0) mom (mom-sub ZERO-MOMENT mom)))))
+  (else ZERO-MOMENT))) % ignores any error
 
 %% The main code in pos->moment is provided by measure-number->moment, which is
 %% defined in "extractMusic.ly". idem for mom-add which allows args count > 2
@@ -133,7 +135,7 @@ Any moment remains unchanged"
                   (m first-measure-number)) ; if n < m, take m later
          (cond ((not (integer? n)) ; can be 'end or 'begin
                   (if (eq? 'end n)(ly:music-length global) ;
-                                  ZERO-MOMENT)) ; b = 'begin
+                                  ZERO-MOMENT)) ; n = 'begin
                (else (measure-number->moment (max n m) m))))))
   (apply mom-add mom (map int->moment (cdr pos-list)))))
 
@@ -2200,7 +2202,7 @@ letter is added to the left"
      (and i (any (lambda(m) (let ((index (event->index m)))
                               (and index (= index i) m)))
                  whole-event-list)))
-   (define (copy-dur from-whole-evt to-whole-evt) ; done to work also with chords
+   (define (copy-dur from-whole-evt to-whole-evt) ; make to work also with chords
      (define (dur-evt? m) (ly:music-property m 'duration #f))
      (define (dur-evts-in evt) (fold-some-music dur-evt? cons '() evt))
      (for-each (lambda(from to)(ly:music-set-property! to 'duration
@@ -2208,6 +2210,7 @@ letter is added to the left"
                (dur-evts-in from-whole-evt)
                (dur-evts-in to-whole-evt)))
 ;; main
+   ; (display (ly:moment? (pos:remain music-start-pos)))
 (let* ((music ((set-del-events 'BarCheck) music)) ;; del previous BarChecks to avoid double Barcheck
        (1st-i (pos:num music-start-pos)) ; bar number
        (partial (and (= 1st-i first-measure-number)
@@ -2218,6 +2221,7 @@ letter is added to the left"
                     (list (seq partial (make-music 'BarCheck))) ; ... add it.
                     '())))
     (let ((m (em music i (1+ i) music-start-pos)))  ;; extract 1 measure
+      ;(display-scheme-music m)
       (if (defined-music? m) ;; true while end not reached
         (let* ((l (make-whole-event-list m #f)) ; event of the current measure
                (sim (any (lambda(m)(and (eq? (name-of m) 'SimultaneousMusic) m)) l)))
