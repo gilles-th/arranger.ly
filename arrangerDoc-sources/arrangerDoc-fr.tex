@@ -1,4 +1,4 @@
-%%%%%% Documentation de arranger.ly. Version YYYY/MM/DD = 2020/10/05 %%%%%%
+%%%%%% Documentation française de arranger.ly. Version YYYY/MM/DD = 2022/12/16 %%%%%%
 %% À compiler avec : ConTeXt (LuaTex)
 %% https://wiki.contextgarden.net/Main_Page
 
@@ -1718,7 +1718,7 @@ Le tableau suivant montre la liste obtenue avec différentes valeurs:
 \blank
 \reference[exemple8]{exemple8}
 \starthanging[right]
-{\vbox{\blank[5.2em]\externalfigure[exemple08.pdf][wfactor=305, align=flushright]}}
+{\vbox{\blank[5em]\externalfigure[exemple08.pdf][wfactor=305, align=flushright]}}
 \underbar{\sc\Words exemple 8}
 \startlily
 global = {s1*12 \bar "|."}
@@ -2798,17 +2798,75 @@ assocDynList = #(assoc-pos-dyn
   ...
 )
 \stopmylily
+\blank[1.8em]
+D'autre macros peuvent être définies mais à l'instar de \type{def-dyn}, elles devront toutes avoir comme valeur de retour, la fonction scheme \type{/} (division de nombres). \type{assoc-pos-dyn} en effet, supprime automatiquement un tel élément de la liste donnée en argument.\\
+\blank
+Voici quelques autres exemples de macros.\\
+\blank
+\index{def-dyn†txt}
+\index{def-txt†dyn}
+Les 2 macros \type{def-dyn+txt} et \type{def-txt+dyn} suivantes, permettent de créer des nuances composées telles \type{p sub} ou \type{molto f}.\\
+Elles prennent 2 arguments de type {\em chaîne de caractères}. Le nom de la nuance est concaténée à partir de ces 2 arguments : \type{psub} et \type{moltof}.\\
 
-\stoptitle
+\startlily
+#(define-macro (def-dyn+txt dyn txt)   ;&\em{& (def-dyn+txt "p" "sub") => psub &}&
+`(let ((sym (string->symbol (string-append ,dyn ,txt))))
+   (ly:parser-define! sym (make-dynamic-script (markup
+                            #:dynamic ,dyn
+                            #:normal-text #:italic ,txt)))
+   /))
+
+#(define-macro (def-txt+dyn txt dyn) ;&\em{& (def-txt+dyn "molto" "f") => moltof&}&
+`(let ((sym (string->symbol (string-append ,dyn ,txt))))
+   (ly:parser-define! sym (make-dynamic-script (markup
+                            #:normal-text #:italic ,txt
+                            #:dynamic ,dyn)))
+   /))
+\stoplily
+\blank[1.8em]
+
+\index{def-span-dyn}
+La macro \type{def-span-dyn} permet ici de créer des nuances avec des lignes d'extensions.\\
+Le 1\high{er} argument de type {\em symbol} permet de définir le nom de la nouvelle nuance.\\
+Le 2\high{nd} argument de type {\em chaîne de caractères} est le texte à afficher par la nuance.\\
+Si le 1\high{er} argument est omis, le nom de la nuance est formé à partir de la {\em chaîne de caractères}, en n'y gardant que les lettres.
+
+\startlily
+&\em{&% pré-fonction &}&
+#(define (def-span-dyn-generic sym txt)
+     (ly:parser-define! sym (make-music 'CrescendoEvent
+       'span-direction START 'span-type 'text 'span-text txt))
+     /)
+&\em{&% la macro &}&
+#(define-macro (def-span-dyn txt . args)
+`(if (and (pair? (list ,@args)) (symbol? ,txt))
+   (apply def-span-dyn-generic (list ,txt ,@args))
+   (let ((sym (string->symbol (string-filter ,txt char-set:letter))))
+     (def-span-dyn-generic sym ,txt))))
+
+                           &\em{&%%%%%%%%%%%%%%%%%&}&
+global = s1*3
+music = { \repeat unfold 16 c8 c1 }
+
+#(init '(instru))
+#(rm 'instru 1 (rel 1 music))
+
+assocDynList = #(assoc-pos-dyn
+  (def-span-dyn 'crescspace " ")
+  (def-span-dyn "cresc. molto")
+    "1 pp crescspace / 2 crescmolto / 3 ff" 'instru
+)
+
+\new Staff $(sim global instru (add-dyn 'instru))
+\stoplily
+\midaligned{\externalfigure[macro-spanner-dyn.pdf][wfactor=300]}
+%\midaligned{\underbar{\sc\Words exemple 11}}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
- 
+
 \title[index]{INDEX}
 \placeindex[level=title]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\stoptext
-
-
 
 \stoptext

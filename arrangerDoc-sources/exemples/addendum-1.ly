@@ -1,5 +1,5 @@
 %% addendum-1
-\version "2.20.0"
+\version "2.24.0"
 
 \include "arranger.ly"
 
@@ -9,7 +9,7 @@
   \context { \Score
     skipBars = ##t
     \override MultiMeasureRest.expand-limit = #1
-    markFormatter = #format-mark-box-letters
+    rehearsalMarkFormatter = #format-mark-box-letters
   }
 }
 

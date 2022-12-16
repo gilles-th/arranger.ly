@@ -1,9 +1,8 @@
-\version "2.20.0"
-%% version Y/M/D = 2022/08/01
-%% Tested with Lilypond 2.22
-%% LSR :
-%%   http://lsr.di.unimi.it/LSR/Item?id=654
-%% Last release here :
+\version "2.24.0"
+
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/16 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% LSR =  http://lsr.di.unimi.it/LSR/Item?id=654
+%% Last release here:
 %%   http://gillesth.free.fr/Lilypond/changePitch/
 %% This directory contains also a doc called: changePitch-doc.pdf
 %% Last changes (the more recent to the top) :
@@ -129,7 +128,7 @@
             (if (integer? prev)(set! res (cons prev res)))
             (set! prev (if (pair? prev)(cons evt prev)(list evt))))  ; a list
          ((memq name (list 'SkipEvent 'SkipMusic))
-            (if (pair? prev)(set! res (cons prev res))) ; keep the reverse order
+            (if (pair? prev)(set! res (cons prev res))) ; keeps the reverse order
             (set! prev (if (integer? prev) (1+ prev) 1)))
        ; ((memq name (list 'EventChord 'NoteEvent 'RestEvent))
          ((note-or-chord? evt 'RestEvent) ; a note, a chord, or a rest
@@ -292,9 +291,9 @@ note with the tie symbol)"
                         (loop notes-list (cdr pat-list) res))))))  ; the next evt only
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
         ((or (and
-               (not (eq? 'TimeScaledMusic (name-of evt))) ; \tuplet have now a 'duration !
-               (ly:music-property evt 'duration #f))  ; current evt in pattern is not a note
-             (not (has-notes? evt)))
+               (not (eq? 'TimeScaledMusic (name-of evt))) ; \tuplet have  a 'duration !
+               (ly:music-property evt 'duration #f))  ; current evt is a skip or a rest
+             (not (has-notes? evt)))                  ; \clef, \time, \override for ex.
            (cond ((memq cPPatternEnd (ly:music-property evt 'tags)) ; last evt of pattern
                     (let ((x (car notes-list)))
                       (if (and (integer? x)
@@ -322,18 +321,18 @@ note with the tie symbol)"
                  (case (length new-e)
                    ((0) (set! empty? #t)
                         new-e)
-                   ((1)(car new-e))
-                   (else (make-sequential-music new-e))))))
+                   ((1) (car new-e))
+                   (else (make-sequential-music new-e)))))
+             (set! empty? #t))
            (if (pair? es)
              (let ((new-es (loop notes-list es '())))
                (ly:music-set-property! evt 'elements new-es)
-               (set! empty? (and empty? (null! new-es))))) ; #t if both empty
-
+               (if empty? (set! empty? (null? new-es))))) ; #t if both empty
            (let ((next-new-notes (if (or same-pitch-section?
                                          (and (integer? skip-notnote-event?)
                                               (> skip-notnote-event? 1)))
-                                    last-notes-list
-                                    (cdr last-notes-list))))
+                                   last-notes-list
+                                   (cdr last-notes-list))))
               (if empty? (loop next-new-notes (cdr pat-list) res)
                          (loop next-new-notes (cdr pat-list) (cons evt res))))))))))))
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; end loop ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -423,15 +422,3 @@ cPII = #(define-music-function (newnotes) (ly:music?)
 #(define cP changePitch)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-%{
-convert-ly (GNU LilyPond) 2.19.82  convert-ly: Traitement de «  »...
-Conversion en cours : 2.19.80
-%}
-
-
-%{
-convert-ly (GNU LilyPond) 2.22.0  convert-ly: Traitement de «  »...
-Conversion en cours : 2.21.0, 2.21.2, 2.22.0
-%}

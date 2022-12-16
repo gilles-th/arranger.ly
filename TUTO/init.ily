@@ -180,7 +180,7 @@ Returns the symbol converted"
 %%%%%%%%%%%%%%%%%%%%% layout settings %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #(define textSize -2)
 #(define dynamicSize -2)
-#(if (not (defined? 'header-sep))(define header-sep 4)) % can be tweaked in separate parts
+#(if (not (defined? 'header-sep))(ly:parser-define! 'header-sep 4)) % can be tweaked in separate parts
 
 myLayoutSet = \with  {
   \override TextScript.font-size = #textSize

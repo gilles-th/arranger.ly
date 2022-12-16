@@ -1,6 +1,6 @@
-\version "2.20.0"
-%% version Y/M/D = 2022/08/01
-%% Tested with Lilypond 2.22
+\version "2.24.0"
+
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/16 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% LSR = http://lsr.di.unimi.it/LSR/Item?id=769
 %% last changes :
 %%   - tuplets have now a duration . fix line 92-93 and 179
@@ -202,9 +202,3 @@ cAII = #(define-music-function (music) (ly:music?)
 
 #(define cA copyArticulations)
 #(define notCA notCopyArticulations)
-
-
-%{
-convert-ly (GNU LilyPond) 2.19.82  convert-ly: Traitement de «  »...
-Conversion en cours : 2.19.80
-%}

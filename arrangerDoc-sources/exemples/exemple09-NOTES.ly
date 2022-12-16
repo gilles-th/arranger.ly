@@ -1,5 +1,6 @@
-%% exemple09-NOTES.ly
-\version "2.20.0"
+% exemple09-NOTES.ly
+% this file is included in several ly files and doesn't produce any pdf
+\version "2.24.0"
 
 \include "arranger.ly"
 
@@ -7,7 +8,6 @@
 
 \layout { \context { \Score
   \override BarNumber.break-visibility = #all-visible
-  barNumberVisibility = #all-bar-numbers-visible
   skipBars = ##t
   \override BarNumber.font-size = #+2
   \override MultiMeasureRest.expand-limit = #1
@@ -21,8 +21,9 @@ music = \relative c' {
   a4 g f e | d2 g, | c1
 }
 
+% exemple09-flute-en.ly has an english version of names below.
 #(if (not (defined? 'names))
-  (define names (list "(violon)" "obligé")))
+  (ly:parser-define 'names (list "(violon)" "obligé")))
 
 #(begin
 (rm 'vl 1 music)
@@ -30,7 +31,4 @@ music = \relative c' {
 (rm 'fl 4 (seq (txt (second names) UP)
                (rel #{ f'4 g a b | c1 #}))))
 
-%   \new StaffGroup <<
-%   \new Staff \with{ instrumentName = fl }{<< \global \fl >>}
-%   \new Staff \with{ instrumentName = vl }{<< \global \vl >>}
-%   >>
+

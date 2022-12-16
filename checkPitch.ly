@@ -1,7 +1,7 @@
-\version "2.20.0"
+\version "2.24.0"
+
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/16 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% LSR = http://lsr.di.unimi.it/LSR/Item?id=773
-%% version Y/M/D = 2022/08/01
-%% Tested with Lilypond 2.22
 %% Last modification :
 %%   - add same-pitch-as
 %%   - optimization of correct-out-of-range
@@ -112,8 +112,8 @@ of 2 notes specifying low and high pitches range."
 #(define ((same-pitch-as p1 . args) p2)
 "Tests octave, notename and alteration equality of pitches p1 and p2.
 Ignores octaves if 'any-octave is in args.
-For alterations, an other comparison predicate than = can be specified in args.
-It can be > < >= <= or even + - * to ignore alterations" ; or better for guile > 2.0: (const #t)
+For alterations, an other comparison predicate than = can be specified in args. It can be > < >= <= 
+To ignore alterations, use (const #t)" ; + - * also works
    (define alteration-comp (or (find procedure? args) =)) ; the alteration predicate
    (define any-octave? (memq 'any-octave args))           ; ignore octave ?
  (and (= (ly:pitch-notename p1) (ly:pitch-notename p2))
@@ -123,8 +123,6 @@ It can be > < >= <= or even + - * to ignore alterations" ; or better for guile >
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-
 %% tests
 %{   %% ajouter un % en début de ligne pour le test -> %%{
 music = \relative c' {
@@ -132,7 +130,6 @@ music = \relative c' {
   g^"g'" a b c
   d e f g^"g''" a b c2
 }
-
 
 \score {<<
   \new Staff \with { instrumentName = "1"}
@@ -153,7 +150,8 @@ music = \relative c' {
 range = < g' g'' >
 \new Staff \with { instrumentName = "4 Alt"}
         $(correct-out-of-range music range)
-%{
-convert-ly (GNU LilyPond) 2.19.82  convert-ly: Traitement de «  »...
-Conversion en cours : 2.19.80
+
+#(display ((same-pitch-as #{ c #}) #{ cis #}))
+#(display ((same-pitch-as #{ c #} (const #t)) #{ cis #}))
+
 %}

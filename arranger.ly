@@ -1,12 +1,12 @@
-\version "2.20.0"
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/08/01 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%% tested with Lilypond 2.22  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\version "2.24.0"
+
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/16 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The main objective of arranger.ly is to provide a set of functions to make
 % arrangements of pieces originally intended for another band :
 % for ex a symphonic piece arranged for a concert band (wood-winds and percussions only).
 % In particular, arranger.ly allows the insertion of a fragment of music (a theme for ex),
 % to simultaneously a whole set of instruments, and to several musical positions in one shot.
-% To achieve this goal, the notion of "position" had to be redefined. The timing
+% To achieve this goal, the notion of "position" had to be rethought. The timing
 % location system is now based on measure number (Lilypond use instead moments).
 % To use arranger.ly functions, a user has just to :
 % 1- define a variable called \global, where all time signatures are stored.
@@ -34,7 +34,7 @@
 %      "13 ^mf#-0.5" means : at measure 13, -\tweak DynamicText.self-alignment-X #-0.5 ^mf
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\include "chordsAndVoices.ly"    %% original name "chord.ly". See :
+\include "chordsAndVoices.ly"    %% (original name "chord.ly") See :
                                  %% LSR = http://lsr.di.unimi.it/LSR/Item?u=1&id=761
                                  %% LSR = http://lsr.di.unimi.it/LSR/Item?u=1&id=545
 \include "changePitch.ly"        %% LSR = http://lsr.di.unimi.it/LSR/Item?id=654
@@ -194,9 +194,11 @@ Any moment remains unchanged"
 %% Here are some utilities to get informations from these arguments
 #(define (obj->music x)
 (cond
+  ((ly:music? x) x)
   ((symbol? x) (primitive-eval x)) ;; try (module-ref (current-module) x)
   ((pair? x) (map obj->music x))
-  (else x)))
+  ((ly:pitch? x) (make-music 'NoteEvent 'pitch x))
+  (else x))) % ly:error ?
 
 #(define (obj->music-list obj)
 (if (cheap-list? obj)
@@ -375,12 +377,12 @@ The result lists of each iteration are concatained together.
        args))
 
 %% Guile 2.0 propose a compose function, not 1.8 :-(
-#(define ((compose func-n . other-funcs) obj)
-"((compose func-n ... func-2 func-1) obj) will result to 
-  (func-n ... (func-2 (func-1 obj)))"
-(if (null? other-funcs)
-  (func-n obj)
-  (func-n ((apply compose (car other-funcs)(cdr other-funcs)) obj))))
+% #(define ((compose func-n . other-funcs) obj)
+% "((compose func-n ... func-2 func-1) obj) will result to
+%   (func-n ... (func-2 (func-1 obj)))"
+% (if (null? other-funcs)
+%   (func-n obj)
+%   (func-n ((apply compose (car other-funcs)(cdr other-funcs)) obj))))
 
 %%%% skip utilities %%%%
 #(define* (moment->skip mom-or-rationnal #:optional text dir X-align Y-offset)
@@ -1034,13 +1036,15 @@ combine-func is a function with 2 music parameters (like split or sim) :
       res))))
 
 %% derivated from \partCombine
-#(define (part-combine part1 part2)
-;(make-part-combine-music (list part1 part2) #f)) ;; <- lilypond 2.18
-; new in lilypond 2.20 : see ly/music-functions-init.ly ;
-(make-directed-part-combine-music #f '(0 . 8) part1 part2
-    #{ \with { \voiceOne \override DynamicLineSpanner.direction = #UP } #}
-    #{ \with { \voiceTwo \override DynamicLineSpanner.direction = #DOWN } #}
-    #{ #}))
+% #(define (part-combine part1 part2)
+% ;(make-part-combine-music (list part1 part2) #f)) ;; <- lilypond 2.18
+% ; new in lilypond 2.20 : see ly/music-functions-init.ly ;
+% (make-directed-part-combine-music #f '(0 . 8) part1 part2
+%     #{ \with { \voiceOne \override DynamicLineSpanner.direction = #UP } #}
+%     #{ \with { \voiceTwo \override DynamicLineSpanner.direction = #DOWN } #}
+%     #{ #}))
+
+#(define part-combine partCombine)
 
 #(define combine1 (add-voice 1 part-combine))
 
@@ -1344,31 +1348,32 @@ to insert the dynamics into a \\grace {} section."
           (after-grace #f)) ; actived by "::" ex "p::4 :8 f:16" => \afterGrace s4\p { s8 s16\f }
       (let loop ((grace "")
                  (pos 0))   ; position of the section to parse
-        (let ((i (and (< pos len) (string-index str #\: pos))))               ; index of : char
+        (let ((i (and (< pos len) (string-index str #\: pos))))   ; i = index of semi-column : char
+          ; (format #t "\n\tstr = ~s\n\tsemi-column index = ~a" str i )
           (if i                                        ; for str = "\mf:16 :16*2" => i=3 then 7
             (let* ((k (or (string-index str #\space i) len))                  ;  => k=6 then 12
                    (j (1+ i))
-                   (2cols? (string= str ":" j (1+ j))) ; "::" ? (Returns #f or index after "::")
-                   (dur (substring str (if 2cols? 2cols? j) k)) ; string after ":" or "::"
+                   (2cols? (string-index str #\: j (1+ j)))     ; "::" ? (Returns #f or j)
+                   (dur (substring str (if 2cols? (1+ j) j) k)) ; string after ":" or "::"
                    (dyn (substring str pos i))                  ; string before 1st : char
                    (skip (string-append "s" dur                 ; s16 then s16*2
                                             dyn)))              ; \mf then ""
-              ; (format #t "\nstr = ~a\ni = ~a\nj = ~a\nk = ~a\n2cols? = ~a\n" str i j k 2cols?)
+              ; (format #t "\n\tj = ~a\n\tk = ~a\n\t2cols? = ~a\n" j k 2cols?)
               (cond
-                (2cols? (let* ((splitted-dur (string-split dur #\:))
-                               (dur (car splitted-dur))
-                               (fracs (cdr splitted-dur))
+                (2cols? (let* ((splitted-dur (string-split dur #\:)) ; ex  f::4:15:16 => '("4" "15" "16")
+                               (dur (car splitted-dur))			     ; "4"
+                               (fracs (cdr splitted-dur))			 ; '("15" "16")
                                (frac (if (null? fracs)
-                                 after-grace-frac
-                                 (string->number (string-append
+                                 after-grace-frac                    ; afterGraceFraction def
+                                 (string->number (string-append      ; => 15/16
                                    (car fracs) "/"
                                    (if (null? (cdr fracs)) "1" (cadr fracs))))))
                                (scale-dur "\\scaleDurations "))
                           (set! after-grace (cons ; before and after the grace section
-                            (string-append scale-dur (number->string frac)
+                            (string-append scale-dur (number->string frac) ; "\\scaleDurations 15/16 s4\\f {"
                                                      " s" dur dyn
                                            " { ")
-                            (string-append " } "
+                            (string-append " } "                           ; "} \\scaleDurations 1/16 s4"
                                            scale-dur (number->string (- 1 frac))
                                                      " s" dur))))
                         (loop grace (1+ k)))
@@ -1378,7 +1383,7 @@ to insert the dynamics into a \\grace {} section."
                               (substring grace 0 (1- (string-length grace)))
                               skip " }")
                             (1+ k)))))
-            (if (> pos 0)   ; if a least 1 : char has been found
+            (if (> pos 0)   ; if at least one : char has been found
               (string-append
                 (if after-grace (car after-grace) "")
                 grace " <>" (if (< pos len) (substring str pos len) "")
@@ -1404,7 +1409,7 @@ to insert the dynamics into a \\grace {} section."
                                      (procedure? (eval-string 1st-word))))      ; is it a func ? (must return a pos !)
                             (str->pos->pos-str s) ; apply func and convert resulting pos to string. ex (cons A '(2 8.))
                             (str->pos->pos-str (string-append "(list " (substring s 1)))))))))) ; force evaluation
-        ; (format #t "\n~a - ~a" str pos)   ; ← uncomment for debugging
+        ;(format #t "\n~s\n\tpos = ~a" str pos)   ; ← uncomment for debugging
         (if (= pos-end len)                           ; ← if no dyn specified :
           (let ((mom (pos-str->mom pos)))             ; that means that user want
             (let loop ((source prev-res)              ; to delete a previous pos-str
@@ -1511,7 +1516,7 @@ obj is an instrument or a list of instruments."
     (fold-right              ;; a sub-list will have at least 1 operator and 1 elt
       (lambda(x prev-lst)
         (cond
-          ((instrument? x)(cons x prev-lst))  ;; keeps instrument? also 'and 'or 'xor
+          ((instrument? x)(cons x prev-lst))  ;; instrument? keeps also 'and 'or 'xor
           ((pair? x)
              (let ((elt (car x)))
                (if (memq elt '(or and xor))   ;; elt is an operator
@@ -1756,7 +1761,7 @@ in `music."
        (if i (- (1+ i)) ; index 0 ("breve") -> -1 , index 1 -> -2 etc
              (let ((n (string->number str)))
                (if (and (integer? n) (> n 0))
-                 (log2 n)
+                 (ly:intlog2 n)
                  (ly:error (_ "not a valid duration string: ~a") duration-str))))))
   (let ((split-list (string-split duration-str #\.))) ;; "4.."   -> (list "4" "" "")
      (note-by-number-markup layout props
@@ -1929,6 +1934,8 @@ with a note."
 
 #(define-macro (cp1 obj) `(cp patI ,obj))
 #(define-macro (cp2 obj) `(cp patII ,obj))
+% Syntax error in guile 2 with compose: ((compose cp1 (set-octave 2)) music) =>
+%    "unknown location: source expression failed to match any pattern in form cp1"
 
 #(define (cp-with obj pos new-notes . others-pos-new-notes)
 (let loop ((pos pos)

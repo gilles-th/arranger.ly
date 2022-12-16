@@ -1,6 +1,6 @@
-\version "2.20.0"
-%% version Y/M/D = 2022/08/01
-%% Tested with Lilypond 2.22
+\version "2.24.0"
+
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/16 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% LSR = http://lsr.di.unimi.it/LSR/Item?u=1&id=761
 %% LSR = http://lsr.di.unimi.it/LSR/Item?u=1&id=545
 %% for Lilypond 2.20 or higher.
@@ -445,10 +445,4 @@ music = \relative c' \addVoiceAlt
 >>}
 
 
-%}
-
-
-%{
-convert-ly (GNU LilyPond) 2.19.82  convert-ly: Traitement de «  »...
-Conversion en cours : 2.19.80
 %}

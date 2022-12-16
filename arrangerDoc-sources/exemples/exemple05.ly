@@ -1,5 +1,5 @@
 %% example 5
-\version "2.20.0"
+\version "2.24.0"
 
 \include "arranger.ly"
 
@@ -7,7 +7,6 @@
 
 \layout { \context { \Score
   \override BarNumber.break-visibility = #all-visible
-  barNumberVisibility = #all-bar-numbers-visible
   skipBars = ##t
   \override BarNumber.font-size = #+2
   \override MultiMeasureRest.expand-limit = #1 }}

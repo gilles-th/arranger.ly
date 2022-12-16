@@ -1,8 +1,8 @@
-\version "2.20.0"
-%% version Y/M/D = 2022/08/01
-%% Tested with Lilypond 2.22
+\version "2.24.0"
+
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/16 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Is a work-around for that :
-%% http://code.google.com/p/lilypond/issues/detail?id=824
+%%   http://code.google.com/p/lilypond/issues/detail?id=824
 %% Last features/modifications since last version:
 %%   replace the function anchor->moment by anchor->list
 %%   add a function musicAt
@@ -127,6 +127,3 @@ global = \relative c'
 \new Voice \addAt #'coda \global {\tempo \markup "Extremely slow"}
 
   %}
-
-
-

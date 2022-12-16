@@ -1,5 +1,5 @@
 %% fill-percent.ly
-\version "2.20.0"
+\version "2.24.0"
 
 \include "arranger.ly"
 
@@ -9,7 +9,6 @@
   \context {
     \Score \override BarNumber.break-visibility = #all-visible
     \override BarNumber.font-size = #+2
-    barNumberVisibility = #all-bar-numbers-visible
   }
 }
 

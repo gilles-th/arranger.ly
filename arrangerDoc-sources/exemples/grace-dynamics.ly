@@ -1,5 +1,5 @@
 %% grace-dynamics.ly
-\version "2.20.0"
+\version "2.24.0"
 
 \include "arranger.ly"
 
@@ -7,9 +7,7 @@
 
 \layout {
   indent = 0
-  \context { \Score
-    % barNumberVisibility = #all-bar-numbers-visible
-    %\override BarNumber.break-visibility = ##(#t #t #t)    
+  \context { \Score   
     skipBars = ##t
     \override MultiMeasureRest.expand-limit = #1
   }
@@ -19,7 +17,7 @@ global = s1
 all = #'(instru1 instru2 instru3)
 #(init all)
 
-music = { d2 \acciaccatura {c16 cis d } es2 }
+music = { d2 \acciaccatura { c16 cis d } es2 }
 
 #(rm all 1 (rel 1 0 -1 music))
 

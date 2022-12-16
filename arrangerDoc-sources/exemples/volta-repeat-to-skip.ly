@@ -1,5 +1,5 @@
-%% volta-repeat->skip.ly
-\version "2.20.0"
+%% volta-repeat-to-skip.ly
+\version "2.24.0"
 
 \include "arranger.ly"
 
@@ -8,7 +8,6 @@
 \layout {
   indent = 0
   \context { \Score
-    barNumberVisibility = #all-bar-numbers-visible
     \override BarNumber.break-visibility = ##(#t #t #t)    
     skipBars = ##t
     \override MultiMeasureRest.expand-limit = #1

@@ -1,5 +1,5 @@
 %% exemple08.ly
-\version "2.20.0"
+\version "2.24.0"
 
 \include "arranger.ly"
 
@@ -9,7 +9,6 @@
 
 \layout { \context { \Score
   \override BarNumber.break-visibility = #all-visible
-  barNumberVisibility = #all-bar-numbers-visible
   skipBars = ##t
   \override BarNumber.font-size = #+2
   \override MultiMeasureRest.expand-limit = #1
@@ -26,6 +25,6 @@ music = { e'2 f' | g' f' | e'1 }
 )
 
 \new StaffGroup <<
-  \new Staff \with{ instrumentName = "clarI" } { << \global \clI >> }
-  \new Staff \with{ instrumentName = "clarII" } { << \global \clII >> }
+  \new Staff \with{ instrumentName = "I" } { << \global \clI >> }
+  \new Staff \with{ instrumentName = "II" } { << \global \clII >> }
   >> 

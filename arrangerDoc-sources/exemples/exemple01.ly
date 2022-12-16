@@ -1,5 +1,5 @@
 %% exemple1.ly
-\version "2.20.0"
+\version "2.24.0"
 
 \include "arranger.ly"
 
@@ -7,14 +7,15 @@
 
 \layout {
   \context {
-    \Score \override BarNumber.break-visibility = #all-visible
-    \override BarNumber.font-size = #+2
-    barNumberVisibility = #all-bar-numbers-visible
+    \Score
+      \override BarNumber.break-visibility = ##(#t #t #f)
+      \override BarNumber.font-size = #+2
+      barNumberVisibility = #all-bar-numbers-visible
   }
 }
 
 global = {
- \partial 4 s4
+  \partial 4 s4
   s1*2
   % measure 3 : only 2 beats
   s4 \set Timing.measurePosition = #(ly:make-moment 3/4)
@@ -28,7 +29,7 @@ global = {
 all = #'(flute clar sax tptte cor tbne basse)
 #(init all)
 
-#(display (map measure-number->moment '(1 2 3 4 50)))
+%#(display (map measure-number->moment '(1 2 3 4 50)))
 % => (#<Mom 1/4> #<Mom 5/4> #<Mom 9/4> #<Mom 11/4> #<Mom 15/4>)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

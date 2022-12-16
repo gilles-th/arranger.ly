@@ -1,7 +1,7 @@
-\version "2.20.0"
-%% version Y/M/D = 2022/08/01
-%% Tested with Lilypond 2.22
-%% LSR = http://lsr.di.unimi.it/LSR/Item?id=542
+\version "2.24.0"
+
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/16 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LSR = http://lsr.di.unimi.it/LSR/Item?id=542
 % Last modif. (the last at the end) :
 % - change append! by cons in (make-signature-list)
 % - replace moment-null definition, by ZERO-MOMENT, which has been
@@ -112,8 +112,8 @@ Moments as <Mom 5/8>, will return (ly:make-duration k dots num den)"
     'element elt  %%  (make-music 'EventChord or make-sequential-music ...
 %}
 
-#(define-macro (extract-repeated-music) ; But not volta-music
-'(if (not (pair? elts))
+#(define-macro (extract-repeated-music) ; all repeated-music but not volta-music
+'(if (null? elts)
   (let* ((unfold-music (make-sequential-music (map
                          (lambda(section) (ly:music-deep-copy elt))
                          (make-list (ly:music-property music 'repeat-count)))))
@@ -126,25 +126,25 @@ Moments as <Mom 5/8>, will return (ly:make-duration k dots num den)"
         ((0) (make-music 'Music))
         ((1) (car extracted-sections))
         (else   ; the 1st or the last sections has been perhaps shortened
-          (let* ((first-section (car extracted-sections))
-                 (last-section (car (last-pair extracted-sections))) ; use last instead ?
-                 (seq-elts (list #f #f #f));(shortened? count*elt shortened?)
-                 (elt-length (ly:music-length elt)))
-            (if (ly:moment<? (ly:music-length first-section) elt-length)
-                (begin
-                  (set! count (1- count))
-                  (list-set! seq-elts 0 first-section)))      ; 0 = first elt
-            (if (ly:moment<? (ly:music-length last-section) elt-length)
-                (begin
-                  (set! count (1- count))
-                  (list-set! seq-elts 2 last-section)))       ; 2 = 3rd elt
-            (cond ((= count 1) (list-set! seq-elts 1 elt))    ; 1 = 2nd elt
-                  ((> count 1) (list-set! seq-elts 1
+          (let ((first-section (car extracted-sections))
+                (last-section (last extracted-sections))
+                (mid-section #f)  ; to convert to a repeated music
+                (res #f)          ; a list of musics to find
+                (elt-len (ly:music-length elt)))
+            (if (ly:moment<? (ly:music-length first-section) elt-len)
+              (set! count (1- count))
+              (set! first-section #f))
+            (if (ly:moment<? (ly:music-length last-section) elt-len)
+              (set! count (1- count))
+              (set! last-section #f))
+            (cond ((= count 1) (set! mid-section elt)) ; no  repeated music
+                  ((> count 1) (set! mid-section
                          (make-music name 'repeat-count count 'element elt))))
-            (set! seq-elts (filter (lambda (x) x) seq-elts)) ;delete trailing #f
-            (if (= (length seq-elts) 1)
-                  (car seq-elts)
-                  (make-sequential-music seq-elts))))))
+            (set! res (filter (lambda (x) x) ; delete trailing #f
+                              (list first-section mid-section last-section)))
+            (if (= (length res) 1)
+                  (car res)
+                  (make-sequential-music res))))))
   ; volta-repeat musics use 'element AND 'elements
   (let* ((extracted-elt (extract-range (ly:music-deep-copy elt) from to))
          (extracted-elts (filter defined-music? (map
@@ -171,8 +171,7 @@ Moments as <Mom 5/8>, will return (ly:make-duration k dots num den)"
  (cond
   ((whole-music-inside? begin-pos end-pos from to) music)
   ((whole-music-outside? begin-pos end-pos from to)(make-music 'Music))
-        ; From this point, the intervals [begin-pos end-pos][from to] overlap
-  (else
+  (else ; from this point, the intervals [begin-pos end-pos][from to] overlap
     (let((name (ly:music-property music 'name)))
      (if (and (ly:duration? (ly:music-property music 'duration))
               (not (eq? name 'TimeScaledMusic))) ; tuplet have a duration now !
@@ -186,7 +185,7 @@ Moments as <Mom 5/8>, will return (ly:make-duration k dots num den)"
                 ; for containers of duration evt, or a chord
        (let ((elts (ly:music-property music 'elements))
              (elt  (ly:music-property music 'element)))
-          (*current-moment* begin-pos)    ;we go deeper into the same music evt
+          (*current-moment* begin-pos)    ; we go deeper into the same music evt
           (cond
             ((string-contains (symbol->string name) "RepeatedMusic")
                (if (eq? name 'VoltaRepeatedMusic)
@@ -220,7 +219,7 @@ Moments as <Mom 5/8>, will return (ly:make-duration k dots num den)"
 #(define infinite-mom (ly:make-moment infinite-number))
 #(define infinite-mmR (make-music 'MultiMeasureRestMusic 'duration (ly:make-duration 0 0 infinite-number)))
 % WARNING : to use only within extractMusic functions. (See the \mmR definition at the bottom of this file)
-% A music just like { \compressFullBarRests #infinite-mmR } take 5 mn to compile on my machine
+% A music just like { \compressEmptyMeasures #infinite-mmR } take 5 mn to compile on my machine
 
 #(define (mom->integer mom) (quotient (ly:moment-main-numerator mom)(ly:moment-main-denominator mom)))
 #(define (mom-add mom . rest) (fold ly:moment-add mom rest))     % multiple args
@@ -749,7 +748,7 @@ multiReplaceMusic = #(define-music-function (music seq-music) (ly:music? ly:musi
 %     \extractBegin \mmR \upToMeasure #25
 %  will behave like an automatic multiMeasureRest filler.
 % WARNING : to use only with extractMusic functions.
-% Just a music like { \compressFullBarRests #infinite-mmR } take 5 mn to compile on my machine
+% Just a music like { \compressEmptyMeasures #infinite-mmR } take 5 mn to compile on my machine
                     %%% mmRest %%%
 mmR = { #infinite-mmR \tag #'mmWarning R1 }
                 % The \tag is a way to be recognized
@@ -767,8 +766,3 @@ mmS = { #(skip-of-length infinite-mmR) \tag #'mmWarning s1 }
 #(define rM replaceMusic)
 #(define mEM multiExtractMusic)
 #(define mRM multiReplaceMusic)
-
-%{
-convert-ly (GNU LilyPond) 2.19.82  convert-ly: Traitement de «  »...
-Conversion en cours : 2.19.80
-%}

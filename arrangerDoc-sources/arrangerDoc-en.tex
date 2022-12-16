@@ -1,4 +1,4 @@
-%%%%%% English Documentation of arranger.ly. Version YYYY/MM/DD = 2020/10/19 %%%%%%
+%%%%%% English Documentation of arranger.ly. Version YYYY/MM/DD = 2022/12/16 %%%%%%
 %% To compile with : ConTeXt (LuaTex)
 %% https://wiki.contextgarden.net/Main_Page
 
@@ -1756,13 +1756,13 @@ The following table shows the list obtained with different values:
 \blank[0.6em]
 \reference[exemple8]{exemple8}
 \starthanging[right]
-{\vbox{\blank[5.2em]\externalfigure[exemple08.pdf][wfactor=305, align=flushright]}}
+{\vbox{\blank[5em]\externalfigure[exemple08.pdf][wfactor=305, align=flushright]}}
 \underbar{\sc\Words example 8}
 \startlily
 global = {s1*12 \bar "|."}
 music = { e'2 f' | g' f' | e'1 }
 
-cls = #'(clI clII)
+cls = #'(I II)
 #(init cls)
 
 #(begin
@@ -2833,18 +2833,72 @@ assocDynList = #(assoc-pos-dyn
   ...
 )
 \stopmylily
+\blank[1.8em]
+Other macros can be defined but like \type{def-dyn}, they must all have as return value, the function scheme \type{/} (division of numbers). \type{assoc-pos-dyn} indeed, automatically removes such an element from the list given as argument.\\
+\blank
+\index{def-dyn†txt}
+\index{def-txt†dyn}
+The following 2 macros \type{def-dyn+txt} and \type{def-txt+dyn} allow you to create a compound dynamic such as \type{p sub} or \type{molto f}.\\
+They take 2 arguments of type {\em string}. The dynamic name is concatenated from these 2 arguments: \type{psub} and \type{moltof} for example.\\
 
-\stoptitle
+\startlily
+#(define-macro (def-dyn+txt dyn txt)   ;&\em{& (def-dyn+txt "p" "sub") => psub &}&
+`(let ((sym (string->symbol (string-append ,dyn ,txt))))
+   (ly:parser-define! sym (make-dynamic-script (markup
+                            #:dynamic ,dyn
+                            #:normal-text #:italic ,txt)))
+   /))
+
+#(define-macro (def-txt+dyn txt dyn) ;&\em{& (def-txt+dyn "molto" "f") => moltof&}&
+`(let ((sym (string->symbol (string-append ,dyn ,txt))))
+   (ly:parser-define! sym (make-dynamic-script (markup
+                            #:normal-text #:italic ,txt
+                            #:dynamic ,dyn)))
+   /))
+\stoplily
+\blank[1.8em]
+
+\index{def-span-dyn}
+The macro \type{def-span-dyn} here allows to create dynamics with extender lines.\\
+The 1\high{st} argument of type {\em symbol} is used to define the name of the new dynamic.\\
+The 2\high{nd} argument of type {\em character string} is the text to be engraved by the dynamic.\\
+If the 1\high{st} argument is omitted, the dynamic name is formed from the {\em string}, keeping only the letters in it.
+
+\startlily
+&\em{&% pre-function &}&
+#(define (def-span-dyn-generic sym txt)
+     (ly:parser-define! sym (make-music 'CrescendoEvent
+       'span-direction START 'span-type 'text 'span-text txt))
+     /)
+&\em{&% the macro &}&
+#(define-macro (def-span-dyn txt . args)
+`(if (and (pair? (list ,@args)) (symbol? ,txt))
+   (apply def-span-dyn-generic (list ,txt ,@args))
+   (let ((sym (string->symbol (string-filter ,txt char-set:letter))))
+     (def-span-dyn-generic sym ,txt))))
+
+                           &\em{&%%%%%%%%%%%%%%%%%&}&
+global = s1*3
+music = { \repeat unfold 16 c8 c1 }
+
+#(init '(instru))
+#(rm 'instru 1 (rel 1 music))
+
+assocDynList = #(assoc-pos-dyn
+  (def-span-dyn 'crescspace " ")
+  (def-span-dyn "cresc. molto")
+    "1 pp crescspace / 2 crescmolto / 3 ff" 'instru
+)
+
+\new Staff $(sim global instru (add-dyn 'instru))
+\stoplily
+\midaligned{\externalfigure[macro-spanner-dyn.pdf][wfactor=300]}
+%\midaligned{\underbar{\sc\Words exemple 11}}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
- 
 \title[index]{INDEX}
 \placeindex[level=title]
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \stoptext
-               
 
-                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-
-\stoptext
