@@ -119,7 +119,7 @@ etc…
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subject {Pré-requis logiciels :}
 \startitemize[2,joinedup,intro]
-\item Lilypond 2.20 ou supérieur
+\item Lilypond 2.24 ou supérieur
 \item Le fichier {\em arranger.ly} nécessite les fichiers \type{include} suivants :
   \starttabulate[|l|l|,before={\blank[1mm]},after={\blank[1mm]}, indenting=yes]
     \NC {\textbullet \hspace[1] \em chordsAndVoices.ly} \NC\small {(\from[chord])} \NC
@@ -887,7 +887,7 @@ On peut utiliser la fonction \type{def!} décrite \at{page}[def!], pour créer u
    29 (volta-repeat->skip (pos-sub 38 29) (* 2 3/4) 3/4)) ; &\em{&(en &}&7/8&\em{& et &}&3/4&\em{&)&}&   
 (def! 'global (sim global structure))  ; &\em{&global = << \global \structure >>&}&
 \stopmylily
-\placefigure[here]{}{\externalfigure[volta-repeat->skip][hfactor=max]}
+\placefigure[here]{}{\externalfigure[volta-repeat-to-skip][hfactor=max]}
 
 \midaligned{ \tfd ------------}
 \godown[1em]
@@ -896,9 +896,15 @@ On peut utiliser la fonction \type{def!} décrite \at{page}[def!], pour créer u
 \func{mmr}
 \syntax {(mmr ratio)}{}
 \syntax {(mmr from-bar-num to-bar-num)}{}
-Renvoie un \type{multiMeasasureRest} de longueur soit \type{(ly:make-moment ratio)}(par exemple\\ \type{(mmr 3/4)} pour \type+#{ R4*3 #}+, ou \type{(mmr 2)} pour \type+#{ R1*2 #}+), soit de la longueur de la musique entre les mesures \type{from-bar-num} et \type{to-bar-num} (par exemple \type{(mmr 5 13)} pour un silence remplissant intégralement les mesures 5 à 13). La syntaxe 2 utilise en interne la fonction \type{pos-sub} décrite plus haut.
-
-\blank
+Renvoie un \type{multiMeasasureRest} d'une durée calculée d'après :\\
+\startnarrower[1em]
+- un rationnel (syntaxe 1), de la forme p/q où q est une puissance de deux (1 2 4 8…)\\
+(par exemple \type{(mmr 3/4)} pour \type+#{ R4*3 #}+, ou \type{(mmr 2)} pour \type+#{ R1*2 #}+)\\
+- ou, pour la syntaxe 2, d'après la longueur musicale entre 2 mesures.\\
+(par exemple \type{(mmr 5 13)} pour un silence remplissant intégralement les mesures 5 à 13).
+\stopnarrower
+La syntaxe 2 utilise en interne la fonction \type{pos-sub} décrite plus haut.
+\blank[1.5em]
 \midaligned{ \tfd ------------}
 \page  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -2334,7 +2340,9 @@ Copie \type{n} fois \type{music}.
 \index{index->string-letters}
 \func{def-letters}
 \syntax {(def-letters measures [index->string][start-index][show-infos?])}{}
-La fonction associe des lettres aux mesures contenues dans la liste : \type{measures}. Elle convient particulièrement si \type{Score.markFormatter} est de la forme \type{#format-mark-[…]-letters}.\\
+La fonction associe des lettres aux mesures contenues dans la liste : \type{measures}.\\
+Elle convient particulièrement si \type{Score.rehearsalMarkFormatter} est de la forme :\\
+\startnarrower[\lilyspace] \type{#format-mark-[…]-letters}. \stopnarrower\\
 Les 3 paramètres suivant \type{measures} sont optionnels et se distinguent uniquement par leur type.\\
 \type{index->string} est une fonction de rappel renvoyant une {\em chaîne de caractères}, et prenant en paramètre un {\em index} (un entier positif). L'index est incrémenté de 1 à chaque appel, en commençant par la valeur du paramètre \type{start-index} (\type{0} si \type{start-index} non spécifié).\\
 Par défaut, \type{index->string} est la fonction interne \type{index->string-letters} qui renvoie la ou les lettre(s) capitale(s) correspondante(s) à leur index dans l'alphabet, mais en sautant la lettre~\quotation{\type{I}}~: "\type{A}"…"\type{H}" puis "\type{J}"…"\type{Z}" puis "\type{AA}"…"\type{AH}" 
@@ -2465,7 +2473,7 @@ global = { s1*1000 }                   %%&\em\tfx{& On prévoit une grande longu
   \context { \Score
     skipBars = ##t
     \override MultiMeasureRest.expand-limit = #1
-    markFormatter = #format-mark-box-letters
+    rehearsalMarkFormatter = #format-mark-box-letters
   }
 }
 \new Staff { << \global \test >> }

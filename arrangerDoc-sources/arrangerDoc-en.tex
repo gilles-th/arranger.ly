@@ -130,7 +130,7 @@ clar = {…}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subject{Software dependencies}
 \startitemize[2,joinedup,intro]
-\item You need LilyPond 2.20 or higher.
+\item You need LilyPond 2.24 or higher.
 \item The file {\em arranger.ly} requires the following \type{include} files:
   \starttabulate[|l|l|,before={\blank[1mm]},after={\blank[1mm]}, indenting=yes]
     \NC {\textbullet \hspace[1] \em chordsAndVoices.ly} \NC\small {(\from[chord])} \NC
@@ -825,7 +825,7 @@ All arguments are {\em music}s but list of {\em music}s are also supported.\\
 \startmylily
 (rm 'clar 12 (seq (em 'flute 12 15)         ; &\em{&Double the flute&}&
                   #{ r2 r4 #}               ; &\em{&Measure 15&}&
-                  (em 'violon '(16 -4) 20)) ; &\em{&Double the violin&}&
+                  (em 'violin '(16 -4) 20)) ; &\em{&Double the violin&}&
 \stopmylily 
 \blank[1.2em]
 \midaligned{ \tfd ------------}
@@ -840,7 +840,7 @@ The previous example can be written :
 \startmylily
 (rm 'clar 12 (seq-r (em 'flute 12 15)         ; &\em{&Double the flute&}&
                     2 4                       ; &\em{&Measure 15 : some rests&}&
-                    (em 'violon '(16 -4) 20)) ; &\em{&Double le violin&}&
+                    (em 'violin '(16 -4) 20)) ; &\em{&Double the violin&}&
 \stopmylily
 A dot after the number is possible : \type{4.} means \type+#{ r4. #}+.\\
 For 2, 3 dots or more, the digit 2, 3 etc… is added after the dot:\\
@@ -945,18 +945,24 @@ You can use the \type{def!} function (described \at{page}[def!]), to create a va
   29 (volta-repeat->skip (pos-sub 38 29) (* 2 3/4) 3/4)) ; &\em{&(in &}&7/8&\em{& and &}&3/4&\em{&)&}&   
 (def! 'global (sim global structure))  ; &\em{&global = << \global \structure >>&}&
 \stopmylily
-\placefigure[here]{}{\externalfigure[volta-repeat->skip][hfactor=max]}
+\placefigure[here]{}{\externalfigure[volta-repeat-to-skip][hfactor=max]}
 
 \midaligned{ \tfd ------------}
-\godown[1em]
+\godown[1.5em]
 
 %%%%%%%%%
 \func{mmr}
 \syntax {(mmr ratio)}{}
 \syntax {(mmr from-bar-num to-bar-num)}{}
-Returns a \type{multiMeasasureRest} with a length of either \type{(ly:make-moment ratio)}(for example\\ \type{(mmr 3/4)} for \type+#{ R4*3 #}+, or \type{(mmr 2)} for \type+#{ R1*2 #}+), or either with the length of the music \type{from-bar-num} to \type{to-bar-num} (for example 
-\type{(mmr 5 13)} to get a rest that completely fulfils bar 5 to 13). Syntax 2 internally uses the \type{pos-sub} function described above.
-\blank[1em]
+Returns a \type{multiMeasasureRest} with a duration computed from:\\
+\startnarrower[1em]
+- a rational (syntax 1) in the p/q form, with q as a power of two (1 2 4 8…) \\
+(for example \type{(mmr 3/4)} for \type+#{ R4*3 #}+, or \type{(mmr 2)} for \type+#{ R1*2 #}+),\\ 
+- or, for syntax 2, from the music length between 2 bar numbers\\
+(for example \type{(mmr 5 13)} to get a rest that completely fulfils bar 5 to 13).\\
+\stopnarrower
+Syntax 2 internally uses the \type{pos-sub} function described above.
+\blank[1.5em]
 \midaligned{ \tfd ------------}
 \page  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -2368,7 +2374,8 @@ Copy \type{music} \type{n} times.
 \index{index->string-letters}
 \func{def-letters}
 \syntax {(def-letters measures [index->string][start-index][show-infos?])}{}
-The function associates letters with the bar numbers of the \type{measures} list. It is particularly suitable when \type{Score.markFormatter} is of the form \type{#format-mark-[…]-letters}.\\
+The function associates letters with the bar numbers of the \type{measures} list. It is particularly suitable when \type{Score.rehearsalMarkFormatter} is of the form: 
+\startnarrower[\lilyspace] \type{#format-mark-[…]-letters}.\stopnarrower\\
 The following 3 parameters for \type{measures} are optional and differ only in their type.\\
 \type{index->string} is a callback function returning a {\em string}, and taking an {\em index} as parameter (a positive integer). The index is incremented by 1 with each call, starting with the value of the \type{start-index} parameter (\type{0} if \type{start-index} is not specified).\\
 By default, \type{index->string} is the internal function \type{index->string-letters} that returns the corresponding capital letter(s) to their index in the alphabet, but skips the letter~\quotation{\type{I}}~:
@@ -2499,7 +2506,7 @@ global = { s1*1000 }                  %%&\em\tfx{& a long length is provided &}&
   \context { \Score
     skipBars = ##t
     \override MultiMeasureRest.expand-limit = #1
-    markFormatter = #format-mark-box-letters
+    rehearsalMarkFormatter = #format-mark-box-letters
   }
 }
 \new Staff { << \global \test >> }
@@ -2519,7 +2526,7 @@ global = { s1*1000 }                  %%&\em\tfx{& a long length is provided &}&
   ]
 
 
-Here are some ideas for organisation when creating an arrangement for a large orchestral ensemble. Some functions are suggested here, but please note that they are {\em not} part of {\em arranger.ly}. Their définitions have been copied in the file: \type{addendum-functions.ly} in the \type{arrangerDoc-sources} directory of \type{arranger.ly} project.\\
+Here are some ideas for organisation when creating an arrangement for a large orchestral ensemble. Some functions are suggested here, but please note that they are {\em not} part of {\em arranger.ly}. Their définitions have been copied in the file: \type{addendum-functions.ly} in the \type{arrangerDoc-sources} directory of \type{arranger.ly} project.\\\\
 
 {\tfa\bf→} {\bf Files structure}
 
