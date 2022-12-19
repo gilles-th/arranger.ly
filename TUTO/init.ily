@@ -221,7 +221,7 @@ globalLayout = \layout {
     \override RehearsalMark.font-size = #textSize
     \override RehearsalMark.break-visibility = ##(#f #t #t)
     \override MetronomeMark.font-size = #textSize
-    markFormatter = #format-mark-box-letters
+    rehearsalMarkFormatter = #format-mark-box-letters
     %	\remove Bar_number_engraver
   }
   \context { \Staff \myStaffLayoutSet }
@@ -255,3 +255,5 @@ globalLayout = \layout {
 }
 
 \header { title = "(2nd mvt)" }
+
+\version "2.24.0"

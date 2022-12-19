@@ -1,6 +1,6 @@
 #(define part 'percu-score)
 #(define header-sep 15)
-\version "2.19.83"
+\version "2.24.0"
 \include "../NOTES.ily"
 
 %%#(set-global-staff-size 16)
@@ -8,7 +8,7 @@
 \header { instrument = "Percussions"
           instrumentMore = \markup \vcenter {
             \override #'(font-encoding . fetaBraces) {
-              \lookup #"brace160"
+              \lookup "brace160"
               \hspace #1 }
             \tiny \override #'(baseline-skip . 5) \column {
               Xylophone

@@ -1,5 +1,5 @@
 #(define part 'alt2)
-\version "2.19.83"
+\version "2.24.0"
 \include "../NOTES.ily"
 
 \header { instrument = "Saxo alto 2" }

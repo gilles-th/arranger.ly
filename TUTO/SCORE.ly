@@ -177,12 +177,12 @@ brassHierarchy = \with { systemStartDelimiterHierarchy =
   }
   \context {
     \StaffGroup
-    \override SystemStartBracket #'collapse-height = #1
-    \override SystemStartBrace #'collapse-height = #1
-    \override SystemStartBar #'collapse-height = #1
-    \override SystemStartSquare #'collapse-height = #1
+    \override SystemStartBracket.collapse-height = #1
+    \override SystemStartBrace.collapse-height = #1
+    \override SystemStartBar.collapse-height = #1
+    \override SystemStartSquare.collapse-height = #1
   }
 } % layout
 } % score
 
-\version "2.20.0"
+\version "2.24.0"

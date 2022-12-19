@@ -1,5 +1,5 @@
 #(define part 'cl1)
-\version "2.19.83"
+\version "2.24.0"
 \include "../NOTES.ily"
 
 \header { instrument = "clarinette 1 + solo " }
