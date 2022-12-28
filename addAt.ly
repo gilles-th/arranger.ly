@@ -1,6 +1,6 @@
 \version "2.24.0"
 
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/16 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/28 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Is a work-around for that :
 %%   http://code.google.com/p/lilypond/issues/detail?id=824
 %% Last features/modifications since last version:

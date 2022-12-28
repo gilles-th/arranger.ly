@@ -8,9 +8,9 @@
 \layout {
   \context {
     \Score
-      \override BarNumber.break-visibility = ##(#t #t #f)
-      \override BarNumber.font-size = #+2
-      barNumberVisibility = #all-bar-numbers-visible
+    \override BarNumber.break-visibility = ##(#t #t #f)
+    \override BarNumber.self-alignment-X = #CENTER
+    \override BarNumber.font-size = #+2
   }
 }
 

@@ -6,10 +6,12 @@
 
 #(ly:set-option 'crop #t)
 
-\layout { \context { \Score
-  \override BarNumber.break-visibility = #all-visible
+\layout { \context { 
+  \Score
+  \override BarNumber.break-visibility = ##(#f #t #f)
+  \override BarNumber.self-alignment-X = #CENTER
   skipBars = ##t
-  \override BarNumber.font-size = #+2
+  \override BarNumber.font-size = #+1
   \override MultiMeasureRest.expand-limit = #1
   }
 }
@@ -23,7 +25,7 @@ music = \relative c' {
 
 % exemple09-flute-en.ly has an english version of names below.
 #(if (not (defined? 'names))
-  (ly:parser-define 'names (list "(violon)" "obligé")))
+  (ly:parser-define! 'names (list "(violon)" "obligé")))
 
 #(begin
 (rm 'vl 1 music)

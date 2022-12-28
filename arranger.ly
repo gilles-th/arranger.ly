@@ -1,6 +1,6 @@
 \version "2.24.0"
 
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/16 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/28 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The main objective of arranger.ly is to provide a set of functions to make
 % arrangements of pieces originally intended for another band :
 % for ex a symphonic piece arranged for a concert band (wood-winds and percussions only).
@@ -405,19 +405,40 @@ The result lists of each iteration are concatained together.
   (make-duration-of-length (pos->moment pos))))
 
 % ex in a 3/4 signature music :
-%%  (volta-repeat->skip 15/4 3/4 2/4)  ; 15/4 = 5 measures
-% => \repeat volta 2 s4*15 \alternative { s4*3 s2 }
-% same result, if these 5 measures are from for ex measure 7 to 12, with  :
-%   (volta-repeat->skip (pos-sub 12 7) 3/4 2/4)
-#(define (volta-repeat->skip mom . alts)
-"Make a repeat volta structure filled with skip musics.
-All arguments are moments or directly rationnal numbers as well.
-`mom is the length of the main section, and the other arguments in `alts
-are the length of each \\alternative section"
+%    (volta-repeat->skip 15/4 3/4 2/4)  ; 15/4 = 5 measures in 3/4
+% => \repeat volta 2 s4*15 \alternate { \volta 1 s4*3 \volta 2 s2 }
+% For complex signatures, use pos-sub: (pos-sub 17 12) returns <mom 15/4> in 3/4
+#(define (volta-repeat->skip len . alts) ; len = moment or rationnal (both compatible with moment->skip)
+"Make a \repeat volta [\alternate] structure filled with skip musics.
+Syntax 1: (volta-repeat->skip r0 [r1 r2…])
+Syntax 2: (volta-repeat->skip r0 '((r1 n1 [n2…])(r2 ni [ni+1…])…)
+r0 r1… are rationnal numbers or moments, and indicate the length of each section.
+n1 n2… are the same integers than those set in a \volta command.
+repeat-count is based on the number of r1 r2… in syntax 1 and of n1 n2… in syntax 2"
+
+  (define error-msg "The 2nd argument of volta-repeat->skip must be a list of lists with\n
+each sub-list element having the form: (list len n1 [n2 n3 ...])")
+  (define (make-one-alternate e) ; e should be a sub-list element of a list
+    (if (pair? e) ; volta-spec-music below is defined in music-functions.scm
+      (volta-spec-music (cdr e) (moment->skip (car e)))
+      (ly:error error-msg)))
+(let* ((count (length alts))
+       (alternates (case count                    ; a list for \alternate settings
+         ((0) (set! count 2)                      ; no \alternate
+              alts) ; (count < 2 does not trigger repeat bars)
+         ((1) (let ((l (car alts)))               ; syntax 2: the list defined by user
+           (cond
+             ((pair? l)(set! count (- (length (flat-lst l))(length l))) ; = number of n…
+                       l)
+             ((index? l) (set! count l) ; no \alternate but user can set count for
+                         '())           ; \unfoldRepeats
+             (else (ly:error error-msg)))))
+         (else (map list alts (iota count 1)))))) ; syntax 1: returns a syntax 2 list
   (make-music 'VoltaRepeatedMusic
-    'repeat-count (length alts)  ; if alts = '(), repeat-count is ignored.
-    'elements (map moment->skip alts) ; \alternate list
-    'element (moment->skip mom)))
+    'repeat-count count
+    'element (moment->skip len)                   ; main section
+    'elements (map make-one-alternate alternates) ; \alternate section
+    )))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% user functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1894,9 +1915,8 @@ the mode can be omitted too: major instead of \\major. ."
 
 #(define (marks pos . other-pos)
 "syntax: (marks [obj] pos1 pos2 ...)
-Inserts a \\mark \\default to each positions pos, in 'global or in obj if
-specified."
-(let* ((mark (make-music 'MarkEvent))         ; \mark \default
+Inserts a \\mark \\default to each positions pos, in 'global or in obj if specified."
+(let* ((mark (make-music 'RehearsalMarkEvent))         ; \mark \default
        (args (if (pos? pos)
          (cons 'global (cons mark (cons pos other-pos)))
          (cons pos (cons mark other-pos)))))  ; pos = obj

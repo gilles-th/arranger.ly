@@ -31,7 +31,7 @@ global = { s1*1000 } %% On prévoit une grande longueur
 (x-rm 'global (bar "||") 20 30 60) ;; Les barres
 (rm-with 'global 1 markLengthOn    ;; Choses diverses
                 40 break          
-                70 (bar "|."))    ;; La touche finale
+                70 fine)    ;; La touche finale
 )                                 %% Fin \global
 
 %% On peut maintenant initialiser la liste d'instruments

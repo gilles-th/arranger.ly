@@ -5,11 +5,14 @@
 
 #(ly:set-option 'crop #t)
 
-\layout { \context { \Score
+\layout { \context {       
+  \Score
   \override BarNumber.break-visibility = #all-visible
-  skipBars = ##t
+  \override BarNumber.self-alignment-X = #CENTER
   \override BarNumber.font-size = #+2
-  \override MultiMeasureRest.expand-limit = #1 }}
+  skipBars = ##t
+  \override MultiMeasureRest.expand-limit = #1 }
+}
 
 global = { s1*8 \bar "|." }
 all = #'(flute clar basse)

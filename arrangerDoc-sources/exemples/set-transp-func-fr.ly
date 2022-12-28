@@ -9,7 +9,6 @@
   \context {
     \Score
     \override BarNumber.font-size = #+2
-    barNumberVisibility = #all-bar-numbers-visible
   }
 }
 
@@ -38,7 +37,7 @@ music = $(ly:music-transpose music fromPitch) % for testing other scales
       0
       (ly:pitch-steps delta)
       (+ (ly:pitch-alteration delta)
-         (if (find (pitch-equal?-to p 'any-octave) special-pitches)
+         (if (find (same-pitch-as p 'any-octave) special-pitches)
            -1/2
            0))))))
 

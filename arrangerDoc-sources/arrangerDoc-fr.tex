@@ -1,4 +1,4 @@
-%%%%%% Documentation française de arranger.ly. Version YYYY/MM/DD = 2022/12/16 %%%%%%
+%%%%%% Documentation française de arranger.ly. Version YYYY/MM/DD = 2022/12/28 %%%%%%
 %% À compiler avec : ConTeXt (LuaTex)
 %% https://wiki.contextgarden.net/Main_Page
 
@@ -486,34 +486,39 @@ La solution ici est :
 \startlily
 cadenza = \relative c' { c4^"cadenza" d e f g }
 \stoplily
-\godown[-1.7em]
+\godown[-1.3em]
 \startfiguretext[right][exemple4]{}
-{\vbox{\blank[-0.5em]\externalfigure[exemple04.pdf][wfactor=200, align=flushright]}}
+{\vbox{\blank[-0.5em]\externalfigure[exemple04-1.pdf][wfactor=200, align=flushright]}}
 \startlily
 global = {
    \time 3/4
    s2.
 \stoplily
 \stopfiguretext
-\godown[-3em]
+\godown[-2.9em]
 \startlily
-   \cadenzaOn #(skip-of-length cadenza) \bar "|" \cadenzaOff
+   \cadenzaOn #(skip-of-length cadenza) \cadenzaOff
    s2.*2 \bar "|." }
-#(begin (init '(clar))
-        (rm 'clar 2 cadenza)
-        (rm 'clar 3 #{ c'2. #}))
+#(init '(clar))
+#(rm 'clar 2 #{ \cadenza r2. #})
 \stoplily
+%\godown[-0.2em]
+\startfiguretext[right][exemple4]{}
+{\vbox{\blank[-0.5em]\externalfigure[exemple04-2.pdf][wfactor=200, align=flushright]}}
+\godown[-0.2em]
+Si avant la mesure 3, on veut remplacer le silence par un la, on pourra utiliser un nombre négatif :
+\godown[0.4em]
+\startmylily (rm 'clar '(3 -2.) #{ a'2. #}) \stopmylily
+\stopfiguretext
 \godown[-0.7em]
-Si on veut insérer un mi avant la mesure 3, on pourra utiliser des nombres négatifs :
-\startmylily (rm 'clar '(3 -2 -4) #{ e'2. #}) \stopmylily
 {\em arranger.ly} utilise quelque fois en interne une autre syntaxe pour les positions :
 \startmylily `(n ,moment)    ;&\it\rm{& ou : (list n moment)&}& \stopmylily
-Son utilisation ici, pour insérer le mi donnerait :
-\startmylily (rm 'clar `(2 ,(ly:music-length cadenza)) #{ e'2. #}) \stopmylily
+Son utilisation ici, pour insérer le la à partir de la mesure 2, donnerait alors :
+\startmylily (rm 'clar `(2 ,(ly:music-length cadenza)) #{ a'2. #}) \stopmylily
 Notez enfin que la syntaxe \type{`(n ,(ly:make-moment p/q))} peut s'alléger en
 \type{'(n p/q)}, à condition que le quotient \type{p/q} ne soit pas réductible à 1 entier.
 \startmylily 
-(rm 'clar '(2 5/4) #{ e'2. #})  ;&\it\rm{& ok avec 5/4 : même résultat que le code précédent&}&  \stopmylily
+(rm 'clar '(2 5/4) #{ a'2. #})  ;&\it\rm{& ok avec 5/4 : même résultat que le code précédent&}&  \stopmylily
 Par contre, \type{8/4} donnerait \type{(ly:make-moment 1/2)} et non \type{(ly:make-moment 2/1)}
 \blank
 - \underbar{Convention} :
@@ -868,23 +873,25 @@ Utile particulièrement pour la construction de \type{\global} ; voir l'\goto{ad
 %%%%%%%%%
 \index{pos-sub}
 \func{volta-repeat->skip}
-\syntax {(volta-repeat->skip r . alts)}{}
+\syntax {(volta-repeat->skip r0 [r1 r2…])}{}
+\syntax {(volta-repeat->skip r0 '((r1 n1 [n2…])(r2 ni [ni+1…])…)}{}
 Retourne une structure \type+\repeat volta [\alternate]+ où chaque éléments est un \type{\skip}.\\
-Le nombre de répétitions est calculé sur le nombre d'éléments de \type{alts} (ou ignoré s'il est vide).
-Tous les arguments sont des rationnels de la forme p/q où q est une puissance de deux (1 2 4 8…). Ils indiquent la longueur de chaque élément.
-\startmylily (volta-repeat->skip 9 3 5/4) \stopmylily
-est equivalent à :
-\startmylily \repeat volta 2 s1*9 \alternate { s1*3 s4*5 } \stopmylily  \\
-Les arguments peuvent être aussi alternativement, de type \type{moment}, ce qui permet d'utiliser la fonction interne \type{pos-sub} qui renvoie un \type{moment} égal à la différence de 2 positions.\\
-Par exemple, \type{(pos-sub 24 13)} renvoie la longueur de la musique entre la mesure 13 et la mesure 24 : facile à calculer en 4/4 mais plus difficile si la section comporte de nombreux changements de mesures (genre \type{\time 7/8} puis \type{\time 3/4} etc …).\\
-On peut utiliser la fonction \type{def!} décrite \at{page}[def!], pour créer une variable qui contiendra les différentes reprises du morceau :\\
+Les arguments \type{r…} sont des rationnels de la forme p/q où q est une puissance de deux (1 2 4 8…) et indiquent la longueur de chaque \type{\skip}.\\
+Dans la syntaxe 2, les arguments \type{n…} de la \quote {\type{liste de listes }} du 2\high{ème} paramètre, sont les entiers naturels correspondant à ceux de la commande \type+\volta+ (Par exemple \type+\volta 1,2,3+).\\
+Le nombre de répétitions est calculé sur le nombre de \type{r1 r2…} pour la syntaxe 1 et sur le nombre de \type{n1 n2…} pour la syntaxe 2.
+\startmylily (volta-repeat->skip 9 3 5/4) &\em{&ou&}& (volta-repeat->skip 9 '((3 1) (5/4 2)) \stopmylily
+sont dans les 2 cas, equivalents à :
+\startmylily \repeat volta 2 s1*9 \alternate { \volta 1 s1*3 \volta 2 s4*5 } \stopmylily  \\
+Les arguments \type{r…} peuvent être alternativement de type \type{moment}, ce qui permet d'utiliser la fonction interne \type{pos-sub} qui renvoie la longeur entre 2 positions. L'exemple ci-dessous montre, à la mesure 29 l'usage d'une telle fonction, ainsi que celui de la fonction \type{def!} décrite \at{page}[def!].\\\\
 \underbar{\sc\Words Exemple 5} :
 \blank[0.5em]
 \startmylily 
 (def! 'structure)                ; &\em{&Même longeur que \global&}&  
 (rm-with 'structure              ; &\em{&On ajoute les reprises&}&  
-    5 (volta-repeat->skip 9 3 1)                          ; &\em{&(en &}&4/4&\em{&)&}& 
-   29 (volta-repeat->skip (pos-sub 38 29) (* 2 3/4) 3/4)) ; &\em{&(en &}&7/8&\em{& et &}&3/4&\em{&)&}&   
+  5 (volta-repeat->skip 9 3 1)                          ; &\em{&en &}&4/4
+ 29 (volta-repeat->skip (pos-sub 38 29) (* 2 3/4) 3/4)) ; &\em{&en &}&7/8&\em{& et &}&3/4
+ 50 (volta-repeat->skip (* 9 3/4) '((3/4 1 2) (3/4 3 4 5) (3/4 6 7))) 
+                                                        ; &\em{&syntaxe &}&2&\em{&, en &}&3/4 
 (def! 'global (sim global structure))  ; &\em{&global = << \global \structure >>&}&
 \stopmylily
 \placefigure[here]{}{\externalfigure[volta-repeat-to-skip][hfactor=max]}

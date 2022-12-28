@@ -1,6 +1,6 @@
 \version "2.24.0"
 
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/16 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/28 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % LSR = http://lsr.di.unimi.it/LSR/Item?id=542
 % Last modif. (the last at the end) :
 % - change append! by cons in (make-signature-list)
@@ -140,7 +140,8 @@ Moments as <Mom 5/8>, will return (ly:make-duration k dots num den)"
             (cond ((= count 1) (set! mid-section elt)) ; no  repeated music
                   ((> count 1) (set! mid-section
                          (make-music name 'repeat-count count 'element elt))))
-            (set! res (filter (lambda (x) x) ; delete trailing #f
+            (set! res (filter (lambda (x) x) ; delete trailing #f : set to identity function (new in guile 2)
+                                             ; when LSR is in Lilypond 2.24.0
                               (list first-section mid-section last-section)))
             (if (= (length res) 1)
                   (car res)

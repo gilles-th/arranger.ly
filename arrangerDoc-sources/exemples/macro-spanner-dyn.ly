@@ -22,7 +22,7 @@
 #(define-macro (def-span-dyn txt . args)
 `(if (and (pair? (list ,@args)) (symbol? ,txt))
    (apply def-span-dyn-generic (list ,txt ,@args))
-   (let ((sym (string->symbol (string-filter ,txt char-set:letter))))
+   (let ((sym (string->symbol (string-filter char-set:letter ,txt))))
      (def-span-dyn-generic sym ,txt))))
  
             %%%%%%%%%%%%

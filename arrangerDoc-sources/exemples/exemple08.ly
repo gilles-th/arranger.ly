@@ -7,8 +7,10 @@
 
 \paper { ragged-right = ##t }
 
-\layout { \context { \Score
-  \override BarNumber.break-visibility = #all-visible
+\layout { \context { 
+  \Score
+  \override BarNumber.break-visibility = ##(#f #t #f)
+  \override BarNumber.self-alignment-X = #CENTER
   skipBars = ##t
   \override BarNumber.font-size = #+2
   \override MultiMeasureRest.expand-limit = #1

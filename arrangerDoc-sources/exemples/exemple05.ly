@@ -5,7 +5,10 @@
 
 #(ly:set-option 'crop #t)
 
-\layout { \context { \Score
+\layout { \context { 
+   \Score
+
+  \override BarNumber.self-alignment-X = #CENTER
   \override BarNumber.break-visibility = #all-visible
   skipBars = ##t
   \override BarNumber.font-size = #+2
