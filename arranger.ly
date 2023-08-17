@@ -113,9 +113,9 @@ Any moment remains unchanged"
   ((integer? n) (cond  ; is n an exact or inexact integer ? ie 4 or 4. form ?
      ((= n 0) ZERO-MOMENT) ; n will be a denominator so must be non 0
      ((exact? n)           ; 4 => <mom 1/4>
-        (ly:make-moment 1 n 0 0)) ; zeros needed ! ( n can be < 0 )
+        (ly:make-moment (/ 1 n)))
      (else                 ; 4. => <mom 3/8>
-        (ly:make-moment 3 (* 2 (inexact->exact n)) 0 0))))
+        (ly:make-moment (/ 3 (* 2 (inexact->exact n)))))))
   ((ly:moment? n) n)      ; this syntax is used by moment->pos below.
   ((rational? n) (if (exact? n) ; 7/8 or 4.3 form ?
      (ly:make-moment n)    ; 7/8 => <mom 7/8>
