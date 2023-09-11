@@ -1,4 +1,4 @@
-%%%%%% Documentation française de arranger.ly. Version YYYY/MM/DD = 2022/12/28 %%%%%%
+%%%%%% Documentation française de arranger.ly. Version YYYY/MM/DD = 2023/09/11 %%%%%%
 %% À compiler avec : ConTeXt (LuaTex)
 %% https://wiki.contextgarden.net/Main_Page
 
@@ -68,8 +68,8 @@
 \define[1]\func
 { % Affiche => La fonction #1
  %% \index{#1}   % <- #1 peut se terminer par le caractère + qui ne sera alors pas affiché :-(
- %% On essaie de remedier au problème :
- \ctxlua{context.index((string.gsub("#1","+", "†")))}  %%  remplace dans l'index tout caractère + par †
+ %% On remedie au problème avec lua :
+ \ctxlua{context.index((string.gsub("#1","+", "\\textplus")))}  %% remplace dans l'index tout caractère + par \textplus
               %% Noter les doubles parenthèses pour forcer une seule valeur de retour de gsub
               %% https://wiki.contextgarden.net/Programming_in_LuaTeX
  \startsubsection[number=no,list=#1,reference=#1]{}
@@ -792,11 +792,13 @@ L'exemple précédent peut s'écrire :
                     (em 'violon '(16 -4) 20)) ; &\em{&Double le violon&}&
 \stopmylily
 Un point après le nombre est possible : \type{4.} pour \type+#{ r4. #}+.\\
-Pour 2, 3 points ou plus, on ajoute le chiffre 2, 3 etc…, après le point :\\
-\type{4.3} par exemple pour \type+#{ r4... #}+ (3 points)
+Pour 2, 3 points ou plus, on ajoute ce chiffre après le point : \type{4.3} pour \type+#{ r4... #}+ (3 points)
 
-\blank[1em]
-\midaligned{ \tfd ------------}
+\hairline
+\type{seq} et \type{seq-r} sont maintenant une seule et même fonction et peuvent s'utiliser indifféremment.
+Le nom \type{seq-r} est conservé uniquement par compatibilité avec les versions précédentes.
+\hairline
+%\midaligned{ \tfd ------------}
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%
@@ -1006,7 +1008,7 @@ Les fonctions qui vont suivre sont toutes créées, au niveau des paramètres, s
 \hairline
 
 \blank
-\func{add-voice1, add-voice2}{}
+\func{add-voice1{,} add-voice2}{}
 \syntax{(add-voice1 obj where-pos new-voice}{voice-start-pos to-pos obj-start-pos)}        
 \syntax{(add-voice2 obj where-pos new-voice}{voice-start-pos to-pos obj-start-pos)}
 
@@ -1056,7 +1058,7 @@ La barre oblique \type{/} est optionnelle
 \godown[1.5em]
 
 %%%%%%%%%
-\func{combine1, combine2}{}
+\func{combine1{,} combine2}{}
 \syntax{(combine1 obj where-pos new-voice}{voice-start-pos to-pos obj-start-pos)}        
 \syntax{(combine2 obj where-pos new-voice}{voice-start-pos to-pos obj-start-pos)}
 
@@ -1097,8 +1099,8 @@ music = { <c e g>-\p <d f b>-. }
 
 %%%%%%%%%
 \func{notes+}
-\syntax {(notes+ music newnotes1 [newnotes2…])}{}
-\index{set-note†}
+\syntax {(notes music newnotes1 [newnotes2…])}{}
+\index{set-notes\textplus}
 ou : (2\high{ème} forme  équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
 \syntax {((set-notes+ newnotes1 [newnotes2…]) music))}{}
 Transforme chaque note de \type{music} en accord, et y insère la note des \type{newnotes}  correspondante.\\
@@ -1470,7 +1472,7 @@ Toutes les musiques \type{m1 m2 m3 m4} sont transposées à l'octave.
 \godown[-0.3em]
 ou : (2\high{ème} forme équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
 \godown[-0.3em]
-\index{set-octave†}
+\index{set-octave\textplus}
 \syntax {((set-octave+ n) obj)}{}
 \godown[-0.1em]
 Raccourci de \type!(notes+ music (octave n music))! (voir \in{\type{notes+} \at{page}{}[notes+])}[notes+] mais sans doubler les articulations des notes octaviées.\\
@@ -1567,12 +1569,12 @@ Déplace visuellement les notes de \type{amount} positions vers le haut ou le ba
 
 \godown[1em]
 \midaligned{ \tfd ------------}
-\godown[1em]
+\godown[0.5em]
 
 %%%%%%%%%
 \hairline
-La fonction \type{cp} présentée maintenant, tire son nom de l'anglais \underbar{c}hange \underbar{p}itch. Elle permet donc effectivement de modifier la hauteur des notes d'une musique sans toucher à son rythme, mais comme elle permet également de modifier le rythme d'une musique sans toucher aux hauteurs de notes, elle sera traitée dans la section suivante : pattern de rythmes.\\
-Est également concernée par cette remarque, la fonction \type{cp-with}
+Devrait être présentée maintenant dans ce chapitre, la fonction \type{cp}.\\
+\type{cp} (de l'anglais \underbar{c}hange \underbar{p}itch) permet effectivement de modifier la hauteur d'une séries de notes, sans toucher à leur rythme. Inversement cependant, elle peut modifier le rythme des notes sans toucher à leur hauteur. Le choix a été fait de traiter la fonction \type{cp} (ainsi que la la fonction \type{cp-with}), dans la section suivante : {\em pattern de rythme}.
 \hairline
 \godown[2em] 
 
@@ -1582,8 +1584,7 @@ Est également concernée par cette remarque, la fonction \type{cp-with}
 %%%%%%%%%
 \func{cp} : pattern de {\em rythme} (fonction référence \type+\changePitch+%
 \footnote{Voir {\em changePitch-doc.pdf} à \from[changePitch]})
-\index{cp1}
-\index{cp2}
+\index{cp1{,} cp2}
 \syntax {(cp [keep-last-rests?] pattern[s] music[s])}{}
 ou : (2\high{ème} forme équivalente, à utiliser avec \goto{\type{apply-to}}[apply-to])
 \index{set-pat}
@@ -1731,7 +1732,7 @@ Le tableau suivant montre la liste obtenue avec différentes valeurs:
 \blank
 \reference[exemple8]{exemple8}
 \starthanging[right]
-{\vbox{\blank[5em]\externalfigure[exemple08.pdf][wfactor=305, align=flushright]}}
+{\vbox{\blank[5em]\externalfigure[exemple08.pdf][wfactor=303, align=flushright]}}
 \underbar{\sc\Words exemple 8}
 \startlily
 global = {s1*12 \bar "|."}
@@ -2197,6 +2198,61 @@ Insère un \type{\mark \default} aux positions \type{pos}, dans \type{'global} o
 \blank[1.3em]
 \midaligned{ \tfd ------------}
 \godown[0.3em]
+
+                      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                              
+\subject{Gérer les "modes" Lilypond}
+\index{lilypond-mode}
+Ce chapitre n'apporte pas de nouvelles fonctions en tant que telles mais montre comment simplifier l'entrée d'événements musicaux dans les différents modes de Lilypond tels \type{\drummode}, \type{\chordmode} etc…\\
+Dans Lilypond, le mode par défaut n'est pas modifiable et a été fixé à \type{\notemode} :
+\startmylily { c d e } &\rm est un raccourci de& \notemode { c d e } \stopmylily
+{\em arranger.ly} définit en interne une variable globale nommée \type{lilypond-mode}, à qui on peut affecter à tout moment, le \type{symbol} du mode souhaité par défaut : \type{'drummode} pour \type{\drummode}, \type{'chordmode} pour \type{\chordmode}, etc…\\ 
+On pourra effectuer cette affection, avec par exemple la fonction scheme \type{set!} : 
+\startmylily (set! lilypond-mode 'figuremode) \stopmylily
+
+Parallèlement, les fonctions de base d'{\em arranger.ly} dispose d'une syntaxe "cachée"\footnote{non documentée}, qui permet de remplacer un argument de type \type{music} par un argument de type \type {string}, rendant ainsi la valeur de retour de ces fonctions, dépendantes de la valeur de \type{lilypond-mode}.\\
+Si \type{lilypond-mode} est laissé en \type{'notemode} (c'est le mode par défaut dans {\em arranger.ly}) :\\
+\startmylily (rm obj 1 "c d e") &\rm est simplement équivalent à& (rm obj 1 #{ c d e #}) \stopmylily
+Mais si \type{lilypond-mode} passe par exemple en \type{'lyricmode}, cette même instruction sera maintenant équivalente à :
+\startmylily (rm obj 1 #{ \lyricmode { c d e } #}) \stopmylily
+L'objet \type{obj} devra donc être inclus dans un contexte {\em Lyrics} et non plus {\em Voice}
+\blank[1em]
+Voici une même partie de batterie écrite sans puis avec, l'utilisation de \type{lilypond-mode} :\\
+\page %%%%%%%%%%%%%%%
+\startlily
+%% Methode traditionnelle
+#(begin
+(fill 'mydrums #{ \drummode { hihat8 } #} 1 3)
+(add-voice2 'mydrums 1 #{ \drummode { bassdrum8 r r4 } #})
+(add-voice2 'mydrums 2 #{ \drummode { r8 bassdrum r4 } #})
+)
+\stoplily
+\startfiguretext[right, top][exemple]{} 
+{ \externalfigure[lilypond-mode.pdf][wfactor=200] } %%, align=flushright] }
+
+\startlily
+%% Methode avec lilypond-mode 
+#(set! lilypond-mode 'drummode)
+#(begin
+(fill 'mydrums "hihat8" 1 3)
+(add-voice2 'mydrums 1 "bassdrum8 r r4")
+(add-voice2 'mydrums 2 "r8 bassdrum r4")
+)
+\stoplily
+\stopfiguretext
+\godown[-1em]
+Il est ici bien clair que la valeur de \type{lilypond-mode} n'affecte que les arguments où un type \type{music} est attendu et qu'un type \type{string} est fourni.
+\startlily
+#(set! lilypond-mode 'chordmode)
+#(begin
+(rm objA 1 "c d e")                    &\em{&; \chordmode&}&
+(rm objB 1 #{ c d e #})                &\em{&; \notemode&}&
+(set! lilypond-mode 'lyricmode)
+(rm objC 1 "c d e")                    &\em{&; \lyricmode&}&
+(rm objD 1 #{ \chordmode { c d e } #}) &\em{&; \chordmode&}&
+)
+\stoplily
+\blank[-1.5em]
+%%%%%%%%
 
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                              
 \subject{Manipuler les listes}
@@ -2818,8 +2874,8 @@ D'autre macros peuvent être définies mais à l'instar de \type{def-dyn}, elles
 \blank
 Voici quelques autres exemples de macros.\\
 \blank
-\index{def-dyn†txt}
-\index{def-txt†dyn}
+\index{def-dyn\textplus txt}
+\index{def-txt\textplus dyn}
 Les 2 macros \type{def-dyn+txt} et \type{def-txt+dyn} suivantes, permettent de créer des nuances composées telles \type{p sub} ou \type{molto f}.\\
 Elles prennent 2 arguments de type {\em chaîne de caractères}. Le nom de la nuance est concaténée à partir de ces 2 arguments : \type{psub} et \type{moltof}.\\
 

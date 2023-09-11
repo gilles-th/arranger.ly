@@ -1,4 +1,4 @@
-\version "2.24.0"
+\version "2.25.6"
 
 %%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/28 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% LSR =  http://lsr.di.unimi.it/LSR/Item?id=654
@@ -92,15 +92,14 @@
               (reduce-seq (ly:music-property mus 'element)))))
   mus))
 
-#(define (expand-notes-and-chords music) ; resolves { c2.~ 4 <c e>2. 4 <c e>2.~ q4 }
+#(define (expand-notes-and-chords music) ; resolves for ex { c2.~ 4 <c e>2. 4 <c e>2.~ q4 }
 "Makes sure that all notes have a pitch !"
-(expand-repeat-notes! (expand-repeat-chords! (list 'rhythmic-event) music)))
+  (expand-repeat-notes! (expand-repeat-chords! (list 'rhythmic-event) music)))
 % (list 'rhythmic-event) can be replaced by (cons 'rhythmic-event (ly:parser-lookup '$chord-repeat-events))
 
 #(define (expand-notes-and-chords-copy-of music) ; for arranger.ly
-   (expand-repeat-notes!
-     (expand-repeat-chords! (list 'rhythmic-event)
-       (ly:music-deep-copy music))))
+  (expand-notes-and-chords (ly:music-deep-copy music)))
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% changePitch %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #(define cPInsertInPattern (gensym))
 #(define cPSamePitch (gensym))
@@ -230,7 +229,7 @@ note with the tie symbol)"
 
 #(if (and (defined? 'cPCheckForTies) ; compatibility for files made with previous version. To add :
           (not cPCheckForTies))      ; (define cPCheckForTies #f) before \include "changePitch.ly"
-    (ly:parser-define! 'check-for-ties (lambda(pattern) pattern)))
+    (ly:parser-define! 'check-for-ties identity)) %(lambda(pattern) pattern))) ; identity is new in guile 2.x
 
 #(define (change-pitch pattern newnotes)
 "The scheme function of \\changePitch, `pattern and `newnotes as music."
@@ -297,9 +296,9 @@ note with the tie symbol)"
            (cond ((memq cPPatternEnd (ly:music-property evt 'tags)) ; last evt of pattern
                     (let ((x (car notes-list)))
                       (if (and (integer? x)
-                                (or (null? (cdr notes-list))        ; last elt ?
-                                    (and (null? (cddr notes-list))  ; 2nd to last and last is
-                                         (pair? (cadr notes-list))))) ; a \insert section
+                               (or (null? (cdr notes-list))        ; last elt ?
+                                   (and (null? (cddr notes-list))  ; 2nd to last and last is
+                                        (pair? (cadr notes-list))))) ; a \insert section
                         (cond
                            ((= x 1)
                               (set! skip-notnote-event? x)
@@ -369,6 +368,7 @@ by this function will have the same pitch, according to the current note of
 
 % for arranger.ly users
 #(define (same-pitch music)(samePitch (ly:music-deep-copy music)))
+%#(define same-pitch samePitch) ?
 
 absolute = #(define-music-function (music) (ly:music?)
 "Make `music unrelativable. To use inside a \\samePitch function in relative mode."
@@ -422,3 +422,8 @@ cPII = #(define-music-function (newnotes) (ly:music?)
 #(define cP changePitch)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%{
+convert-ly (GNU LilyPond) 2.25.7  convert-ly: Processing `'...
+Applying conversion: 2.25.0, 2.25.1, 2.25.3, 2.25.4, 2.25.5, 2.25.6
+%}

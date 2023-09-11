@@ -1,4 +1,4 @@
-\version "2.24.0"
+\version "2.25.6"
 
 %%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/28 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Is a work-around for that :
@@ -35,17 +35,14 @@ by setting pred function."
           (name (ly:music-property evt 'name))
           (tags (ly:music-property evt 'tags)))
       (cond
-        ; ((memq anchor-tag tags)
-;           (if (or (pair? res)     ; sym has been found, anchors after sym
-;                   (not sym)       ; sym = #f => all anchors (from beginning)
-;                   (memq sym tags)); the starting-anchor
-;             (set! res (cons (cons moment (delq anchor-tag tags)) res))))
         ((memq anchor-tag tags)
            (let ((val (pred sym (delq anchor-tag tags) res)))
+             ;; (format #t "val: ~a\n" val)
              (if val (set! res (cons (cons moment val) res)))))
         ((eq? name 'GraceMusic)) ;; do nothing (do not increase moment)
         ((or (ly:duration? (ly:music-property evt 'duration))
              (eq? name 'EventChord))
+            ; (format #t "moment: ~a evt: ~a length: ~a\n" moment name (ly:music-length evt))
             (set! moment (ly:moment-add moment (ly:music-length evt))))
         ((eq? name 'SimultaneousMusic)
             (let ((save-mom moment)
@@ -127,3 +124,8 @@ global = \relative c'
 \new Voice \addAt #'coda \global {\tempo \markup "Extremely slow"}
 
   %}
+
+%{
+convert-ly (GNU LilyPond) 2.25.7  convert-ly: Processing `'...
+Applying conversion: 2.25.0, 2.25.1, 2.25.3, 2.25.4, 2.25.5, 2.25.6
+%}

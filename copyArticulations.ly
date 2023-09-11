@@ -1,4 +1,4 @@
-\version "2.24.0"
+\version "2.25.6"
 
 %%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/28 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% LSR = http://lsr.di.unimi.it/LSR/Item?id=769
@@ -202,3 +202,9 @@ cAII = #(define-music-function (music) (ly:music?)
 
 #(define cA copyArticulations)
 #(define notCA notCopyArticulations)
+
+
+%{
+convert-ly (GNU LilyPond) 2.25.7  convert-ly: Processing `'...
+Applying conversion: 2.25.0, 2.25.1, 2.25.3, 2.25.4, 2.25.5, 2.25.6
+%}

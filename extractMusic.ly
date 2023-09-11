@@ -1,4 +1,4 @@
-\version "2.24.0"
+\version "2.25.6"
 
 %%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/28 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % LSR = http://lsr.di.unimi.it/LSR/Item?id=542
@@ -293,7 +293,7 @@ named \\global. The first event in global begins always at measure first-measure
                          (if (ly:moment<? max-pos local-pos)
                            (set! max-pos local-pos))
                          (set! local-pos save-pos))
-                         elts)
+                       elts)
                      (set! local-pos max-pos)))
                 ((eq? name 'GraceMusic)) ; do nothing !
                 (else    ; all sequential-musics, volta-repeats etc ...
@@ -310,7 +310,6 @@ named \\global. The first event in global begins always at measure first-measure
                   (moment>=? (vector-ref info2 0) (vector-ref info1 0))       ; info1 <= info2 [(moment>= b a) = (ly:moment<= a b)]
                   (ly:moment<? (vector-ref info1 0) (vector-ref info2 0)))))) ; info1 < info2
      (set! timings (sort timings less)))
-    ;(display timings)
 ;; Construction of sections, the list to return. Each element (a section) will be represented
 ;; by a 3 elts vector : index 0 = start of the section as a measure number
                      ;; index 1 = start of the section as a moment
@@ -326,6 +325,7 @@ named \\global. The first event in global begins always at measure first-measure
                     (vector first-measure ZERO-MOMENT (ly:make-moment 4/4)))))) ; default signature
  (let loop ((sections (list section1))   ; add the first entry to sections
             (timings timings))
+   ; (format #t "--- sections : ~a\n    timings : ~a\n" sections timings)
    (let* ((timing-evt (car timings))
           (mom (vector-ref timing-evt 0))
           (sym (vector-ref timing-evt 1))
@@ -369,10 +369,10 @@ named \\global. The first event in global begins always at measure first-measure
        ((measureLength) (loop (cons (vector (+ n delta-n) mom val)
                                 (if (equal? mom prev-mom) (cdr sections) sections))
                               (cdr timings)))
-       ((currentBarNumber)(loop (cons (vector (+ val first-measure -1) mom 1measure-len)
+       ((currentBarNumber)(loop (cons (vector val mom 1measure-len)
                                   (if (equal? mom prev-mom) (cdr sections) sections))
                                 (cdr timings)))
-       ((timing) ; ; val #t / #f => cadenzaOff / On
+       ((timing) ; ; val #t / #f => cadenza Off / On
           (if val ; if cadenza return to Off : retrieve infos set in cadenzaOn-infos while cadenzaOn
             (if cadenzaOn-infos ; a 3 elts vector
               (let* ((cadenzaOn-mom (vector-ref cadenzaOn-infos 0))    ; evt cadenzaOn start
@@ -767,3 +767,9 @@ mmS = { #(skip-of-length infinite-mmR) \tag #'mmWarning s1 }
 #(define rM replaceMusic)
 #(define mEM multiExtractMusic)
 #(define mRM multiReplaceMusic)
+
+
+%{
+convert-ly (GNU LilyPond) 2.25.7  convert-ly: Processing `'...
+Applying conversion: 2.25.0, 2.25.1, 2.25.3, 2.25.4, 2.25.5, 2.25.6
+%}

@@ -1,4 +1,4 @@
-%%%%%% English Documentation of arranger.ly. Version YYYY/MM/DD = 2022/12/28 %%%%%%
+%%%%%% English Documentation of arranger.ly. Version YYYY/MM/DD = 2023/09/11 %%%%%%
 %% To compile with : ConTeXt (LuaTex)
 %% https://wiki.contextgarden.net/Main_Page
 
@@ -72,8 +72,8 @@
 \define[1]\func
 { % display => The function #1
  %% \index{#1}   % <- #1 can end with character + which will not be displayed in index ! :-(
- %% (bad) workaround :
- \ctxlua{context.index((string.gsub("#1","+", "†")))}  %%  replace in index, any + character by †
+ %% workaround :
+ \ctxlua{context.index((string.gsub("#1","+", "\\textplus")))}  %%  replace in index, any + character by \textplus
                            %% Note the double parenthesis to force a single return value  of gsub
                            %% https://wiki.contextgarden.net/Programming_in_LuaTeX
  \startsubsection[number=no,list=#1,reference=#1]{}
@@ -794,7 +794,7 @@ The following functions help manipulating sequential or simultaneous musics, ext
 \type+\extractMusic+
 \footnote{See {\em DOCS/extractMusic-doc.pdf} at \from[extractMusic]}
 \syntax {(em obj from-pos to-pos}{obj-start-pos)}
-Extract music in measures range \type{[from-pos to-pos[}. An event will be kept if it begins between theses two limits, and his length will be cut if it lasts after \type{to-pos}.\\
+Extract music in measures range \type{[from-pos to-pos[}. An event will be kept if it begins between these two limits, and his length will be cut if it lasts after \type{to-pos}.\\
 \type{obj} is typically an {\em instrument}, or a list of {\em instrument}s.\\
 If \type{obj} is a {\em music} or a {\em music}s list, the \type{obj-start-pos} parameter will inform the function about the position of \type{obj} in the piece (by default : the beginning of the piece).
 
@@ -841,11 +841,14 @@ The previous example can be written :
                     (em 'violin '(16 -4) 20)) ; &\em{&Double the violin&}&
 \stopmylily
 A dot after the number is possible : \type{4.} means \type+#{ r4. #}+.\\
-For 2, 3 dots or more, the digit 2, 3 etc… is added after the dot:\\
-\type{4.3} for example means \type+#{ r4... #}+ (3 dots)
+For 2, 3 dots or more, this digit is added after the dot:
+\type{4.3} means \type+#{ r4... #}+ (3 dots)
 
-\blank[1.2em]
-\midaligned{ \tfd ------------}
+\blank[1em]
+\hairline
+\type{seq} and \type{seq-r} are now the same function and can be used interchangeably.\\
+The name \type{seq-r} remains only for compatibility with previous versions.
+\hairline
 \page %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%
@@ -1062,7 +1065,7 @@ The following functions are all created, at the parameter level, on the same mod
 \hairline
 
 \godown[3em]
-\func{add-voice1, add-voice2}{}
+\func{add-voice1{, } add-voice2}{}
 \syntax{(add-voice1 obj where-pos new-voice}{voice-start-pos to-pos obj-start-pos)}        
 \syntax{(add-voice2 obj where-pos new-voice}{voice-start-pos to-pos obj-start-pos)}
 The music of each {\em instrument}, is replaced at the \type{where-pos} position with 
@@ -1109,7 +1112,7 @@ The slash \type{/} is optionnal
 \page  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%
-\func{combine1, combine2}{}
+\func{combine1{,} combine2}{}
 \syntax{(combine1 obj where-pos new-voice}{voice-start-pos to-pos obj-start-pos)}        
 \syntax{(combine2 obj where-pos new-voice}{voice-start-pos to-pos obj-start-pos)}
 music of each {\em instrument}, is replaced, at  \type{where-pos} position, by :  
@@ -1148,7 +1151,7 @@ music = { <c e g>-\p <d f b>-. }
 %%%%%%%%%
 \func{notes+}
 \syntax {(notes+ music newnotes1 [newnotes2…])}{}
-\index{set-note†}
+\index{set-notes\textplus}
 or : (2\high{nd} equivalent form, to be used with \goto{\type{apply-to}}[apply-to])
 \syntax {((set-notes+ newnotes1 [newnotes2…]) music))}{}
 Transforms each note of \type{music} into a chord, and inserts in it, the corresponding \type{newnotes}  note.\\
@@ -1501,7 +1504,7 @@ All musics \type{m1 m2 m3 m4} are transposed by one octave.
 \godown[-0.2em]
 or : (2\high{nd} equivalent form, to be used with \goto{\type{apply-to}}[apply-to])
 \godown[-0.5em]
-\index{set-octave†}
+\index{set-octave\textplus}
 \syntax {((set-octave+ n) obj)}{}
 \godown[-0.3em]
 Shortcut of \type!(notes+ music (octave n music))! (see \in{\type{notes+} \at{page}{}[notes+]}[notes+]) but without doubling articulations.\\
@@ -1599,8 +1602,10 @@ Visually moves notes from \type{amount} positions up or down. The midi datas are
 
 %%%%%%%%%
 \hairline
-The \type{cp} function presented now, takes its name from \underbar{c}hange \underbar{p}itch. It therefore allows you to modify the pitch of the notes of a piece of music without affecting its rhythm, but also to modify the rhythm of a piece of music without affecting the pitch of the notes. This is the reason why it will be part of the following section: rhythm patterns.\\
-This remark also concerns the function \type{cp-with}
+Should be presented now in this chapter, the \type{cp} function.\\
+\type{cp} (initials of \underbar{c}hange \underbar{p}itch) allows you to modify the pitch of the notes of a piece of music without affecting their rhythm. Conversely, however, it can modify the rhythm of notes without
+affecting their pitch. The choice was made to treat the \type{cp} function (and also the 
+\type{cp-with} function), in the following section: {\em rhythm} pattern.
 \hairline
 \godown[2em]  
 
@@ -1611,8 +1616,7 @@ This remark also concerns the function \type{cp-with}
 
 \func{cp} : {\em rhythm} pattern (reference function is \type+\changePitch+%
 \footnote{See {\em changePitch-doc.pdf} at \from[changePitch]})
-\index{cp1}
-\index{cp2}
+\index{cp1{,} cp2}
 \syntax {(cp [keep-last-rests?] pattern[s] music[s])}{}
 or : (2\high{nd} equivalent form, to be used with \goto{\type{apply-to}}[apply-to])
 \index{set-pat}
@@ -2222,6 +2226,61 @@ Inserts a \type{\mark \default} command at positions \type{pos}, in \type{'globa
 \godown[1.2em]
 \midaligned{ \tfd ------------}
 \godown[-1.3em]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subject{Manage Lilypond “modes”}
+\index{lilypond-mode}
+This chapter does not provide new functions as such but shows how to simplify the entry of musical events in the various modes of Lilypond such as \type{\drummode}, \type{\chordmode} etc…\\
+In Lilypond, the default mode is not changeable and is fixed to \type{\notemode}:
+\startmylily { c d e } &\rm is a shortcut for& \notemode { c d e } \stopmylily
+{\em arranger.ly} internally defines a global variable named \type{lilypond-mode}, which can be assigned at any time, to the \type{symbol} of the desired default mode: \type{'drummode} for \type{\drummode}, \type{'chordmode} for \type{\chordmode}, etc…\\
+We can carry out this assignment, for example with the \type{set!} scheme function:
+\startmylily (set! lilypond-mode 'figuremode) \stopmylily
+
+At the same time, the basic functions of {\em arranger.ly} have a "hidden"\footnote{undocumented} syntax, which allows you to replace an argument of type \type{music} by an argument of type \type {string}, thus making the return value of these functions dependent on the value of \type{lilypond-mode}.\\
+If \type{lilypond-mode} is left in \type{'notemode} (this is the default mode in {\em arranger.ly}):\\
+\startmylily (rm obj 1 "c d e") &\rm is simply equivalent to& (rm obj 1 #{ c d e #}) \stopmylily
+But if \type{lilypond-mode} changes for example to \type{'lyricmode}, this same instruction will now be equivalent to:
+\startmylily (rm obj 1 #{ \lyricmode { c d e } #}) \stopmylily
+The \type{obj} object must therefore be included in a {\em Lyrics} context and no longer in a {\em Voice} one.
+\blank[1em]
+Here is the same drum part written without \type{lilypond-mode} then using it:\\
+\page %%%%%%%%%%%%%%%
+\startlily
+%% Traditional method
+#(begin
+(fill 'mydrums #{ \drummode { hihat8 } #} 1 3)
+(add-voice2 'mydrums 1 #{ \drummode { bassdrum8 r r4 } #})
+(add-voice2 'mydrums 2 #{ \drummode { r8 bassdrum r4 } #})
+)
+\stoplily
+\startfiguretext[right, top][example]{}
+{ \externalfigure[lilypond-mode.pdf][wfactor=200] } %%, align=flushright] }
+
+\startlily
+%% Method with lilypond-mode
+#(set! lilypond-mode 'drummode)
+#(begin
+(fill 'mydrums "hihat8" 1 3)
+(add-voice2 'mydrums 1 "bassdrum8 r r4")
+(add-voice2 'mydrums 2 "r8 bassdrum r4")
+)
+\stoplily
+\stopfiguretext
+\godown[-1em]
+It is clear here that the value of \type{lilypond-mode} only affects arguments where a \type{music} type is expected and where a \type{string} type is supplied instead.
+\startlily
+#(set! lilypond-mode 'chordmode)
+#(begin
+(rm objA 1 "c d e")                    &\em{&; \chordmode&}&
+(rm objB 1 #{ c d e #})                &\em{&; \notemode&}&
+(set! lilypond-mode 'lyricmode)
+(rm objC 1 "c d e")                    &\em{&; \lyricmode&}&
+(rm objD 1 #{ \chordmode { c d e } #}) &\em{&; \chordmode&}&
+)
+\stoplily
+\blank[-1.5em]
+%%%%%%%%
 
                       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                              
 \subject{Manipulating lists}
@@ -2840,8 +2899,8 @@ assocDynList = #(assoc-pos-dyn
 \blank[1.8em]
 Other macros can be defined but like \type{def-dyn}, they must all have as return value, the function scheme \type{/} (division of numbers). \type{assoc-pos-dyn} indeed, automatically removes such an element from the list given as argument.\\
 \blank
-\index{def-dyn†txt}
-\index{def-txt†dyn}
+\index{def-dyn\textplus txt}
+\index{def-txt\textplus dyn}
 The following 2 macros \type{def-dyn+txt} and \type{def-txt+dyn} allow you to create a compound dynamic such as \type{p sub} or \type{molto f}.\\
 They take 2 arguments of type {\em string}. The dynamic name is concatenated from these 2 arguments: \type{psub} and \type{moltof} for example.\\
 
