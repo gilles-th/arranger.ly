@@ -1788,7 +1788,7 @@ in `music."
              (let ((n (string->number str)))
                (if (and (integer? n) (> n 0))
                  (ly:intlog2 n)
-                 (ly:error (_ "not a valid duration string: ~a") duration-str))))))
+                 (ly:error "not a valid duration string: ~a" duration-str))))))
   (let ((split-list (string-split duration-str #\.))) ;; "4.."   -> (list "4" "" "")
      (note-by-number-markup layout props
         (str->log (car split-list)) (length (cdr split-list)) dir)))
