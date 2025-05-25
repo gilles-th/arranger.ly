@@ -1,4 +1,4 @@
-\version "2.25.6"
+\version "2.25.26"
 
 %%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/28 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% LSR = http://lsr.di.unimi.it/LSR/Item?u=1&id=761
@@ -450,4 +450,11 @@ music = \relative c' \addVoiceAlt
 %{
 convert-ly (GNU LilyPond) 2.25.7  convert-ly: Processing `'...
 Applying conversion: 2.25.0, 2.25.1, 2.25.3, 2.25.4, 2.25.5, 2.25.6
+%}
+
+
+%{
+convert-ly (GNU LilyPond) 2.25.26  convert-ly: Processing `'...
+Applying conversion: 2.25.8, 2.25.9, 2.25.11, 2.25.12, 2.25.13,
+2.25.18, 2.25.22, 2.25.23, 2.25.24, 2.25.25, 2.25.26
 %}

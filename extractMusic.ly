@@ -1,4 +1,4 @@
-\version "2.25.6"
+\version "2.25.26"
 
 %%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/28 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % LSR = http://lsr.di.unimi.it/LSR/Item?id=542
@@ -75,11 +75,11 @@ Moments as <Mom 5/8>, will return (ly:make-duration k dots num den)"
         (if (>= p2 q)
           (loop (- p2 q) (1+ dots))
           ;; it seems that (not documented) :
-          ;;    (ly:duration-length (ly:make-duration a b c d)) =
-          ;;    (ly:moment-mul (ly:duration-length (ly:make-duration a b))
+          ;;    (ly:duration->moment (ly:make-duration a b c d)) =
+          ;;    (ly:moment-mul (ly:duration->moment (ly:make-duration a b))
           ;;                   (ly:make-moment c d))
           (let* ((dur (ly:make-duration k dots))        ; duration for displaying the note
-                 (dur-len (ly:duration-length dur))     ; his display length.
+                 (dur-len (ly:duration->moment dur))     ; his display length.
                  (frac (ly:moment-div moment dur-len))) ; to adjust to the real length
             (ly:make-duration k dots
               (ly:moment-main-numerator frac) ; frac = 1/1 for moment = 3/4, 7/8 etc ..
@@ -266,12 +266,12 @@ named \\global. The first event in global begins always at measure first-measure
                     (case name
                       ((PartialSet)  ;; \partial dur music
                          (let* ((dur (ly:music-property ctx-elt 'duration #f))
-                                (offset (if dur (ly:duration-length dur) ZERO-MOMENT)))
+                                (offset (if dur (ly:duration->moment dur) ZERO-MOMENT)))
                            (add-timing local-pos name offset)))
                       ((PropertySet)
                          (let ((sym (ly:music-property ctx-elt 'symbol))
                                (val (ly:music-property ctx-elt 'value)))
-                           (if (memq sym '(timing measurePosition measureLength currentBarNumber))
+                           (if (memq sym '(timing measurePosition measureLengthAsMoment currentBarNumber))
                              (add-timing local-pos sym val))))
                       (else (loop (ly:music-property ctx-elt 'element)))))))) ;; 2nd level for partial, currentBarNumber
            (else
@@ -366,7 +366,7 @@ named \\global. The first event in global begins always at measure first-measure
                                 (mom-sub (mom-delta-mod prev-mom mom 1measure-len) val)) ; r - val : delta = mom/1measure-len + r
                               1measure-len) sections)
                 (cdr timings)))
-       ((measureLength) (loop (cons (vector (+ n delta-n) mom val)
+       ((measureLengthAsMoment) (loop (cons (vector (+ n delta-n) mom val)
                                 (if (equal? mom prev-mom) (cdr sections) sections))
                               (cdr timings)))
        ((currentBarNumber)(loop (cons (vector val mom 1measure-len)
@@ -772,4 +772,11 @@ mmS = { #(skip-of-length infinite-mmR) \tag #'mmWarning s1 }
 %{
 convert-ly (GNU LilyPond) 2.25.7  convert-ly: Processing `'...
 Applying conversion: 2.25.0, 2.25.1, 2.25.3, 2.25.4, 2.25.5, 2.25.6
+%}
+
+
+%{
+convert-ly (GNU LilyPond) 2.25.26  convert-ly: Processing `'...
+Applying conversion: 2.25.8, 2.25.9, 2.25.11, 2.25.12, 2.25.13,
+2.25.18, 2.25.22, 2.25.23, 2.25.24, 2.25.25, 2.25.26
 %}

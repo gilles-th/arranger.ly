@@ -1,4 +1,4 @@
-\version "2.25.6"
+\version "2.25.26"
 
 %%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/28 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The main objective of arranger.ly is to provide a set of functions to make
@@ -123,7 +123,7 @@ Any moment remains unchanged"
      (let* ((10n (inexact->exact (truncate (* 10 (abs n))))) ; 4.3 -> 43 | -4.3 -> 43
             (q (quotient 10n 10)) ; => 4 (log2 for duration: 2 (4 = 2^2))
             (r (modulo 10n 10))   ; => 3 (number of points = rest of division)
-            (mom (ly:duration-length (ly:make-duration (ly:intlog2 q) r))))
+            (mom (ly:duration->moment (ly:make-duration (ly:intlog2 q) r))))
        (if (> n 0) mom (mom-sub ZERO-MOMENT mom)))))
   (else ZERO-MOMENT))) % ignores any error
 
@@ -2337,4 +2337,11 @@ Applying conversion: 2.25.0, 2.25.1, 2.25.3, 2.25.4, 2.25.5, 2.25.6
 %{
 convert-ly (GNU LilyPond) 2.25.7  convert-ly: Processing `'...
 Applying conversion:     Le document n'a pas été modifié.
+%}
+
+
+%{
+convert-ly (GNU LilyPond) 2.25.26  convert-ly: Processing `'...
+Applying conversion: 2.25.8, 2.25.9, 2.25.11, 2.25.12, 2.25.13,
+2.25.18, 2.25.22, 2.25.23, 2.25.24, 2.25.25, 2.25.26
 %}
