@@ -1,11 +1,14 @@
-\version "2.25.6"
+\version "2.26.0"
 
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/28 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%% version YYYY/MM/DD = 2026/04/27 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% LSR =  http://lsr.di.unimi.it/LSR/Item?id=654
 %% Last release here:
 %%   http://gillesth.free.fr/Lilypond/changePitch/
 %% This directory contains also a doc called: changePitch-doc.pdf
 %% Last changes (the more recent to the top) :
+%%    - \grace structure has changed internally. change-pitch now deletes 'InitialContextMusic events
+%%      in pattern because Lilypond copy the grace notes in double in it. That would require from the user
+%%      to repeat 2 times the new pitches wanted for the pattern grace notes.
 %%    - \relative in lilypond has changed internally. The lines in copy-dur+arti
 %%      that used to manage the relative mode are no longer required. They are deleted.
 %%    - combine copy-duration and copy-arti into 1 function: copy-dur+arti
@@ -43,8 +46,8 @@
             (has-notes? e)))
      (any has-notes? (ly:music-property music 'elements '()))))
 
-%% An EventChord is sometimes used as a wrapper in Lilypond, so we have to check
-%% if a chord is a standard chord with notes. We could have used has-notes?
+%% An EventChord is sometimes used as a wrapper in Lilypond without notes. We check
+%% here if a chord is a standard chord (with notes). We could have used has-notes?
 %% but this version is probably more efficient.
 %% Optional events name like 'RestEvent can be included.
 #(define (note-or-chord? music . otherEvent)
@@ -233,6 +236,8 @@ note with the tie symbol)"
 
 #(define (change-pitch pattern newnotes)
 "The scheme function of \\changePitch, `pattern and `newnotes as music."
+;; \InitialContextFrom not compatible with change-pitch (see comments in the top of this file)
+(set! pattern (music-filter (lambda(evt) (not (eq? (name-of evt) 'InitialContextMusic))) pattern))
 (let ((seq-list '())           ; list of transformed patterns
       (skip-notnote-event? #f) ; #t if a \skip or an \insert is found in newnotes
       (same-pitch-section? #f) ; #t if we are in the 2nd pattern note of a\samePitch section

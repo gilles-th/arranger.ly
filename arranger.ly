@@ -1,6 +1,6 @@
-\version "2.25.6"
+\version "2.26.0"
 
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/28 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%% version YYYY/MM/DD = 2026/04/27 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The main objective of arranger.ly is to provide a set of functions to make
 % arrangements of pieces originally intended for another band :
 % for ex a symphonic piece arranged for a concert band (wood-winds and percussions only).
@@ -123,7 +123,7 @@ Any moment remains unchanged"
      (let* ((10n (inexact->exact (truncate (* 10 (abs n))))) ; 4.3 -> 43 | -4.3 -> 43
             (q (quotient 10n 10)) ; => 4 (log2 for duration: 2 (4 = 2^2))
             (r (modulo 10n 10))   ; => 3 (number of points = rest of division)
-            (mom (ly:duration-length (ly:make-duration (ly:intlog2 q) r))))
+            (mom (ly:duration->moment (ly:make-duration (ly:intlog2 q) r))))
        (if (> n 0) mom (mom-sub ZERO-MOMENT mom)))))
   (else ZERO-MOMENT))) % ignores any error
 
@@ -778,7 +778,7 @@ Any music argument is added unaltered into the sequence"
                (if (exact? n)     ;  integer or rational p/q
                  (if (integer? n)
                    (ly:make-duration (if (> n 0) (ly:intlog2 n) (1- n))) ; n = 0 breve, -1 longa, -2 maxima
-                   (moment->rhythm (ly:make-moment n))) ;n is a rational. moment->rhythm will fail if n < 0
+                   (moment->rhythm (ly:make-moment n)))                  ; n as a rational.
                  (let* ((10n (inexact->exact (truncate (* 10 (abs n))))) ; 4.3 -> 43
                         (q (quotient 10n 10)) ; 4 : for the log of duration
                         (r (modulo 10n 10)))  ; 3 : number of points = rest of the division
@@ -1109,7 +1109,7 @@ note of music2..., then repeat the process with each following notes of each mus
            (args args))
   (if (null? args)
     music
-    (loop (add-note music (car args)) ;; add-note : see chordsAndVoices.ly
+    (loop (add-note music (ly:music-deep-copy (car args))) ;; add-note : see chordsAndVoices.ly
           (cdr args)))))
 
 #(define (notes+ musics . args)
@@ -1788,7 +1788,7 @@ in `music."
              (let ((n (string->number str)))
                (if (and (integer? n) (> n 0))
                  (ly:intlog2 n)
-                 (ly:error (_ "not a valid duration string: ~a") duration-str))))))
+                 (ly:error ("not a valid duration string: ~a") duration-str))))))
   (let ((split-list (string-split duration-str #\.))) ;; "4.."   -> (list "4" "" "")
      (note-by-number-markup layout props
         (str->log (car split-list)) (length (cdr split-list)) dir)))
@@ -2017,19 +2017,13 @@ music-function is then applied to the nth note"
   (tweak-notes-seq n-list mus))
 
 %%% articulation patterns
-% #(define ((set-arti pattern) obj)  ; see copyArticulations.ly
-%    (define (func mus) (copy-articulations pattern mus))
-% ((music-func->obj-func func) obj))
-%
-% #(define (ca pattern obj)
-% ((set-arti pattern) obj))
 
 #(define (ca . args)  ; see copyArticulations.ly
 "syntax : (ca pattern[s] music[s])
 Copies articulations from pattern to music, and returns music.
 If at least one argument is a list (a list of musics or a list of instruments),
 the function returns a list of musics."
-    (define (func p m) (ly:music-deep-copy (copy-articulations p m)))
+    (define (func p m) (copy-articulations p (ly:music-deep-copy m)))
 (if (null? (filter pair? args)) ; if no list (only music)
   (apply func (map obj->music args))
   (apply map func
@@ -2074,7 +2068,7 @@ to-pos], cutting if necessary the last repeat to fit exactly the range."
                     (map func pat-or-pats                  ; if list
                          (circular-list from-pos)
                          (circular-list to-pos))
-                    (func pat-or-pats from-pos to-pos))))) ; if  music
+                    (func pat-or-pats from-pos to-pos))))) ; if music
     (if (null? args)
       ret
       (let ((x (car args)))
@@ -2083,7 +2077,7 @@ to-pos], cutting if necessary the last repeat to fit exactly the range."
           (begin (set! args (cdr args))
                  (set! pat-or-pats x)))
         (if (>= (length args) 2)
-          (loop (first args)(second args)(list-tail args 2))
+          (loop (first args)(second args) pat-or-pats (list-tail args 2))
           ret))))))
 
 #(define (fill obj pat-or-pats from-pos to-pos . args)
@@ -2335,6 +2329,7 @@ Applying conversion: 2.25.0, 2.25.1, 2.25.3, 2.25.4, 2.25.5, 2.25.6
 
 
 %{
-convert-ly (GNU LilyPond) 2.25.7  convert-ly: Processing `'...
-Applying conversion:     Le document n'a pas été modifié.
+convert-ly (GNU LilyPond) 2.26.0  convert-ly: Processing `'...
+Applying conversion: 2.25.28, 2.25.30, 2.25.31, 2.25.32, 2.25.33,
+2.25.34, 2.25.35, 2.25.80, 2.26.0
 %}

@@ -1,8 +1,10 @@
-\version "2.25.6"
+\version "2.26.0"
 
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/28 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%% version YYYY/MM/DD = 2026/04/27 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % LSR = http://lsr.di.unimi.it/LSR/Item?id=542
 % Last modif. (the last at the end) :
+% - rename make-signature-list by make-timing-sections and introduce
+%   a *timing-sections* global parameter
 % - change append! by cons in (make-signature-list)
 % - replace moment-null definition, by ZERO-MOMENT, which has been
 %   already defined in lily-library.scm.Delete also moment-min definition.
@@ -75,15 +77,42 @@ Moments as <Mom 5/8>, will return (ly:make-duration k dots num den)"
         (if (>= p2 q)
           (loop (- p2 q) (1+ dots))
           ;; it seems that (not documented) :
-          ;;    (ly:duration-length (ly:make-duration a b c d)) =
-          ;;    (ly:moment-mul (ly:duration-length (ly:make-duration a b))
+          ;;    (ly:duration->moment (ly:make-duration a b c d)) =
+          ;;    (ly:moment-mul (ly:duration->moment (ly:make-duration a b))
           ;;                   (ly:make-moment c d))
           (let* ((dur (ly:make-duration k dots))        ; duration for displaying the note
-                 (dur-len (ly:duration-length dur))     ; his display length.
+                 (dur-len (ly:duration->moment dur))     ; his display length.
                  (frac (ly:moment-div moment dur-len))) ; to adjust to the real length
             (ly:make-duration k dots
               (ly:moment-main-numerator frac) ; frac = 1/1 for moment = 3/4, 7/8 etc ..
               (ly:moment-main-denominator frac)))))))))
+
+#(define (moment->rhythm moment)
+"Try to convert a moment to a duration in the form: (ly:make-duration k dots). 
+Moments as <Mom 5/8>, will return (ly:make-duration k dots num den)"
+(let ((p (ly:moment-main-numerator moment))
+      (q (ly:moment-main-denominator moment)))
+  (if (< p 1) ; (if moment < 0 or = 0)
+    (ly:make-duration 0 0 p q)
+    (let ((k (- (ly:intlog2 q) (ly:intlog2 p)))) ; p > 0
+      (if (< (ash p k) q) (set! k (1+ k))) ; (ash p k) = p * 2^k
+      (if (> k 6)
+        (ly:make-duration 6 0) ; 6 means 64th (max value).
+        (let loop ((p1 (- (ash p k) q))
+                   (dots 0))
+          (let ((p2 (ash p1 1)))
+            ;; (format #t "p1 = ~a ; p2 = ~a\n" p1 p2)
+            (if (>= p2 q)
+              (loop (- p2 q) (1+ dots))
+              ;; it seems that (not documented) :
+              ;;    (ly:duration->moment (ly:make-duration a b c d)) =
+              ;;    (ly:moment-mul (ly:duration->moment (ly:make-duration a b))
+              ;;                   (ly:make-moment c d))
+              (let* ((dur (ly:make-duration k dots))        ; duration for displaying the note
+                     (dur-len (ly:duration->moment dur))     ; his display length.
+                     (frac (ly:moment-div moment dur-len))) ; to adjust to the real length
+                     ; frac = 1/1 for moment = 3/4, 7/8 etc ..
+                (ly:make-duration k dots (ly:moment-main frac)))))))))))
 
 %%%%%  Here are some macros, to keep the extract-range code more compact  %%%%%
 
@@ -243,7 +272,7 @@ The list is returned in reverse order, the latest section at beginning.
 All signatures or manual timing changes have to be set by the user in a music variable 
 named \\global. The first event in global begins always at measure first-measure, at ZERO-MOMENT"
 ;; we collect all timing infos (signatures partials etc...) in a list called timings
-(let ((timings '())                     ; the list to build
+(let ((timings '())                     ; a list of vectors
       (local-pos ZERO-MOMENT))          ; current moment pos
     (define (add-timing mom sym value)  ; each elt of timings is a 3 elts vector : #(moment sym value))
       (set! timings (cons (vector mom sym value) timings)))
@@ -251,10 +280,9 @@ named \\global. The first event in global begins always at measure first-measure
       (let ((name (ly:music-property evt 'name))
             (dur (ly:music-property evt 'duration #f)))
          (cond
-           ((eq? name 'TimeSignatureMusic);; a time signature change occurs
-              (add-timing local-pos name
-                        (ly:make-moment (ly:music-property evt 'numerator)
-                                        (ly:music-property evt 'denominator))))
+           ((eq? name 'ReferenceTimeSignatureMusic);; a time signature change occurs
+              (add-timing local-pos name (let ((sig (ly:music-property evt 'time-signature)))
+                                           (ly:make-moment (/ (car sig) (cdr sig))))))
            ((or dur (eq? name 'EventChord))      ;; notes chords skips rests etc...
               (set! local-pos (ly:moment-add local-pos (ly:music-length evt))))
            ;((and (eq? name 'ContextSpeccedMusic)           ;; override of Timing evts, but...
@@ -266,12 +294,12 @@ named \\global. The first event in global begins always at measure first-measure
                     (case name
                       ((PartialSet)  ;; \partial dur music
                          (let* ((dur (ly:music-property ctx-elt 'duration #f))
-                                (offset (if dur (ly:duration-length dur) ZERO-MOMENT)))
+                                (offset (if dur (ly:duration->moment dur) ZERO-MOMENT)))
                            (add-timing local-pos name offset)))
                       ((PropertySet)
                          (let ((sym (ly:music-property ctx-elt 'symbol))
                                (val (ly:music-property ctx-elt 'value)))
-                           (if (memq sym '(timing measurePosition measureLength currentBarNumber))
+                           (if (memq sym '(timing measurePosition measureLengthAsMoment currentBarNumber))
                              (add-timing local-pos sym val))))
                       (else (loop (ly:music-property ctx-elt 'element)))))))) ;; 2nd level for partial, currentBarNumber
            (else
@@ -306,7 +334,7 @@ named \\global. The first event in global begins always at measure first-measure
    (add-timing infinite-mom 'end-of-list ZERO-MOMENT)
      ;; instead of reverting, we sort the list (needed if global has simultaneous music)
    (let((less (lambda(info1 info2) ; the smaller mom, if moms equal, timeSignature first
-                (if (eq? 'TimeSignatureMusic (vector-ref info1 1))
+                (if (eq? 'ReferenceTimeSignatureMusic (vector-ref info1 1))
                   (moment>=? (vector-ref info2 0) (vector-ref info1 0))       ; info1 <= info2 [(moment>= b a) = (ly:moment<= a b)]
                   (ly:moment<? (vector-ref info1 0) (vector-ref info2 0)))))) ; info1 < info2
      (set! timings (sort timings less)))
@@ -318,7 +346,7 @@ named \\global. The first event in global begins always at measure first-measure
 (let ((cadenzaOn-infos #f) ; for cadenzaOn/Off evts (see end of loop)
       (section1 (let ((first-timing (car timings))) ; the first signature is optionnal in Lilypond
                   (if (and (equal? ZERO-MOMENT (vector-ref first-timing 0))
-                           (eq? 'TimeSignatureMusic (vector-ref first-timing 1)))
+                           (eq? 'ReferenceTimeSignatureMusic (vector-ref first-timing 1)))
                     (begin
                       (set! timings (cdr timings)) ; skip first-timing
                       (vector first-measure ZERO-MOMENT (vector-ref first-timing 2)))
@@ -337,7 +365,7 @@ named \\global. The first event in global begins always at measure first-measure
           (delta-n (mom->integer (mom-delta-div prev-mom mom 1measure-len)))) ; section measures count
      (case sym
        ((end-of-list) sections) ; return
-       ((TimeSignatureMusic)
+       ((ReferenceTimeSignatureMusic)
           (loop (cons (vector (+ n delta-n) mom val)
                   (if (equal? mom prev-mom) (cdr sections) ; when prev measure has a \partial
                                             sections))
@@ -366,7 +394,7 @@ named \\global. The first event in global begins always at measure first-measure
                                 (mom-sub (mom-delta-mod prev-mom mom 1measure-len) val)) ; r - val : delta = mom/1measure-len + r
                               1measure-len) sections)
                 (cdr timings)))
-       ((measureLength) (loop (cons (vector (+ n delta-n) mom val)
+       ((measureLengthAsMoment) (loop (cons (vector (+ n delta-n) mom val)
                                 (if (equal? mom prev-mom) (cdr sections) sections))
                               (cdr timings)))
        ((currentBarNumber)(loop (cons (vector val mom 1measure-len)
@@ -402,8 +430,8 @@ named \\global. The first event in global begins always at measure first-measure
               (loop sections (cdr timings)))))
               ))))))
 
-%% (*timing-sections*) is a global variable. For now we don't really need the make-parameter but it can
-%% perhaps enlarge the user possibilities with the restoring abilities of his parameterize function.
+%% (*timing-sections*) is a global variable. It is used
+%% in "arranger.ly" to avoid incessant re-calculations of the list.
 #(define *timing-sections* (make-parameter #f))
 
 %% measure-number->moment (used by \upToMeasure)
@@ -760,7 +788,7 @@ mmS = { #(skip-of-length infinite-mmR) \tag #'mmWarning s1 }
 
 
 #(define eM extractMusic)
-#(define M upToMeasure)
+#(define uM upToMeasure)
 #(define eB extractBegin)
 #(define eE extractEnd)
 #(define iM insertMusic)

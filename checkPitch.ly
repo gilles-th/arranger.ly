@@ -1,6 +1,6 @@
-\version "2.25.6"
+\version "2.26.0"
 
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/28 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%% version YYYY/MM/DD = 2026/04/27 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% LSR = http://lsr.di.unimi.it/LSR/Item?id=773
 %% Last modification :
 %%   - add same-pitch-as

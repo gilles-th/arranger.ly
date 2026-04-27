@@ -1,6 +1,6 @@
-\version "2.25.6"
+\version "2.26.0"
 
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/28 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%% version YYYY/MM/DD = 2026/04/27 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Is a work-around for that :
 %%   http://code.google.com/p/lilypond/issues/detail?id=824
 %% Last features/modifications since last version:
@@ -128,4 +128,11 @@ global = \relative c'
 %{
 convert-ly (GNU LilyPond) 2.25.7  convert-ly: Processing `'...
 Applying conversion: 2.25.0, 2.25.1, 2.25.3, 2.25.4, 2.25.5, 2.25.6
+%}
+
+
+%{
+convert-ly (GNU LilyPond) 2.26.0  convert-ly: Processing `'...
+Applying conversion: 2.25.28, 2.25.30, 2.25.31, 2.25.32, 2.25.33,
+2.25.34, 2.25.35, 2.25.80, 2.26.0
 %}

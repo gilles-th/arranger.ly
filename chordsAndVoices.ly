@@ -1,6 +1,6 @@
-\version "2.25.6"
+\version "2.26.0"
 
-%%%%%%%%%%%%%%%%%%%%%% version Y/M/D = 2022/12/28 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%% version YYYY/MM/DD = 2026/04/27 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% LSR = http://lsr.di.unimi.it/LSR/Item?u=1&id=761
 %% LSR = http://lsr.di.unimi.it/LSR/Item?u=1&id=545
 %% for Lilypond 2.20 or higher.
@@ -10,7 +10,7 @@
 %    they shared some functions
 %% Last major change in extract-note function : as \tuplet as now
 %% a 'duration property, we have to deal with this special case.
-%% by chord->note. You can now specified several numbers, to
+%% chord->note : you can now specified several numbers, and
 %% extract several notes at one time
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -306,6 +306,7 @@ These 2 arguments must have been expanded with expand-notes-and-chords "
              (partition noteEvent? (ly:music-property x 'elements))
              (if (pair? notes)(ly:music-set-property! x 'elements (do-add notes arti)))))
            x)
+        ((TimeScaledMusic) #f) ; TimeScaledMusic have now a 'duration property
         (else (and (get-dur x) x)))) ; #f means : go deeper
     music)))
 
