@@ -1,6 +1,6 @@
 \version "2.26.0"
 
-%%%%%%%%%%%%%%%%%%% version YYYY/MM/DD = 2026/04/27 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%% version YYYY/MM/DD = 2026/05/03 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % LSR = http://lsr.di.unimi.it/LSR/Item?id=542
 % Last modif. (the last at the end) :
 % - rename make-signature-list by make-timing-sections and introduce
@@ -19,6 +19,7 @@
 % - \cadenzaOn/Off compatibility
 % - allows \displayLilyMusic to work, using reduce-seq in a music with a \tempo command
 % - \replaceVoltaMusic was buggy for music out of volta structure : Rewriting.
+% - get rid of message "ly:moment-mod deprecated"
 
 #(define (expand-q-chords music); for q chords : see chord-repetition-init.ly
  (expand-repeat-chords! (list 'rhythmic-event) music))
@@ -200,7 +201,7 @@ Moments as <Mom 5/8>, will return (ly:make-duration k dots num den)"
  (*current-moment* end-pos) ;for the next music to process
  (cond
   ((whole-music-inside? begin-pos end-pos from to) music)
-  ((whole-music-outside? begin-pos end-pos from to)(make-music 'Music))
+  ((whole-music-outside?do begin-pos end-pos from to)(make-music 'Music))
   (else ; from this point, the intervals [begin-pos end-pos][from to] overlap
     (let((name (ly:music-property music 'name)))
      (if (and (ly:duration? (ly:music-property music 'duration))
@@ -259,7 +260,20 @@ Moments as <Mom 5/8>, will return (ly:make-duration k dots num den)"
 #(define mom-div ly:moment-div) % an other short-cut
 #(define (mom-imul mom n) (ly:moment-mul mom (ly:make-moment n))) % multiplication by integer
 #(define (mom-delta-div from to len) (ly:moment-div (ly:moment-sub to from) len)) % len count between from to
-#(define (mom-delta-mod from to len) (ly:moment-mod ; <- the remaining after division
+% mom-mod tries to be a scheme replacement of ly:moment-mod which is deprecated in Lilypond 2.16.
+% We use the scheme function euclidean-remainder, but only positive rationals matches the results of ly-moment-mod.
+#(define (mom-mod a b) ; a and b as moment. Result as a moment
+   (let ((mb (ly:moment-main b)))
+      (and (not (= mb 0)) ; return #f if division by 0
+           (let* ((ma (ly:moment-main a))
+                  (ga (ly:moment-grace a)) ; should be negative but ly-moment-mod deals also with positive values
+                  (mr (euclidean-remainder (abs ma) mb))  ; main remainder with positive value of ma
+                  (gr (euclidean-remainder (abs ga) mb))) ; grace remainder
+             (if (< ma 0) (set! mr (- mr))) ; to match with ly-moment-mod
+             (if (> ga 0) ; compatibility mode of ly:make-moment
+                (ly:make-moment (numerator mr)(denominator mr)(numerator gr)(denominator gr))
+                (ly:make-moment mr (- gr)))))))
+#(define (mom-delta-mod from to len) (mom-mod ;  <- the remainder after division
                                        (if (ly:moment<? ZERO-MOMENT len) (ly:moment-sub to from)(ly:moment-sub from to))
                                        len)) % => result will be < 0 if len < 0. Needed for partial at start
 %% make-timing-sections : use to initialize the *timing-sections* variable or by measure-number->moment
