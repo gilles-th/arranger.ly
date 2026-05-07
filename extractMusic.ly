@@ -1,6 +1,6 @@
 \version "2.26.0"
 
-%%%%%%%%%%%%%%%%%%% version YYYY/MM/DD = 2026/05/03 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%% version YYYY/MM/DD = 2026/05/07 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % LSR = http://lsr.di.unimi.it/LSR/Item?id=542
 % Last modif. (the last at the end) :
 % - rename make-signature-list by make-timing-sections and introduce
@@ -201,7 +201,7 @@ Moments as <Mom 5/8>, will return (ly:make-duration k dots num den)"
  (*current-moment* end-pos) ;for the next music to process
  (cond
   ((whole-music-inside? begin-pos end-pos from to) music)
-  ((whole-music-outside?do begin-pos end-pos from to)(make-music 'Music))
+  ((whole-music-outside? begin-pos end-pos from to)(make-music 'Music))
   (else ; from this point, the intervals [begin-pos end-pos][from to] overlap
     (let((name (ly:music-property music 'name)))
      (if (and (ly:duration? (ly:music-property music 'duration))
